@@ -1,138 +1,470 @@
 import type { MetaFunction } from "@remix-run/node";
+import { FaSearch, FaPlus, FaTrash, FaUndo } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "New Remix App" },
+    { title: "My Stuff" },
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
 
+interface Task {
+  id: string;
+  title: string;
+  category: string;
+  done: boolean;
+}
+
+interface CategoryData {
+  name: string;
+  color: string;
+  description?: string;
+}
+
+const getCategoryColor = (categoryName: string): string => {
+  const hash = Array.from(categoryName.toLowerCase()).reduce(
+    (hash, char) => char.charCodeAt(0) + ((hash << 5) - hash),
+    0
+  );
+
+  const h = Math.abs(hash) % 360;
+  const s = 80 + (Math.abs(hash) % 15);
+  const l = 60 + (Math.abs(hash) % 10);
+
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
+const categoryColors: Record<string, string> = {
+  personal: getCategoryColor("personal"),
+  business: getCategoryColor("business"),
+  project: getCategoryColor("project"),
+  health: getCategoryColor("health"),
+  learning: getCategoryColor("learning"),
+  other: getCategoryColor("other"),
+};
+
+const CategoryCard: React.FC<{ category: CategoryData; tasks: Task[] }> = ({
+  category,
+  tasks,
+}) => {
+  const categoryTasks = tasks.filter(
+    (task) => task.category.toLowerCase() === category.name.toLowerCase()
+  );
+  const completedTasks = categoryTasks.filter((task) => task.done).length;
+  const totalTasks = categoryTasks.length;
+  const completionPercent =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const color = getCategoryColor(category.name);
+
+  return (
+    <motion.div
+      className="relative flex flex-col my-6 bg-white dark:bg-gray-900 shadow-sm border border-slate-200 dark:border-slate-700 rounded-lg min-w-[280px] max-w-[320px] flex-shrink-0"
+      whileHover={{ y: -5 }}
+      transition={{ type: "spring", stiffness: 300 }}
+    >
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h5 className="text-slate-800 dark:text-slate-200 text-xl font-semibold capitalize">
+            {category.name}
+          </h5>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {completedTasks}/{totalTasks}
+          </span>
+        </div>
+
+        <p className="text-slate-600 dark:text-slate-400 leading-normal font-light text-sm mb-4">
+          {category.description || "Complete tasks to make progress"}
+        </p>
+
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+          <div
+            className="h-2 rounded-full"
+            style={{
+              width: `${completionPercent}%`,
+              backgroundColor: color,
+            }}
+          ></div>
+        </div>
+
+        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-4">
+          <span>Progress</span>
+          <span>{completionPercent}%</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const TaskItem: React.FC<{
+  task: Task;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}> = ({ task, onToggle, onDelete }) => {
+  const categoryColor = getCategoryColor(task.category);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDeleted, setIsDeleted] = useState(false);
+  const touchStartRef = useRef<number | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.timeStamp;
+    touchStartXRef.current = e.touches[0].clientX;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartXRef.current) return;
+    const deltaX = e.touches[0].clientX - touchStartXRef.current;
+    if (deltaX < 0) {
+      setSwipeOffset(Math.max(deltaX, -120));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+    if (swipeOffset < -80) {
+      setIsDeleted(true);
+      setTimeout(() => onDelete(task.id), 300);
+    } else {
+      setSwipeOffset(0);
+    }
+    touchStartRef.current = null;
+    touchStartXRef.current = null;
+  };
+
+  const handleUndo = () => {
+    setIsDeleted(false);
+    setSwipeOffset(0);
+  };
+
+  if (isDeleted) {
+    return (
+      <motion.div
+        className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20"
+        initial={{ opacity: 1, x: swipeOffset }}
+        animate={{ opacity: 0, height: 0 }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex items-center gap-2 text-red-500 dark:text-red-400">
+          <FaTrash />
+          <span>Task deleted</span>
+        </div>
+        <button
+          onClick={handleUndo}
+          className="flex items-center gap-1 text-sm text-blue-500 dark:text-blue-400"
+        >
+          <FaUndo /> Undo
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      className="relative overflow-hidden"
+      whileHover={{ scale: 1.01 }}
+      initial={{ opacity: 0, height: 0 }}
+      animate={{
+        opacity: 1,
+        height: "auto",
+        x: swipeOffset,
+        transition: { type: "spring", bounce: 0.3 },
+      }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div
+        className={`flex items-center gap-3 p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-900 ${
+          task.done ? "opacity-70" : ""
+        }`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <button
+          onClick={() => onToggle(task.id)}
+          className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+            task.done ? "bg-green-500 border-green-500" : ""
+          }`}
+          style={{ borderColor: task.done ? "" : categoryColor }}
+          disabled={task.done}
+          aria-label={task.done ? "Task completed" : "Mark as complete"}
+        >
+          {task.done && (
+            <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 13l4 4L19 7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+        <span
+          className={`flex-grow ${
+            task.done
+              ? "line-through text-slate-400 dark:text-slate-500"
+              : "text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          {task.title}
+        </span>
+        <span
+          className="text-xs px-2 py-1 rounded-full capitalize"
+          style={{
+            backgroundColor: `${categoryColor}20`,
+            color: categoryColor,
+          }}
+        >
+          {task.category}
+        </span>
+      </div>
+
+      <motion.div
+        className="absolute right-0 top-0 h-full flex items-center px-4 bg-red-500"
+        style={{
+          width: `${Math.abs(swipeOffset)}px`,
+          transform: `translateX(${swipeOffset}px)`,
+        }}
+        animate={{
+          opacity: isSwiping ? 1 : 0,
+        }}
+      >
+        <FaTrash className="text-white" />
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const AddTaskButton = ({ onAdd }: { onAdd: () => void }) => {
+  return (
+    <motion.button
+      className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-500 text-white shadow-lg grid place-content-center z-30"
+      onClick={onAdd}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      aria-label="Add new task"
+    >
+      <FaPlus className="text-xl" />
+    </motion.button>
+  );
+};
+
+const AddTaskModal = ({
+  isOpen,
+  onClose,
+  onAddTask,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddTask: (task: { title: string; category: string }) => void;
+}) => {
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("Personal");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (title.trim()) {
+      onAddTask({ title, category });
+      setTitle("");
+      onClose();
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+
+          <motion.div
+            className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl p-6 shadow-xl z-50 max-w-md mx-auto"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          >
+            <h3 className="text-xl font-semibold mb-4 dark:text-white">
+              Add New Task
+            </h3>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                  Task Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent dark:text-white"
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                  Category
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent dark:text-white"
+                >
+                  {Object.keys(categoryColors).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <motion.button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  type="submit"
+                  className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Add Task
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const TaskList = () => {
+  const [tasks, setTasks] = useState<Task[]>([
+    { id: "1", title: "Morning workout", category: "Health", done: false },
+    { id: "2", title: "Client meeting", category: "Business", done: true },
+    { id: "3", title: "Design wireframes", category: "Project", done: false },
+    { id: "4", title: "Read book", category: "Personal", done: false },
+    { id: "5", title: "Learn React", category: "Learning", done: true },
+  ]);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const toggleTask = (id: string) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, done: !task.done } : task
+      )
+    );
+  };
+
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const addTask = ({
+    title,
+    category,
+  }: {
+    title: string;
+    category: string;
+  }) => {
+    setTasks([
+      ...tasks,
+      {
+        id: Date.now().toString(),
+        title,
+        category,
+        done: false,
+      },
+    ]);
+  };
+
+  const categories: CategoryData[] = [
+    { name: "Personal", color: getCategoryColor("Personal") },
+    { name: "Business", color: getCategoryColor("Business") },
+    { name: "Project", color: getCategoryColor("Project") },
+    { name: "Health", color: getCategoryColor("Health") },
+    { name: "Learning", color: getCategoryColor("Learning") },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4 pb-20">
+      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+        {categories.map((category) => (
+          <CategoryCard key={category.name} category={category} tasks={tasks} />
+        ))}
+      </div>
+
+      <motion.div
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <AnimatePresence>
+          {tasks.map((task) => (
+            <TaskItem
+              key={task.id}
+              task={task}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+            />
+          ))}
+        </AnimatePresence>
+      </motion.div>
+
+      <AddTaskButton onAdd={() => setIsAddModalOpen(true)} />
+      <AddTaskModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddTask={addTask}
+      />
+    </div>
+  );
+};
+
 export default function Index() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="flex flex-col items-center gap-16">
-        <header className="flex flex-col items-center gap-9">
-          <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Welcome to <span className="sr-only">Remix</span>
-          </h1>
-          <div className="h-[144px] w-[434px]">
-            <img
-              src="/logo-light.png"
-              alt="Remix"
-              className="block w-full dark:hidden"
-            />
-            <img
-              src="/logo-dark.png"
-              alt="Remix"
-              className="hidden w-full dark:block"
-            />
-          </div>
-        </header>
-        <nav className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-gray-200 p-6 dark:border-gray-700">
-          <p className="leading-6 text-gray-700 dark:text-gray-200">
-            What&apos;s next?
-          </p>
-          <ul>
-            {resources.map(({ href, text, icon }) => (
-              <li key={href}>
-                <a
-                  className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {icon}
-                  {text}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+    <div className="h-screen w-full">
+      <nav className="w-full h-16 px-3 flex justify-between items-center border border-slate-200/10">
+        <h1 className="text-xl font-semibold">My Stuff</h1>
+        <div className="flex gap-3">
+          <motion.button
+            className="h-8 w-8 rounded-full grid place-content-center hover:bg-slate-300/20"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FaSearch />
+          </motion.button>
+        </div>
+      </nav>
+      <div className="w-full h-full flex flex-col gap-4 px-5 pt-6 py-3">
+        <h1 className="text-6xl tracking-tighter text-balance">
+          What's up Ray!
+        </h1>
+        <TaskList />
       </div>
     </div>
   );
 }
-
-const resources = [
-  {
-    href: "https://remix.run/start/quickstart",
-    text: "Quick Start (5 min)",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M8.51851 12.0741L7.92592 18L15.6296 9.7037L11.4815 7.33333L12.0741 2L4.37036 10.2963L8.51851 12.0741Z"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    href: "https://remix.run/start/tutorial",
-    text: "Tutorial (30 min)",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M4.561 12.749L3.15503 14.1549M3.00811 8.99944H1.01978M3.15503 3.84489L4.561 5.2508M8.3107 1.70923L8.3107 3.69749M13.4655 3.84489L12.0595 5.2508M18.1868 17.0974L16.635 18.6491C16.4636 18.8205 16.1858 18.8205 16.0144 18.6491L13.568 16.2028C13.383 16.0178 13.0784 16.0347 12.915 16.239L11.2697 18.2956C11.047 18.5739 10.6029 18.4847 10.505 18.142L7.85215 8.85711C7.75756 8.52603 8.06365 8.21994 8.39472 8.31453L17.6796 10.9673C18.0223 11.0653 18.1115 11.5094 17.8332 11.7321L15.7766 13.3773C15.5723 13.5408 15.5554 13.8454 15.7404 14.0304L18.1868 16.4767C18.3582 16.6481 18.3582 16.926 18.1868 17.0974Z"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    href: "https://remix.run/docs",
-    text: "Remix Docs",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M9.99981 10.0751V9.99992M17.4688 17.4688C15.889 19.0485 11.2645 16.9853 7.13958 12.8604C3.01467 8.73546 0.951405 4.11091 2.53116 2.53116C4.11091 0.951405 8.73546 3.01467 12.8604 7.13958C16.9853 11.2645 19.0485 15.889 17.4688 17.4688ZM2.53132 17.4688C0.951566 15.8891 3.01483 11.2645 7.13974 7.13963C11.2647 3.01471 15.8892 0.951453 17.469 2.53121C19.0487 4.11096 16.9854 8.73551 12.8605 12.8604C8.73562 16.9853 4.11107 19.0486 2.53132 17.4688Z"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    href: "https://rmx.as/discord",
-    text: "Join Discord",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="20"
-        viewBox="0 0 24 20"
-        fill="none"
-        className="stroke-gray-600 group-hover:stroke-current dark:stroke-gray-300"
-      >
-        <path
-          d="M15.0686 1.25995L14.5477 1.17423L14.2913 1.63578C14.1754 1.84439 14.0545 2.08275 13.9422 2.31963C12.6461 2.16488 11.3406 2.16505 10.0445 2.32014C9.92822 2.08178 9.80478 1.84975 9.67412 1.62413L9.41449 1.17584L8.90333 1.25995C7.33547 1.51794 5.80717 1.99419 4.37748 2.66939L4.19 2.75793L4.07461 2.93019C1.23864 7.16437 0.46302 11.3053 0.838165 15.3924L0.868838 15.7266L1.13844 15.9264C2.81818 17.1714 4.68053 18.1233 6.68582 18.719L7.18892 18.8684L7.50166 18.4469C7.96179 17.8268 8.36504 17.1824 8.709 16.4944L8.71099 16.4904C10.8645 17.0471 13.128 17.0485 15.2821 16.4947C15.6261 17.1826 16.0293 17.8269 16.4892 18.4469L16.805 18.8725L17.3116 18.717C19.3056 18.105 21.1876 17.1751 22.8559 15.9238L23.1224 15.724L23.1528 15.3923C23.5873 10.6524 22.3579 6.53306 19.8947 2.90714L19.7759 2.73227L19.5833 2.64518C18.1437 1.99439 16.6386 1.51826 15.0686 1.25995ZM16.6074 10.7755L16.6074 10.7756C16.5934 11.6409 16.0212 12.1444 15.4783 12.1444C14.9297 12.1444 14.3493 11.6173 14.3493 10.7877C14.3493 9.94885 14.9378 9.41192 15.4783 9.41192C16.0471 9.41192 16.6209 9.93851 16.6074 10.7755ZM8.49373 12.1444C7.94513 12.1444 7.36471 11.6173 7.36471 10.7877C7.36471 9.94885 7.95323 9.41192 8.49373 9.41192C9.06038 9.41192 9.63892 9.93712 9.6417 10.7815C9.62517 11.6239 9.05462 12.1444 8.49373 12.1444Z"
-          strokeWidth="1.5"
-        />
-      </svg>
-    ),
-  },
-];
