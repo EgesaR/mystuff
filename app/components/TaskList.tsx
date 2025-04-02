@@ -62,7 +62,7 @@ export default function TaskList({
       >
         <AnimatePresence>
           {tasks.length > 0 ? (
-            tasks.map((task) => (
+            [...tasks].reverse().map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}

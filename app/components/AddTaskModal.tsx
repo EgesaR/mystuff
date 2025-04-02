@@ -104,11 +104,15 @@ export default function AddTaskModal({
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent dark:text-white"
+                      className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent dark:text-white dark:bg-gray-800 dark:[color-scheme:dark]"
                     >
                       <option value="">Select or create...</option>
                       {categories.map((cat) => (
-                        <option key={cat} value={cat}>
+                        <option
+                          key={cat}
+                          value={cat}
+                          className="dark:bg-gray-800"
+                        >
                           {cat}
                         </option>
                       ))}
