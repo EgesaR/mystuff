@@ -10,11 +10,3 @@ body {
     color-scheme: dark;
   }
 }
-
-.dark select {
-  color-scheme: dark;
-}
-
-.dark select option {
-  background-color: #1f2937; /* bg-gray-800 */
-}
