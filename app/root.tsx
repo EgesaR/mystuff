@@ -35,11 +35,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="w-full h-screen overflow-hidden">
-        <div className="h-full w-full">
+        <div className="h-full w-full overflow-hidden">
           <AppBar />
           <div className="w-full h-[92%] flex">
             <SideBar />
-            <div className="w-full h-full">{children}</div>
+            <div className="w-full h-full overflow-y-auto">{children}</div>
           </div>
         </div>
         <ScrollRestoration />

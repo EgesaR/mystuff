@@ -21,4 +21,14 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  css: {
+    postcss: "./postcss.config.js"
+  },
+  server: {
+    port: 8000,
+    hmr: {
+      protocol: "ws",
+      host: "localhost",
+    },
+  },
 });

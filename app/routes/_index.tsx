@@ -1,4 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
+
 export const meta: MetaFunction = () => {
   return [
     { title: "My Stuff" },
@@ -7,9 +8,5 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
-  return (
-    <div className="h-full w-full">
-      
-    </div>
-  );
+  return <></>;
 }
