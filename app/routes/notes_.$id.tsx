@@ -3,6 +3,9 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import notesData from "../data/notes.json";
 import { formatRelativeTime } from "../utils/dateUtils";
+import { FaPlus } from "react-icons/fa";
+import { Menu, Transition } from "@headlessui/react";
+import { Fragment, useState } from "react";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Note Details" }];
@@ -39,6 +42,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
 export default function NoteDetails() {
   const { note } = useLoaderData<{ note: Note }>();
+  const [textSize, setTextSize] = useState<"sm" | "base" | "lg">("base");
+
+  const textSizeClasses = {
+    sm: "text-xs md:text-sm",
+    base: "text-sm md:text-base",
+    lg: "text-base md:text-lg",
+  };
 
   const renderContentWithLinks = (content: string) => {
     const linkRegex = /\[(.*?)\]\((.*?)\)/g;
@@ -77,7 +87,7 @@ export default function NoteDetails() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 md:px-10 pt-6">
         <div className="flex flex-col gap-2">
@@ -85,19 +95,19 @@ export default function NoteDetails() {
             {note.tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded"
+                className="inline-flex items-center rounded-md bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400 ring-1 ring-green-400/30 ring-inset"
               >
                 {tag}
               </span>
             ))}
           </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
             {note.title}
           </h1>
-          <div className="flex items-center text-gray-500 text-xs md:text-sm gap-2">
+          <div className="flex items-center text-gray-400 text-xs md:text-sm gap-2">
             <p>Created {formatRelativeTime(note.createdAt)}</p>
-            <div className="h-1 w-1 bg-gray-400 rounded-full"></div>
-            <p>Updated {formatRelativeTime(note.updatedAt)}</p>
+            <div className="h-1 w-1 bg-gray-500 rounded-full"></div>
+            <p>Last modified {formatRelativeTime(note.updatedAt)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -106,7 +116,7 @@ export default function NoteDetails() {
               key={owner.id}
               alt={owner.name}
               src={owner.avatar}
-              className="w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-white shadow"
+              className="w-6 h-6 md:w-8 md:h-8 rounded-full ring-2 ring-gray-800"
               title={owner.name}
             />
           ))}
@@ -114,36 +124,38 @@ export default function NoteDetails() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row px-4 md:px-10 py-8 gap-4 md:gap-8">
-        {/* Sidebar */}
-        <aside className="w-full md:w-1/3 md:max-w-xs flex flex-col gap-4">
-          <button className="flex items-center gap-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md shadow transition-colors">
-            ➕ Add Element
-          </button>
-          {/* Additional sidebar content can be added here */}
-        </aside>
-
+      <div className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-16">
         {/* Note Body */}
         <div className="flex-1 flex flex-col gap-6">
           {note.body.map((item, index) => (
             <div key={index}>
               {item.type === "heading" && (
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl md:text-2xl font-bold text-white mt-6 mb-2">
                   {item.content}
                 </h2>
               )}
               {item.type === "subheading" && (
-                <h3 className="text-lg md:text-xl font-semibold text-gray-700">
+                <h3 className="text-lg md:text-xl font-semibold text-white mt-4 mb-2">
                   {item.content}
                 </h3>
               )}
               {item.type === "paragraph" && (
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                <p
+                  className={`text-gray-300 leading-relaxed ${
+                    textSizeClasses[textSize]
+                  } ${
+                    index === 0
+                      ? "bg-yellow-800/50 p-4 rounded-md text-yellow-200"
+                      : ""
+                  }`}
+                >
                   {renderContentWithLinks(item.content as string)}
                 </p>
               )}
               {item.type === "list" && Array.isArray(item.content) && (
-                <ul className="list-disc pl-6 text-gray-600 space-y-2 text-sm md:text-base">
+                <ul
+                  className={`list-disc pl-6 text-gray-300 space-y-2 ${textSizeClasses[textSize]}`}
+                >
                   {item.content.map((li, i) => (
                     <li key={i}>
                       {renderContentWithLinks(li.replace(/^[0-9a-z]\.\s/, ""))}
@@ -152,7 +164,9 @@ export default function NoteDetails() {
                 </ul>
               )}
               {item.type === "code" && (
-                <pre className="bg-gray-100 rounded-md p-4 text-xs md:text-sm overflow-x-auto">
+                <pre
+                  className={`bg-gray-800 rounded-md p-4 text-gray-200 overflow-x-auto ${textSizeClasses[textSize]}`}
+                >
                   <code>{item.content}</code>
                 </pre>
               )}
@@ -161,20 +175,132 @@ export default function NoteDetails() {
         </div>
       </div>
 
-      {/* Footer Control Panel */}
-      <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-10 py-4 border-t bg-gray-50 text-gray-500 text-xs md:text-sm">
-        <div className="flex gap-2 md:gap-4 mb-2 md:mb-0">
-          <button className="hover:text-gray-800 transition-colors">
-            Aa - Small
-          </button>
-          <button className="hover:text-gray-800 transition-colors">
-            Aa - Medium
-          </button>
-          <button className="hover:text-gray-800 transition-colors">
-            Aa - Large
-          </button>
+      {/* Sticky Footer */}
+      <div className="sticky bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-600 shadow-md py-3 px-4 md:px-10">
+        <div className="flex items-center justify-between">
+          {/* Add Element Menu */}
+          <Menu as="div" className="relative inline-block text-left">
+            <Menu.Button className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+              <FaPlus className="text-lg" />
+              Add Element
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute left-0 bottom-12 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-gray-600 ring-opacity-50 focus:outline-none">
+                <div className="py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Add Heading
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Add Paragraph
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Add List
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Add Code Block
+                      </button>
+                    )}
+                  </Menu.Item>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
+
+          {/* Text Size Menu */}
+          <Menu as="div" className="relative inline-block text-left">
+            <Menu.Button className="text-gray-400 hover:text-white transition-colors">
+              Aa
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute right-0 bottom-12 w-32 rounded-md shadow-lg bg-gray-800 ring-1 ring-gray-600 ring-opacity-50 focus:outline-none">
+                <div className="py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => setTextSize("sm")}
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Small
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => setTextSize("base")}
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Medium
+                      </button>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={() => setTextSize("lg")}
+                        className={`${
+                          active ? "bg-gray-700 text-white" : "text-gray-300"
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        Large
+                      </button>
+                    )}
+                  </Menu.Item>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </Menu>
         </div>
-        <div>Last edited {formatRelativeTime(note.updatedAt)}</div>
       </div>
     </div>
   );
