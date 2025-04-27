@@ -1,3 +1,4 @@
+// app/root.tsx
 import {
   Links,
   Meta,
@@ -6,20 +7,22 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
-
-import "./tailwind.css";
+import styles from "./tailwind.css?url"; // Use ?url for Vite compatibility
+import SideBar from "./components/SideBar";
+import AppBar from "./components/AppBar";
 
 export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: styles },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
     href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
+    crossOrigin: "anonymous"
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+  }
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -32,7 +35,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="w-full h-screen overflow-hidden">
-        {children}
+        <div className="h-full w-full">
+          <AppBar />
+          <div className="w-full h-[92%] flex">
+            <SideBar />
+            <div className="w-full h-full">{children}</div>
+          </div>
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>
