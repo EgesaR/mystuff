@@ -3,9 +3,9 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import notesData from "../data/notes.json";
 import { formatRelativeTime } from "../utils/dateUtils";
-import { FaPlus } from "react-icons/fa";
-import { Menu, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { useState } from "react";
+import TextSizeMenu from "~/components/TextSizeMenu";
+import AddElementMenu from "~/components/AddElementMenu";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Note Details" }];
@@ -176,130 +176,13 @@ export default function NoteDetails() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="sticky bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-600 shadow-md py-3 px-4 md:px-10">
-        <div className="flex items-center justify-between">
+      <div className="sticky bottom-0 left-0 right-0 bg-dark border-t border-gray-600 shadow-md py-3 px-4 md:px-10">
+        <div className="flex items-center justify-end gap-12">
           {/* Add Element Menu */}
-          <Menu as="div" className="relative inline-block text-left">
-            <Menu.Button className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
-              <FaPlus className="text-lg" />
-              Add Element
-            </Menu.Button>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute left-0 bottom-12 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-gray-600 ring-opacity-50 focus:outline-none">
-                <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Add Heading
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Add Paragraph
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Add List
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Add Code Block
-                      </button>
-                    )}
-                  </Menu.Item>
-                </div>
-              </Menu.Items>
-            </Transition>
-          </Menu>
+          <AddElementMenu />
 
           {/* Text Size Menu */}
-          <Menu as="div" className="relative inline-block text-left">
-            <Menu.Button className="text-gray-400 hover:text-white transition-colors">
-              Aa
-            </Menu.Button>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 bottom-12 w-32 rounded-md shadow-lg bg-gray-800 ring-1 ring-gray-600 ring-opacity-50 focus:outline-none">
-                <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={() => setTextSize("sm")}
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Small
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={() => setTextSize("base")}
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Medium
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={() => setTextSize("lg")}
-                        className={`${
-                          active ? "bg-gray-700 text-white" : "text-gray-300"
-                        } group flex w-full items-center px-4 py-2 text-sm`}
-                      >
-                        Large
-                      </button>
-                    )}
-                  </Menu.Item>
-                </div>
-              </Menu.Items>
-            </Transition>
-          </Menu>
+          <TextSizeMenu setTextSize={setTextSize} />
         </div>
       </div>
     </div>
