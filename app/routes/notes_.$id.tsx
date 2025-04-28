@@ -1,46 +1,22 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import notesData from "../data/notes.json";
-import { formatRelativeTime } from "../utils/dateUtils";
 import { useState } from "react";
-import TextSizeMenu from "~/components/TextSizeMenu";
-import AddElementMenu from "~/components/AddElementMenu";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import { HiPencil } from "react-icons/hi";
+import { AnimatePresence, motion } from "framer-motion";
+import notesData from "~/data/notes.json";
+import TextSizeMenu from "~/components/TextSizeMenu";
+import AddElementMenu from "~/components/AddElementMenu";
+import { Form } from "~/components/Form";
+import { formatRelativeTime } from "~/utils/dateUtils";
+import type { Note, NoteBody } from "../types/notes";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const note = data?.note as Note;
   return [{ title: note ? `${note.title} - Notes` : "Notes" }];
 };
-
-interface Owner {
-  id: string;
-  name: string;
-  avatar: string;
-}
-
-interface TextNoteBody {
-  type: "heading" | "subheading" | "paragraph" | "code";
-  content: string;
-}
-
-interface ListNoteBody {
-  type: "list";
-  content: string[];
-}
-
-type NoteBody = TextNoteBody | ListNoteBody;
-
-interface Note {
-  id: string;
-  title: string;
-  body: NoteBody[];
-  updatedAt: string;
-  createdAt: string;
-  owners: Owner[];
-  tags: string[];
-}
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const note = notesData.find((n) => n.id === params.id);
@@ -55,11 +31,13 @@ export default function NoteDetails() {
   const [textSize, setTextSize] = useState<"sm" | "base" | "lg">("base");
   const [noteBody, setNoteBody] = useState<NoteBody[]>(note.body);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedElementType, setSelectedElementType] = useState<string | null>(
-    null
-  );
+  const [selectedElementType, setSelectedElementType] = useState<
+    "heading" | "subheading" | "paragraph" | "code" | "list" | null
+  >(null);
   const [formContent, setFormContent] = useState<string>("");
   const [listItems, setListItems] = useState<string[]>([""]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const textSizeClasses = {
     sm: "text-xs md:text-sm",
@@ -67,7 +45,9 @@ export default function NoteDetails() {
     lg: "text-base md:text-lg",
   };
 
-  const openModal = (type: string) => {
+  const openModal = (
+    type: "heading" | "subheading" | "paragraph" | "code" | "list"
+  ) => {
     setSelectedElementType(type);
     setFormContent("");
     setListItems([""]);
@@ -100,11 +80,7 @@ export default function NoteDetails() {
     } else {
       if (!formContent.trim()) return;
       newElement = {
-        type: selectedElementType as
-          | "heading"
-          | "subheading"
-          | "paragraph"
-          | "code",
+        type: selectedElementType,
         content: formContent,
       };
     }
@@ -112,13 +88,58 @@ export default function NoteDetails() {
     const updatedBody = [...noteBody, newElement];
     setNoteBody(updatedBody);
 
-    // Simulate saving to notesData (in a real app, this would be an API call)
     const noteIndex = notesData.findIndex((n) => n.id === note.id);
     if (noteIndex !== -1) {
       notesData[noteIndex] = { ...note, body: updatedBody };
     }
 
     closeModal();
+  };
+
+  const openEditForm = (index: number) => {
+    setEditIndex(index);
+    const item = noteBody[index];
+    setSelectedElementType(item.type);
+    if (item.type === "list") {
+      setListItems(item.content);
+    } else {
+      setFormContent(item.content as string);
+    }
+  };
+
+  const closeEditForm = () => {
+    setEditIndex(null);
+    setFormContent("");
+    setListItems([""]);
+    setSelectedElementType(null);
+  };
+
+  const updateElement = () => {
+    if (editIndex === null || !selectedElementType) return;
+
+    let updatedElement: NoteBody;
+    if (selectedElementType === "list") {
+      const filteredItems = listItems.filter((item) => item.trim() !== "");
+      if (filteredItems.length === 0) return;
+      updatedElement = { type: "list", content: filteredItems };
+    } else {
+      if (!formContent.trim()) return;
+      updatedElement = {
+        type: selectedElementType,
+        content: formContent,
+      };
+    }
+
+    const updatedBody = [...noteBody];
+    updatedBody[editIndex] = updatedElement;
+    setNoteBody(updatedBody);
+
+    const noteIndex = notesData.findIndex((n) => n.id === note.id);
+    if (noteIndex !== -1) {
+      notesData[noteIndex] = { ...note, body: updatedBody };
+    }
+
+    closeEditForm();
   };
 
   const renderContentWithLinks = (content: string) => {
@@ -194,67 +215,100 @@ export default function NoteDetails() {
         </div>
       </div>
 
-      {/* Main Content with Custom Scrollbar */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-16 overflow-y-auto pr-4 scrollbar-thin scrollbar-color-[var(--thumb-color,#4b5563)_var(--track-color,#1f2937)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-        {/* Note Body */}
         <div className="flex-1 flex flex-col gap-6">
-          {noteBody.map((item, index) => (
-            <div key={index}>
-              {item.type === "heading" && (
-                <h2 className="text-xl md:text-2xl font-normal text-white mt-6 mb-2">
-                  {item.content}
-                </h2>
-              )}
-              {item.type === "subheading" && (
-                <h3 className="text-lg md:text-xl font-light text-white mt-4 mb-2">
-                  {item.content}
-                </h3>
-              )}
-              {item.type === "paragraph" && (
-                <p
-                  className={`text-gray-300 leading-relaxed ${
-                    textSizeClasses[textSize]
-                  } ${
-                    index === 0
-                      ? "bg-yellow-800/50 p-4 rounded-md text-yellow-200"
-                      : ""
-                  }`}
-                >
-                  {renderContentWithLinks(item.content as string)}
-                </p>
-              )}
-              {item.type === "list" && Array.isArray(item.content) && (
-                <ul
-                  className={`list-disc pl-6 text-gray-300 space-y-2 ${textSizeClasses[textSize]}`}
-                >
-                  {item.content.map((li, i) => (
-                    <li key={i}>
-                      {renderContentWithLinks(li.replace(/^[0-9a-z]\.\s/, ""))}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {item.type === "code" && (
-                <pre
-                  className={`bg-gray-800 rounded-md p-4 text-gray-200 overflow-x-auto ${textSizeClasses[textSize]}`}
-                >
-                  <code>{item.content}</code>
-                </pre>
-              )}
-            </div>
-          ))}
+          <AnimatePresence>
+            {noteBody.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 25 }}
+                className="relative group"
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                {editIndex === index ? (
+                  <Form
+                    elementType={selectedElementType!}
+                    initialContent={formContent}
+                    initialListItems={listItems}
+                    setContent={setFormContent}
+                    setListItems={setListItems}
+                    onSubmit={updateElement}
+                    onCancel={closeEditForm}
+                  />
+                ) : (
+                  <>
+                    {hoveredIndex === index && (
+                      <button
+                        onClick={() => openEditForm(index)}
+                        className="absolute top-0 right-0 p-2 text-gray-400 hover:text-white"
+                      >
+                        <HiPencil className="w-5 h-5" />
+                      </button>
+                    )}
+                    {item.type === "heading" && (
+                      <h2 className="text-xl md:text-2xl font-normal text-white mt-6 mb-2">
+                        {item.content}
+                      </h2>
+                    )}
+                    {item.type === "subheading" && (
+                      <h3 className="text-lg md:text-xl font-light text-white mt-4 mb-2">
+                        {item.content}
+                      </h3>
+                    )}
+                    {item.type === "paragraph" && (
+                      <p
+                        className={`text-gray-300 leading-relaxed ${
+                          textSizeClasses[textSize]
+                        } ${
+                          index === 0
+                            ? "bg-yellow-800/50 p-4 rounded-md text-yellow-200"
+                            : ""
+                        }`}
+                      >
+                        {renderContentWithLinks(item.content as string)}
+                      </p>
+                    )}
+                    {item.type === "list" && Array.isArray(item.content) && (
+                      <ul
+                        className={`list-disc pl-6 text-gray-300 space-y-2 ${textSizeClasses[textSize]}`}
+                      >
+                        {item.content.map((li, i) => (
+                          <li key={i}>
+                            {renderContentWithLinks(
+                              li.replace(/^[0-9a-z]\.\s/, "")
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {item.type === "code" && (
+                      <pre
+                        className={`bg-gray-800 rounded-md p-4 text-gray-200 overflow-x-auto ${textSizeClasses[textSize]}`}
+                      >
+                        <code>{item.content}</code>
+                      </pre>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Sticky Footer */}
-      <div className="sticky bottom-0 left-0 right-0 bg-gray-900 w-full shadow-md py-3 px-4 md:px-2">
+      <div className="sticky bottom-0 left-0 right-0 bg-zinc-900 w-full shadow-md py-3 px-4 md:px-2">
         <div className="flex items-center justify-end gap-8">
           <AddElementMenu openModal={openModal} />
           <TextSizeMenu setTextSize={setTextSize} />
         </div>
       </div>
 
-      {/* Modal for Adding Elements */}
+      {/* Modal */}
       <Transition appear show={isModalOpen} as={Fragment}>
         <Dialog as="div" className="relative z-10" onClose={closeModal}>
           <Transition.Child

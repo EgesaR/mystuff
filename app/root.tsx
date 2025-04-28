@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <AppBar />
           <div className="w-full h-[90%] flex gap-5 p-5">
             <SideBar />
-            <div className="w-full h-full bg-gray-900 rounded-t-2xl pr-3">
+            <div className="w-full h-full bg-zinc-900 rounded-t-2xl pr-3">
               <div className="h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-color-[var(--thumb-color,#3b82f6)_var(--track-color,#dc2626)] [&::-webkit-scrollbar]:ml-20 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-red-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-blue-500 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                 {children}
               </div>

@@ -67,7 +67,6 @@ export default function Index() {
         <Loader />
       ) : (
         <Suspense fallback={<Loader />}>
-          <Form setTodos={setTodos} isDisabled={isLoading} />
         </Suspense>
       )}
     </ErrorBoundary>
