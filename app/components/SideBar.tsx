@@ -1,10 +1,47 @@
-import React from "react";
 import { CiStickyNote } from "react-icons/ci";
+import { FaSearch } from "react-icons/fa";
+import { FiCommand } from "react-icons/fi";
 import { HiOutlineClock } from "react-icons/hi";
 import { IoIosAddCircle, IoIosSearch } from "react-icons/io";
+import { IoAddCircleOutline } from "react-icons/io5";
 import { PiHashStraightBold } from "react-icons/pi";
-import { FiCommand } from "react-icons/fi";
 import { Link, useNavigate } from "@remix-run/react";
+
+const SideBar = () => {
+  return (
+    <div className="h-full w-[18%] py-4 px-1 flex flex-col justify-between pt-6">
+      <div className="flex flex-col gap-1">
+        <SideBarBtn text="Search" icon={<IoIosSearch />} command_icon="S" />
+        <SideBarBtn text="Recent" icon={<HiOutlineClock />} command_icon="R" />
+        <div className="flex flex-col gap-4 mt-8">
+          <h1 className="uppercase text-gray-400 px-3 text-sm">Workspace</h1>
+          <div className="flex flex-col gap-1.5">
+            <SideBarBtn
+              text="Notes"
+              icon={<CiStickyNote />}
+              command_icon={"N + /"}
+              to="/notes"
+            />
+            <SideBarBtn
+              text="Tasks"
+              icon={<PiHashStraightBold />}
+              command_icon={"N + /"}
+              to="/tasks"
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <SideBarBtn
+          text="New Page"
+          icon={<IoIosAddCircle />}
+          command_icon={"N"}
+          onClick={() => console.log("Create new page")}
+        />
+      </div>
+    </div>
+  );
+};
 
 interface SideBarBtnProps {
   text: string;
@@ -31,79 +68,48 @@ const SideBarBtn = ({
     }
   };
 
-  const buttonContent = (
-    <div className="w-full h-8 flex items-center justify-between px-2 sm:px-3 rounded-md group hover:bg-gray-300/30">
-      <div className="flex items-center gap-2 sm:gap-3">
-        {React.cloneElement(icon as React.ReactElement, {
-          className: "text-lg sm:text-xl md:text-2xl",
-        })}
-        <label className="text-xs sm:text-sm md:text-base">{text}</label>
-      </div>
-      <span className="flex flex-wrap items-center gap-x-1 text-[12px] sm:text-[14px] md:text-[15px] text-gray-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
-        <kbd className="min-h-6 sm:min-h-7 inline-flex justify-center items-center font-mono text-[10px] sm:text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
-          <FiCommand className="text-sm sm:text-base" />
-        </kbd>
-        +
-        <kbd className="min-h-6 sm:min-h-7 inline-flex justify-center items-center font-mono text-[10px] sm:text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
-          {command_icon}
-        </kbd>
-      </span>
-    </div>
-  );
-
+  // If there's a 'to' prop, wrap the button in a Link for better accessibility and prefetching
   if (to) {
     return (
       <Link to={to} className="w-full">
-        {buttonContent}
+        <div className="w-full h-8 flex items-center justify-between px-3 rounded-md group hover:bg-gray-300/30">
+          <div className="flex items-center gap-3">
+            {icon}
+            <label className="text-sm">{text}</label>
+          </div>
+          <span className="flex flex-wrap items-center gap-x-1 text-[15px] text-gray-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+            <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+              <FiCommand />
+            </kbd>
+            +
+            <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+              {command_icon}
+            </kbd>
+          </span>
+        </div>
       </Link>
     );
   }
 
   return (
     <button
-      className="w-full h-8 flex items-center justify-between px-2 sm:px-3 rounded-md group hover:bg-gray-300/30"
+      className="w-full h-8 flex items-center justify-between px-3 rounded-md group hover:bg-gray-300/30"
       onClick={handleClick}
     >
-      {buttonContent}
+      <div className="flex items-center gap-3">
+        {icon}
+        <label className="text-sm">{text}</label>
+      </div>
+      <span className="flex flex-wrap items-center gap-x-1 text-[15px] text-gray-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+        <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+          <FiCommand />
+        </kbd>
+        +
+        <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+          {command_icon}
+        </kbd>
+      </span>
     </button>
-  );
-};
-
-const SideBar = () => {
-  return (
-    <div className="h-full border-r border-gray-500 w-full md:w-48 lg:w-64 bg-gray-800 py-3 sm:py-4 px-1 sm:px-2 flex flex-col justify-between pt-4 sm:pt-6">
-      <div className="flex flex-col gap-1 sm:gap-2">
-        <SideBarBtn text="Search" icon={<IoIosSearch />} command_icon="S" />
-        <SideBarBtn text="Recent" icon={<HiOutlineClock />} command_icon="R" />
-        <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8">
-          <h1 className="uppercase text-gray-400 px-2 sm:px-3 text-xs sm:text-sm">
-            Workspace
-          </h1>
-          <div className="flex flex-col gap-1 sm:gap-1.5">
-            <SideBarBtn
-              text="Notes"
-              icon={<CiStickyNote />}
-              command_icon="N + /"
-              to="/notes"
-            />
-            <SideBarBtn
-              text="Tasks"
-              icon={<PiHashStraightBold />}
-              command_icon="N + /"
-              to="/tasks"
-            />
-          </div>
-        </div>
-      </div>
-      <div>
-        <SideBarBtn
-          text="New Page"
-          icon={<IoIosAddCircle />}
-          command_icon="N"
-          onClick={() => console.log("Create new page")}
-        />
-      </div>
-    </div>
   );
 };
 

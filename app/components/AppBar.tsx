@@ -2,13 +2,13 @@ import React from "react";
 import { FaBars } from "react-icons/fa";
 
 interface AppBarProps {
-  toggleSidebar: () => void;
-  isSidebarOpen: boolean;
+  toggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 const AppBar = ({ toggleSidebar, isSidebarOpen }: AppBarProps) => {
   return (
-    <div className="w-full h-[8%] border-b border-gray-500 flex items-center justify-between px-2 sm:px-3 md:px-4 bg-gray-900 text-white">
+    <div className="w-full h-[10%] flex items-center justify-between px-2 sm:px-3 md:px-4 text-white">
       {/* Hamburger Menu for Mobile */}
       <button
         onClick={toggleSidebar}

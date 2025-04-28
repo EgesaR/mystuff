@@ -3,15 +3,18 @@ import { Fragment } from "react";
 import { FaPlus } from "react-icons/fa";
 
 interface AddElementMenuProps {
-  openModal: (type: string) => void;
+  openModal: (
+    type: string,
+    index?: number,
+    content?: string | string[]
+  ) => void;
 }
 
 export default function AddElementMenu({ openModal }: AddElementMenuProps) {
   return (
     <Menu as="div" className="relative inline-block text-left">
-      <Menu.Button className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+      <Menu.Button className="flex items-center justify-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors bg-gray-800/10 dark:bg-gray-200/10 h-[33px] w-[33px] rounded-full ">
         <FaPlus className="text-xl text-white hover:text-gray-300 transition-colors" />
-        Add Element
       </Menu.Button>
       <Transition
         as={Fragment}

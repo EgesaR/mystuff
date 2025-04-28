@@ -46,7 +46,7 @@ export default function NotesPage() {
 
   return (
     <div className="h-full w-full flex">
-      <div className="py-5 pt-8 px-6 flex flex-col gap-2.5 w-full">
+      <div className="py-5 pt-8 px-6 flex flex-col gap-4 w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-medium text-gray-900 dark:text-neutral-100">
             Notes

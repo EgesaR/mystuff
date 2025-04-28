@@ -9,8 +9,9 @@ import AddElementMenu from "~/components/AddElementMenu";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 
-export const meta: MetaFunction = () => {
-  return [{ title: "Note Details" }];
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  const note = data?.note as Note;
+  return [{ title: note ? `${note.title} - Notes` : "Notes" }];
 };
 
 interface Owner {
@@ -115,8 +116,6 @@ export default function NoteDetails() {
     const noteIndex = notesData.findIndex((n) => n.id === note.id);
     if (noteIndex !== -1) {
       notesData[noteIndex] = { ...note, body: updatedBody };
-      // In a real app, you'd make an API call here to save the updated notesData
-      // Example: await fetch('/api/saveNote', { method: 'POST', body: JSON.stringify(notesData[noteIndex]) });
     }
 
     closeModal();
@@ -195,8 +194,8 @@ export default function NoteDetails() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-16">
+      {/* Main Content with Custom Scrollbar */}
+      <div className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-16 overflow-y-auto pr-4 scrollbar-thin scrollbar-color-[var(--thumb-color,#4b5563)_var(--track-color,#1f2937)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
         {/* Note Body */}
         <div className="flex-1 flex flex-col gap-6">
           {noteBody.map((item, index) => (
@@ -248,8 +247,8 @@ export default function NoteDetails() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="sticky bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-600 shadow-md py-3 px-4 md:px-10">
-        <div className="flex items-center justify-end gap-12">
+      <div className="sticky bottom-0 left-0 right-0 bg-gray-900 w-full shadow-md py-3 px-4 md:px-2">
+        <div className="flex items-center justify-end gap-8">
           <AddElementMenu openModal={openModal} />
           <TextSizeMenu setTextSize={setTextSize} />
         </div>
