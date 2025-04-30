@@ -2,7 +2,7 @@ import type { MetaFunction } from "@remix-run/node";
 import { useNavigation } from "@remix-run/react";
 import { useState, Suspense } from "react";
 import { Form } from "~/components/Form";
-import Loader from "~/components/Loader";
+import Spinner from "~/components/Spinner";
 
 export const meta: MetaFunction = () => {
   return [
@@ -64,9 +64,9 @@ export default function Index() {
   return (
     <ErrorBoundary>
       {isLoading ? (
-        <Loader />
+        <Spinner size={60} strokeWidth={6} color="#0071c2" />
       ) : (
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Spinner size={60} strokeWidth={6} color="#0071c2" />}>
         </Suspense>
       )}
     </ErrorBoundary>
