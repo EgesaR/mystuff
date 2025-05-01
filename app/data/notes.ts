@@ -51,11 +51,16 @@ const validateNotes = (data: any[]): Note[] => {
   return validNotes;
 };
 
-// Pre-validate notes data
-const notes: Note[] = validateNotes(notesData);
+// In-memory notes store
+let notes: Note[] = validateNotes(notesData);
 
 export const getNotes = async () => {
   console.log("Getting notes");
   console.log("Got all notes");
   return notes;
+};
+
+export const createNote = async (note: Note) => {
+  notes = [...notes, note];
+  return note;
 };
