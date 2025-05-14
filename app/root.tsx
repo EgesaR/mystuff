@@ -1,35 +1,37 @@
+import React, { useState, useEffect } from "react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import type { LinksFunction } from "@remix-run/node";
 import AppBar from "~/components/AppBar";
 import SideBar from "~/components/SideBar";
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
-import React, { useState } from "react";
-import type { LinksFunction } from "@remix-run/node";
 import styles from "./tailwind.css?url";
+import { useIsMobile } from "~/hooks/useIsMobile";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossorigin: "anonymous",
-  },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
   {
     rel: "stylesheet",
-    href:
-      "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  useEffect(() => {
+    // Only set sidebarOpen on initial render or mode change, unless user has interacted
+    if (!hasInteracted) {
+      setSidebarOpen(!isMobile);
+    }
+  }, [isMobile, hasInteracted]);
+
+  const toggleSidebar = () => {
+    setHasInteracted(true);
+    setSidebarOpen((prev) => !prev);
+  };
 
   return (
     <html lang="en">
@@ -42,9 +44,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body className="w-full h-screen overflow-hidden">
         <div className="h-full w-full overflow-hidden">
           <AppBar toggleSidebar={toggleSidebar} isSidebarOpen={sidebarOpen} />
-          <div className="w-full h-[91%] flex gap-5 pt-0 px-0 sm:p-5 relative">
-            <SideBar toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-            <div className="w-full h-full bg-zinc-900 sm:rounded-t-2xl sm:pr-3">
+          <div className="w-full h-[90%] flex relative pr-4 gap-4">
+            <SideBar
+              toggleSidebar={toggleSidebar}
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+            <div
+              className={`h-full bg-zinc-900 sm:rounded-t-2xl sm:pr-3 min-w-0 ${
+                isMobile && !sidebarOpen ? "w-full" : "flex-1"
+              }`}
+            >
               <div className="h-full overflow-y-auto sm:pr-4 scrollbar-thin [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-red-600 [&::-webkit-scrollbar-thumb]:bg-blue-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                 {children}
               </div>
