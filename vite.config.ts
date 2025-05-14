@@ -1,5 +1,5 @@
-import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
+import { vitePlugin as remix } from "@remix-run/dev";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 declare module "@remix-run/node" {
@@ -22,13 +22,28 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   css: {
-    postcss: "./postcss.config.js"
+    postcss: "./postcss.config.js",
   },
   server: {
     port: 8000,
     hmr: {
       protocol: "ws",
       host: "localhost",
+    },
+  },
+  esbuild: {
+    jsx: "automatic", // Handle JSX automatically for .tsx files
+  },
+  resolve: {
+    extensions: [".js", ".jsx", ".ts", ".tsx"], // Ensure Vite resolves these extensions
+  },
+  build: {
+    rollupOptions: {
+      onLog(level, log) {
+        if (log.message.includes("Failed to parse source")) {
+          console.error("Import analysis error:", log);
+        }
+      },
     },
   },
 });

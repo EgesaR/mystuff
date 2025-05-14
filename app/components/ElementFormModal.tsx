@@ -1,10 +1,15 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState, useEffect } from "react";
+import { Form } from "~/components/Form";
 
 interface ElementFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  element: { type: string; index?: number; content?: string | string[] } | null;
+  element: {
+    type: "heading" | "subheading" | "paragraph" | "code" | "list";
+    index: number | null;
+    content: string | string[];
+  } | null;
   onSave: (type: string, content: string | string[], index?: number) => void;
 }
 
@@ -20,9 +25,15 @@ export default function ElementFormModal({
   useEffect(() => {
     if (element?.content) {
       if (element.type === "list") {
-        setListItems(element.content as string[]);
+        setListItems(
+          Array.isArray(element.content) && element.content.length > 0
+            ? element.content
+            : [""]
+        );
+        setFormContent("");
       } else {
         setFormContent(element.content as string);
+        setListItems([""]);
       }
     } else {
       setFormContent("");
@@ -30,20 +41,15 @@ export default function ElementFormModal({
     }
   }, [element]);
 
-  const addListItem = () => {
-    setListItems([...listItems, ""]);
-  };
-
-  const updateListItem = (index: number, value: string) => {
-    const newItems = [...listItems];
-    newItems[index] = value;
-    setListItems(newItems);
-  };
-
   const handleSave = () => {
-    if (!element?.type) return;
+    if (!element?.type) {
+      console.error("No element type provided");
+      return;
+    }
     const content = element.type === "list" ? listItems : formContent;
+    console.log("Saving:", { type: element.type, content, index: element.index });
     onSave(element.type, content, element.index);
+    onClose();
   };
 
   return (
@@ -78,64 +84,25 @@ export default function ElementFormModal({
                   className="text-lg font-medium leading-6 text-white"
                 >
                   {element?.type
-                    ? `${element.index !== undefined ? "Edit" : "Add"} ${
+                    ? `${element.index !== null ? "Edit" : "Add"} ${
                         element.type.charAt(0).toUpperCase() +
                         element.type.slice(1)
                       }`
                     : "Add Element"}
                 </Dialog.Title>
                 <div className="mt-4">
-                  {element?.type === "list" ? (
-                    <div className="space-y-3">
-                      {listItems.map((item, index) => (
-                        <input
-                          key={index}
-                          type="text"
-                          value={item}
-                          onChange={(e) =>
-                            updateListItem(index, e.target.value)
-                          }
-                          placeholder={`Item ${index + 1}`}
-                          className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                        />
-                      ))}
-                      <button
-                        type="button"
-                        onClick={addListItem}
-                        className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
-                      >
-                        Add List Item
-                      </button>
-                    </div>
-                  ) : (
-                    <textarea
-                      value={formContent}
-                      onChange={(e) => setFormContent(e.target.value)}
-                      placeholder={
-                        element?.type
-                          ? `Enter ${element.type} content...`
-                          : "Enter content..."
-                      }
-                      rows={4}
-                      className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  {element && (
+                    <Form
+                      elementType={element.type}
+                      initialContent={formContent}
+                      initialListItems={listItems}
+                      setContent={setFormContent}
+                      setListItems={setListItems}
+                      onSubmit={handleSave}
+                      onCancel={onClose}
+                      isEditing={element.index !== null}
                     />
                   )}
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                    onClick={handleSave}
-                  >
-                    {element?.index !== undefined ? "Save" : "Add"}
-                  </button>
                 </div>
               </Dialog.Panel>
             </Transition.Child>

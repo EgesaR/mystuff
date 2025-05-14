@@ -1,0 +1,1870 @@
+When i load /notes on the sidebar it takes me back to / or home and when i go there using the search bar it shows the notecard skeleton the it shows the cards but the text isn't showing and when i go to the specific note it doesn't show the loading notes plus it doesn't shiw the title of the note page on the browswer tab plus when i try editing one the elements both the modal and form show up yet i want the modal to show up when adding elements and the form to showup when updating anf also when i pressed update the updated text didn't show up and when looking the terminal i saw the data is show but checking on the dom the it shiws the text but the animation variants aren't update so can u fix these issues permanently so that i can continue with other parts of the projectz: import { Menu, Transition } from "@headlessui/react";
+import { Fragment } from "react";
+import { FaPlus } from "react-icons/fa";
+
+interface AddElementMenuProps {
+  openModal: (
+    type: string,
+    index?: number,
+    content?: string | string[]
+  ) => void;
+}
+
+export default function AddElementMenu({ openModal }: AddElementMenuProps) {
+  return (
+    <Menu as="div" className="relative inline-block text-left">
+      <Menu.Button className="flex items-center justify-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors bg-gray-800/10 dark:bg-gray-200/10 h-[33px] w-[33px] rounded-full ">
+        <FaPlus className="text-xl text-white hover:text-gray-300 transition-colors" />
+      </Menu.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items className="absolute right-0 bottom-12 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-gray-600 ring-opacity-50 focus:outline-none">
+          <div className="py-1">
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  onClick={() => openModal("heading")}
+                  className={`${
+                    active ? "bg-gray-700 text-white" : "text-gray-300"
+                  } group flex w-full items-center px-4 py-2 text-sm`}
+                >
+                  Add Heading
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  onClick={() => openModal("paragraph")}
+                  className={`${
+                    active ? "bg-gray-700 text-white" : "text-gray-300"
+                  } group flex w-full items-center px-4 py-2 text-sm`}
+                >
+                  Add Paragraph
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  onClick={() => openModal("list")}
+                  className={`${
+                    active ? "bg-gray-700 text-white" : "text-gray-300"
+                  } group flex w-full items-center px-4 py-2 text-sm`}
+                >
+                  Add List
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  onClick={() => openModal("code")}
+                  className={`${
+                    active ? "bg-gray-700 text-white" : "text-gray-300"
+                  } group flex w-full items-center px-4 py-2 text-sm`}
+                >
+                  Add Code Block
+                </button>
+              )}
+            </Menu.Item>
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
+}
+, import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+
+export const Form = ({
+ elementType,
+ initialContent = "",
+ initialListItems = [""],
+ setContent,
+ setListItems,
+ onSubmit,
+ onCancel
+}: {
+ elementType: "heading" | "subheading" | "paragraph" | "code" | "list";
+ initialContent?: string;
+ initialListItems?: string[];
+ setContent: (content: string) => void;
+ setListItems: (items: string[]) => void;
+ onSubmit: () => void;
+ onCancel: () => void;
+}) => {
+ const [text, setText] = useState(initialContent);
+ const [listItems, setLocalListItems] = useState<string[]>(initialListItems);
+
+ const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  onSubmit();
+ };
+
+ const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  setText(e.target.value);
+  setContent(e.target.value);
+ };
+
+ const handleListItemChange = (index: number, value: string) => {
+  const newItems = [...listItems];
+  newItems[index] = value;
+  setLocalListItems(newItems);
+  setListItems(newItems);
+ };
+
+ const addListItem = () => {
+  const newItems = [...listItems, ""];
+  setLocalListItems(newItems);
+  setListItems(newItems);
+ };
+
+ return (
+  <AnimatePresence>
+   <motion.form
+    initial={{ opacity: 0, y: 25 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 25 }}
+    onSubmit={handleSubmit}
+    className="w-full rounded border border-zinc-700 bg-zinc-900 p-3"
+   >
+    {elementType === "list" ? (
+     <div className="space-y-3">
+      {listItems.map((item, index) => (
+       <input
+        key={index}
+        type="text"
+        value={item}
+        onChange={e => handleListItemChange(index, e.target.value)}
+        placeholder={`Item ${index + 1}`}
+        className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+       />
+      ))}
+      <button
+       type="button"
+       onClick={addListItem}
+       className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+      >
+       Add List Item
+      </button>
+     </div>
+    ) : (
+     <textarea
+      value={text}
+      onChange={handleTextChange}
+      placeholder={`Enter ${elementType} content...`}
+      className="h-24 w-full resize-none rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+     />
+    )}
+    <div className="flex items-center justify-end gap-3 mt-3">
+     <button
+      type="button"
+      onClick={onCancel}
+      className="rounded px-1.5 py-1 text-xs bg-zinc-300/20 text-zinc-300 transition-colors hover:bg-zinc-600 hover:text-zinc-200"
+     >
+      Cancel
+     </button>
+     <button
+      type="submit"
+      className="rounded bg-orange-600 px-1.5 py-1 text-xs text-orange-50 transition-colors hover:bg-orange-500"
+     >
+      Update
+     </button>
+    </div>
+   </motion.form>
+  </AnimatePresence>
+ );
+};
+, import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useState, useEffect } from "react";
+
+interface ElementFormModalProps {
+ isOpen: boolean;
+ onClose: () => void;
+ element: { type: string; index?: number; content?: string | string[] } | null;
+ onSave: (type: string, content: string | string[], index?: number) => void;
+}
+
+export default function ElementFormModal({
+ isOpen,
+ onClose,
+ element,
+ onSave
+}: ElementFormModalProps) {
+ const [formContent, setFormContent] = useState<string>("");
+ const [listItems, setListItems] = useState<string[]>([""]);
+
+ useEffect(() => {
+  if (element?.content) {
+   if (element.type === "list") {
+    setListItems(element.content as string[]);
+   } else {
+    setFormContent(element.content as string);
+   }
+  } else {
+   setFormContent("");
+   setListItems([""]);
+  }
+ }, [element]);
+
+ const addListItem = () => {
+  setListItems([...listItems, ""]);
+ };
+
+ const updateListItem = (index: number, value: string) => {
+  const newItems = [...listItems];
+  newItems[index] = value;
+  setListItems(newItems);
+ };
+
+ const handleSave = () => {
+  if (!element?.type) return;
+  const content = element.type === "list" ? listItems : formContent;
+  onSave(element.type, content, element.index);
+ };
+
+ return (
+  <Transition appear show={isOpen} as={Fragment}>
+   <Dialog as="div" className="relative z-10" onClose={onClose}>
+    <Transition.Child
+     as={Fragment}
+     enter="ease-out duration-300"
+     enterFrom="opacity-0"
+     enterTo="opacity-100"
+     leave="ease-in duration-200"
+     leaveFrom="opacity-100"
+     leaveTo="opacity-0"
+    >
+     <div className="fixed inset-0 bg-black bg-opacity-50" />
+    </Transition.Child>
+
+    <div className="fixed inset-0 overflow-y-auto">
+     <div className="flex min-h-full items-center justify-center p-4 text-center">
+      <Transition.Child
+       as={Fragment}
+       enter="ease-out duration-300"
+       enterFrom="opacity-0 scale-95"
+       enterTo="opacity-100 scale-100"
+       leave="ease-in duration-200"
+       leaveFrom="opacity-100 scale-100"
+       leaveTo="opacity-0 scale-95"
+      >
+       <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-md bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+        <Dialog.Title
+         as="h3"
+         className="text-lg font-medium leading-6 text-white"
+        >
+         {element?.type
+          ? `${element.index !== undefined ? "Edit" : "Add"} ${
+             element.type.charAt(0).toUpperCase() + element.type.slice(1)
+            }`
+          : "Add Element"}
+        </Dialog.Title>
+        <div className="mt-4">
+         {element?.type === "list" ? (
+          <div className="space-y-3">
+           {listItems.map((item, index) => (
+            <input
+             key={index}
+             type="text"
+             value={item}
+             onChange={e => updateListItem(index, e.target.value)}
+             placeholder={`Item ${index + 1}`}
+             className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            />
+           ))}
+           <button
+            type="button"
+            onClick={addListItem}
+            className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+           >
+            Add List Item
+           </button>
+          </div>
+         ) : (
+          <textarea
+           value={formContent}
+           onChange={e => setFormContent(e.target.value)}
+           placeholder={
+            element?.type
+             ? `Enter ${element.type} content...`
+             : "Enter content..."
+           }
+           rows={4}
+           className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          />
+         )}
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+         <button
+          type="button"
+          className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
+          onClick={onClose}
+         >
+          Cancel
+         </button>
+         <button
+          type="button"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+          onClick={handleSave}
+         >
+          {element?.index !== undefined ? "Save" : "Add"}
+         </button>
+        </div>
+       </Dialog.Panel>
+      </Transition.Child>
+     </div>
+    </div>
+   </Dialog>
+  </Transition>
+ );
+}
+, import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { Link } from "@remix-run/react";
+import { FiMoreVertical, FiTrash2, FiShare2 } from "react-icons/fi";
+import { motion } from "framer-motion";
+import { Note } from "~/types/notes";
+import { formatRelativeTime } from "~/utils/dateUtils";
+
+interface NoteCardProps {
+ note: Note;
+ isSelected: boolean;
+ onDoubleClick: () => void;
+ onDelete: () => void;
+}
+
+export const NoteCardSkeleton = () => (
+ <tr className="animate-pulse">
+  <td className="px-4 py-4 whitespace-nowrap">
+   <div className="flex flex-col">
+    <div className="h-4 bg-gray-200 rounded-full dark:bg-neutral-700 w-3/4 mb-2"></div>
+    <div className="h-3 bg-gray-200 rounded-full dark:bg-neutral-700 w-1/2"></div>
+   </div>
+  </td>
+  <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+   <div className="flex gap-1">
+    <div className="h-3 bg-gray-200 rounded-full dark:bg-neutral-700 w-12"></div>
+    <div className="h-3 bg-gray-200 rounded-full dark:bg-neutral-700 w-12"></div>
+   </div>
+  </td>
+  <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+   <div className="h-4 bg-gray-200 rounded-full dark:bg-neutral-700 w-24"></div>
+  </td>
+  <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+   <div className="flex -space-x-1">
+    <div className="size-6 bg-gray-200 rounded-full dark:bg-neutral-700"></div>
+    <div className="size-6 bg-gray-200 rounded-full dark:bg-neutral-700"></div>
+   </div>
+  </td>
+  <td className="px-4 py-4 whitespace-nowrap text-right">
+   <div className="h-5 w-5 bg-gray-200 rounded-full dark:bg-neutral-700"></div>
+  </td>
+ </tr>
+);
+
+export const ErrorCardRow = () => (
+ <tr className="animate-pulse">
+  <td className="px-4 py-4 whitespace-nowrap">
+   <div className="flex flex-col">
+    <div className="h-4 bg-red-200 rounded-full dark:bg-red-700 w-3/4 mb-2"></div>
+    <div className="h-3 bg-red-200 rounded-full dark:bg-red-700 w-1/2"></div>
+   </div>
+  </td>
+  <td className="px-4 py-4 whitespace-nowrap">
+   <div className="flex gap-1">
+    <div className="h-3 bg-red-200 rounded-full dark:bg-red-700 w-12"></div>
+    <div className="h-3 bg-red-200 rounded-full dark:bg-red-700 w-12"></div>
+   </div>
+  </td>
+  <td className="px-4 py-4 whitespace-nowrap">
+   <div className="h-4 bg-red-200 rounded-full dark:bg-red-700 w-24"></div>
+  </td>
+  <td className="px-4 py-4 whitespace-nowrap">
+   <div className="flex -space-x-1">
+    <div className="size-6 bg-red-200 rounded-full dark:bg-red-700"></div>
+    <div className="size-6 bg-red-200 rounded-full dark:bg-red-700"></div>
+   </div>
+  </td>
+  <td className="px-4 py-4 whitespace-nowrap text-right">
+   <div className="h-5 w-5 bg-red-200 rounded-full dark:bg-red-700"></div>
+  </td>
+ </tr>
+);
+
+const NoteCard = ({
+ note,
+ isSelected,
+ onDoubleClick,
+ onDelete
+}: NoteCardProps) => {
+ if (!note) return <ErrorCardRow />;
+ console.log(note);
+ const formattedDate = formatRelativeTime(note.updatedAt);
+ const excerpt =
+  note.body.find(item => item.type === "paragraph")?.content || "No content";
+
+ return (
+  <motion.tr
+   layout
+   initial={{ opacity: 0, y: 10 }}
+   animate={{ opacity: 1, y: 0 }}
+   exit={{ opacity: 0, y: -10 }}
+   transition={{ duration: 0.3 }}
+   className={`transition-all duration-200 ease-in-out group relative ${
+    isSelected
+     ? "bg-blue-100/50 dark:bg-blue-900/50"
+     : "hover:bg-gray-100/30 dark:hover:bg-neutral-700/30"
+   }`}
+   onDoubleClick={onDoubleClick}
+  >
+   <td className="px-4 py-4 whitespace-nowrap">
+    <div className="flex flex-col">
+     <Link
+      to={`/notes/${note.id}`}
+      className="text-sm font-medium text-gray-900 dark:text-neutral-100 hover:underline"
+     >
+      {note.title}
+     </Link>
+     <span className="text-[12px] sm:text-xs text-gray-500 dark:text-neutral-400 truncate max-w-[150px] sm:max-w-xs">
+      {typeof excerpt === "string" ? excerpt : excerpt[0] || "No content"}
+     </span>
+    </div>
+   </td>
+   <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+    <div className="flex gap-1 text-orange-500 dark:text-orange-400 text-xs">
+     {note.tags.map(tag => (
+      <label key={tag}>{tag.replace(/^#/, "")}</label>
+     ))}
+    </div>
+   </td>
+   <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
+    {formattedDate}
+   </td>
+   <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+    <div className="flex -space-x-1">
+     {note.owners.slice(0, 3).map(owner => (
+      <img
+       key={owner.id}
+       alt={owner.name}
+       src={owner.avatar}
+       className="inline-block size-6 rounded-full ring-2 ring-white dark:ring-neutral-800"
+       title={owner.name}
+      />
+     ))}
+     {note.owners.length > 3 && (
+      <div className="h-6 w-6 rounded-full bg-gray-400 dark:bg-neutral-600 text-xs text-white dark:text-neutral-200 flex items-center justify-center ring-2 ring-white dark:ring-neutral-800">
+       +{note.owners.length - 3}
+      </div>
+     )}
+    </div>
+   </td>
+   <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+    <Menu as="div" className="relative inline-block text-left">
+     <MenuButton className="p-1 text-gray-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-300">
+      <FiMoreVertical className="h-5 w-5" />
+     </MenuButton>
+     <MenuItems
+      anchor="bottom end"
+      className="w-48 rounded-md bg-white dark:bg-neutral-800 shadow-lg border border-gray-200 dark:border-neutral-700 py-1 text-sm text-gray-700 dark:text-neutral-200"
+     >
+      <MenuItem>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-neutral-700">
+        Rename
+       </button>
+      </MenuItem>
+      <MenuItem>
+       <button className="w-full flex gap-1 items-center text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-neutral-700">
+        <FiShare2 />
+        Share
+       </button>
+      </MenuItem>
+      <MenuItem>
+       <button
+        className="w-full flex gap-1 items-center text-left px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-100/20 dark:hover:bg-red-600/20 dark:hover:text-red-300"
+        onClick={onDelete}
+       >
+        <FiTrash2 />
+        Delete
+       </button>
+      </MenuItem>
+     </MenuItems>
+    </Menu>
+   </td>
+  </motion.tr>
+ );
+};
+
+export default NoteCard;
+, import React, { useRef } from "react";
+import { CiStickyNote } from "react-icons/ci";
+import { FaSearch } from "react-icons/fa";
+import { FiCommand } from "react-icons/fi";
+import { HiOutlineClock } from "react-icons/hi";
+import { IoIosAddCircle, IoIosSearch } from "react-icons/io";
+import { IoAddCircleOutline } from "react-icons/io5";
+import { PiHashStraightBold } from "react-icons/pi";
+import { FiCalendar } from "react-icons/fi";
+import { Link, useNavigate } from "@remix-run/react";
+
+interface SideBarProps {
+ toggleSidebar?: () => void;
+ sidebarOpen?: string;
+}
+
+const SideBar = ({ sidebarOpen, toggleSidebar }: SideBarProps) => {
+ return (
+  <div
+   className={`h-full w-[60%] sm:w-[18%] py-4 px-1 flex flex-col justify-between absolute sm:relative bg-dark z-10 pt-6 transition-all ease-in-out duration-300 ${
+    sidebarOpen ? "left-0" : "left-[-100%]"
+   }`}
+  >
+   <div className="flex flex-col gap-1">
+    <SideBarBtn
+     text="Search"
+     icon={<IoIosSearch />}
+     command_icon="S"
+     onClick={() => toggleSidebar(prev => !prev)}
+    />
+    <SideBarBtn
+     text="Recent"
+     icon={<HiOutlineClock />}
+     command_icon="R"
+     onClick={() => toggleSidebar(prev => !prev)}
+    />
+    <div className="flex flex-col gap-4 mt-8">
+     <h1 className="uppercase text-gray-400 px-3 text-sm">Workspace</h1>
+     <div className="flex flex-col gap-1.5">
+      <SideBarBtn
+       text="Notes"
+       icon={<CiStickyNote />}
+       command_icon={"N + /"}
+       to="/notes"
+       onClick={() => toggleSidebar(prev => !prev)}
+      />
+      <SideBarBtn
+       text="Tasks"
+       icon={<PiHashStraightBold />}
+       command_icon={"T + /"}
+       to="/tasks"
+       onClick={() => toggleSidebar(prev => !prev)}
+      />
+      <SideBarBtn
+       text="Calendar"
+       icon={<FiCalendar />}
+       command_icon={"C + /"}
+       to="/calendar"
+       onClick={() => toggleSidebar(prev => !prev)}
+      />
+     </div>
+    </div>
+   </div>
+   <div>
+
+   </div>
+  </div>
+ );
+};
+
+interface SideBarBtnProps {
+ text: string;
+ icon: React.ReactNode;
+ command_icon: string;
+ onClick?: () => void;
+ to?: string;
+}
+
+const SideBarBtn = ({
+ text,
+ icon,
+ command_icon,
+ onClick,
+ to
+}: SideBarBtnProps) => {
+ const navigate = useNavigate();
+
+ const handleClick = () => {
+  if (onClick) {
+   onClick();
+  } else if (to) {
+   navigate(to);
+  } else if (onClick && to) {
+   onClick();
+   setTimeout(() => navigate(to), 200);
+  }
+ };
+
+ // If there's a 'to' prop, wrap the button in a Link for better accessibility and prefetching
+ if (to) {
+  return (
+   <Link to={to} onClick={onClick} className="w-full">
+    <div className="w-full h-8 flex items-center justify-between px-3 rounded-md group hover:bg-gray-300/30">
+     <div className="flex items-center gap-3">
+      {icon}
+      <label className="text-sm">{text}</label>
+     </div>
+     <span className="flex flex-wrap items-center gap-x-1 text-[15px] text-gray-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+      <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+       <FiCommand />
+      </kbd>
+      +
+      <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+       {command_icon}
+      </kbd>
+     </span>
+    </div>
+   </Link>
+  );
+ }
+
+ return (
+  <button
+   className="w-full h-8 flex items-center justify-between px-3 rounded-md group hover:bg-gray-300/30"
+   onClick={handleClick}
+  >
+   <div className="flex items-center gap-3">
+    {icon}
+    <label className="text-sm">{text}</label>
+   </div>
+   <span className="flex flex-wrap items-center gap-x-1 text-[15px] text-gray-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+    <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+     <FiCommand />
+    </kbd>
+    +
+    <kbd className="min-h-7.5 inline-flex justify-center items-center font-mono text-xs text-gray-400 rounded-md dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-300">
+     {command_icon}
+    </kbd>
+   </span>
+  </button>
+ );
+};
+
+export default SideBar;
+, [
+  {
+    "id": "1",
+    "title": "Write down your ideas",
+    "body": [
+      {
+        "type": "heading",
+        "content": "Idea Generation Strategies"
+      },
+      {
+        "type": "paragraph",
+        "content": "Sometimes on Mondays, when servers at A16 are slow, ideas flow better. Use this time to capture creative thoughts and plan actionable steps."
+      },
+      {
+        "type": "subheading",
+        "content": "Steps to Capture Ideas"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Brainstorm new features for the app.",
+          "Plan team sync to align on priorities.",
+          "Review codebase for potential improvements."
+        ]
+      },
+      {
+        "type": "subheading",
+        "content": "Resources for Inspiration"
+      },
+      {
+        "type": "list",
+        "content": [
+          "Check out the latest design trends on [Dribbble](https://dribbble.com).",
+          "Read articles on [Medium](https://medium.com) for innovative ideas."
+        ]
+      }
+    ],
+    "updatedAt": "2025-04-27T10:00:00Z",
+    "createdAt": "2025-04-26T09:00:00Z",
+    "owners": [
+      {
+        "id": "1",
+        "name": "User 1",
+        "avatar": "https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+        "id": "2",
+        "name": "User 2",
+        "avatar": "https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+        "id": "3",
+        "name": "User 3",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80"
+      },
+      {
+        "id": "4",
+        "name": "User 4",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      }
+    ],
+    "tags": [
+      "#ideas",
+      "#to-do's",
+      "#morning"
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Plan team meeting",
+    "body": [
+      {
+        "type": "heading",
+        "content": "Team Meeting Agenda for Q2"
+      },
+      {
+        "type": "paragraph",
+        "content": "Discuss project milestones and deadlines for Q2. Ensure all team members are aligned on deliverables and timelines."
+      },
+      {
+        "type": "subheading",
+        "content": "Key Discussion Points"
+      },
+      {
+        "type": "list",
+        "content": [
+          "1. Review current project status and identify blockers.",
+          "2. Set deadlines for the upcoming sprint.",
+          "3. Assign roles for the new feature rollout."
+        ]
+      },
+      {
+        "type": "subheading",
+        "content": "Preparation Checklist"
+      },
+      {
+        "type": "list",
+        "content": [
+          "a. Share the agenda with the team via [Slack](https://slack.com).",
+          "b. Book a meeting room on [Google Calendar](https://calendar.google.com).",
+          "c. Prepare a presentation on [Canva](https://canva.com)."
+        ]
+      }
+    ],
+    "updatedAt": "2025-04-25T15:30:00Z",
+    "createdAt": "2025-04-25T08:00:00Z",
+    "owners": [
+      {
+        "id": "1",
+        "name": "User 1",
+        "avatar": "https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      }
+    ],
+    "tags": [
+      "#meeting",
+      "#team"
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Review codebase",
+    "body": [
+      {
+        "type": "heading",
+        "content": "Codebase Optimization Plan"
+      },
+      {
+        "type": "paragraph",
+        "content": "Check for performance improvements in the API. Focus on reducing latency and improving response times."
+      },
+      {
+        "type": "subheading",
+        "content": "Areas to Optimize"
+      },
+      {
+        "type": "list",
+        "content": [
+          "1. Refactor the authentication middleware.",
+          "2. Optimize database queries for faster retrieval.",
+          "3. Implement caching using [Redis](https://redis.io)."
+        ]
+      },
+      {
+        "type": "subheading",
+        "content": "Sample Code for API Optimization"
+      },
+      {
+        "type": "code",
+        "content": "function optimizeAPI() {\n  // Add caching layer\n  const cache = await getFromCache(request);\n  if (cache) return cache;\n  const data = await fetchFromDB();\n  await saveToCache(request, data);\n  return data;\n}"
+      },
+      {
+        "type": "subheading",
+        "content": "Additional Tools"
+      },
+      {
+        "type": "list",
+        "content": [
+          "- Use [Postman](https://postman.com) for API testing.",
+          "- Monitor performance with [New Relic](https://newrelic.com)."
+        ]
+      }
+    ],
+    "updatedAt": "2025-04-20T12:00:00Z",
+    "createdAt": "2025-04-20T10:00:00Z",
+    "owners": [
+      {
+        "id": "2",
+        "name": "User 2",
+        "avatar": "https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+        "id": "3",
+        "name": "User 3",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80"
+      }
+    ],
+    "tags": [
+      "#code",
+      "#review"
+    ]
+  },
+  {
+    "id": "5144a6d1-0720-4ceb-b2e4-c59569551eff",
+    "title": "Hello Fish",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "Begin from here"
+      }
+    ],
+    "updatedAt": "2025-05-07T20:54:29.825Z",
+    "createdAt": "2025-05-07T20:54:29.825Z",
+    "owners": [],
+    "tags": []
+  },
+  {
+    "id": "d8bdcdff-510b-4372-a5ab-2f27ed0dab07",
+    "title": "Wotr",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "Begin from here"
+      }
+    ],
+    "updatedAt": "2025-05-07T20:57:47.610Z",
+    "createdAt": "2025-05-07T20:57:47.610Z",
+    "owners": [],
+    "tags": []
+  },
+  {
+    "id": "2f197173-f0a7-4a6d-9f3f-aa15a63035e8",
+    "title": "Gonga",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "Begin from here"
+      }
+    ],
+    "updatedAt": "2025-05-07T20:58:47.155Z",
+    "createdAt": "2025-05-07T20:58:47.155Z",
+    "owners": [],
+    "tags": []
+  },
+  {
+    "id": "361238ca-fada-424c-a0f5-6b6a5255b1b9",
+    "title": "Query,",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "Begin from here"
+      }
+    ],
+    "updatedAt": "2025-05-07T21:02:01.099Z",
+    "createdAt": "2025-05-07T21:02:01.101Z",
+    "owners": [],
+    "tags": []
+  },
+  {
+    "id": "998a4a68-c5d0-46cc-ab7c-ed6a62a18c6f",
+    "title": "Qopo",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "Begin from here"
+      }
+    ],
+    "updatedAt": "2025-05-07T21:03:42.095Z",
+    "createdAt": "2025-05-07T21:03:42.096Z",
+    "owners": [],
+    "tags": []
+  }
+], import { Note } from "~/types/notes";
+import fs from "fs";
+import path from "path";
+
+const readNotes = (): Note[] =>
+  JSON.parse(fs.readFileSync(path.resolve("app/data/notes.json"), "utf8"));
+
+const writeNotes = (notes: Note[]) => {
+  fs.writeFileSync(
+    path.resolve("app/data/notes.json"),
+    JSON.stringify(notes, null, 2)
+  );
+};
+
+const validateNotes = (data: any[]): Note[] => {
+  const validNotes: Note[] = data
+    .filter(note => {
+      if (
+        !note.id ||
+        !note.title ||
+        !Array.isArray(note.body) ||
+        !note.updatedAt ||
+        !note.createdAt ||
+        !Array.isArray(note.owners) ||
+        !Array.isArray(note.tags)
+      ) {
+        console.warn("Invalid note structure:", note);
+        return false;
+      }
+      return true;
+    })
+    .map(note => ({
+      ...note,
+      body: note.body.filter((item: any) => {
+        if (
+          ["heading", "subheading", "paragraph", "code"].includes(item.type) &&
+          typeof item.content === "string"
+        ) {
+          return true;
+        }
+        if (
+          item.type === "list" &&
+          Array.isArray(item.content) &&
+          item.content.every((c: any) => typeof c === "string")
+        ) {
+          return true;
+        }
+        console.warn("Invalid body item:", item);
+        return false;
+      }) as Note["body"],
+      owners: note.owners.filter(
+        (owner: any) => owner.id && owner.name && owner.avatar
+      ),
+      tags: note.tags.filter((tag: any) => typeof tag === "string"),
+    }));
+
+  if (validNotes.length === 0) {
+    console.warn("No valid notes found in notes.json");
+  }
+
+  return validNotes;
+};
+
+// In-memory notes store
+let notes: Note[] = validateNotes(readNotes());
+
+export const getNotes = async () => {
+  return notes;
+};
+
+export const createNote = async (note: Note) => {
+  notes = [...notes, note];
+  writeNotes(notes);
+  return note;
+};
+
+export const deleteNote = async (id: string) => {
+  notes = notes.filter(note => note.id !== id);
+  writeNotes(notes);
+  return notes;
+};, // app/routes/notes.$id.tsx
+import Button from "../components/Button";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { json, defer } from "@remix-run/node";
+import { useLoaderData, Await, useNavigate } from "@remix-run/react";
+import { Suspense, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment } from "react";
+import { HiPencil } from "react-icons/hi";
+import { FaArrowLeft } from "react-icons/fa";
+import { AnimatePresence, motion } from "framer-motion";
+import notesData from "~/data/notes.json";
+import TextSizeMenu from "~/components/TextSizeMenu";
+import AddElementMenu from "~/components/AddElementMenu";
+import { Form } from "~/components/Form";
+import { formatRelativeTime } from "~/utils/dateUtils";
+import { renderContentWithLinks } from "~/utils/renderContentWithLinks"; // Assumed utility
+import type { Note, NoteBody } from "../types/notes";
+import Spinner from "~/components/Spinner";
+
+// Utility function to simulate delay
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const meta: MetaFunction = () => {
+ return [{ title: "Note Details - Notes" }];
+};
+
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+ const note = notesData.find(n => n.id === params.id);
+ if (!note) {
+  throw new Response("Not Found", { status: 404 });
+ }
+ return defer({
+  note: wait(3500).then(() => note)
+ });
+};
+
+export default function NoteDetails() {
+ const { note: deferredNote } = useLoaderData<{ note: Promise<Note> }>();
+ const [textSize, setTextSize] = useState<"sm" | "base" | "lg">("base");
+ const [isEditorOpen, setIsEditorOpen] = useState(false);
+ const [editorType, setEditorType] = useState<
+  "heading" | "subheading" | "paragraph" | "code" | "list" | null
+ >(null);
+ const [editorContent, setEditorContent] = useState<string>("");
+ const [editorListItems, setEditorListItems] = useState<string[]>([""]);
+ const [editIndex, setEditIndex] = useState<number | null>(null);
+ const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+ const [noteBody, setNoteBody] = useState<NoteBody[]>([]);
+ const navigate = useNavigate();
+
+ const textSizeClasses = {
+  sm: "text-xs md:text-sm",
+  base: "text-sm md:text-base",
+  lg: "text-base md:text-lg"
+ };
+
+ const openEditor = (
+  type: "heading" | "subheading" | "paragraph" | "code" | "list",
+  index?: number,
+  content?: string | string[]
+ ) => {
+  setEditorType(type);
+  setEditIndex(index ?? null);
+  if (content) {
+   if (Array.isArray(content)) {
+    setEditorListItems(content);
+   } else {
+    setEditorContent(content);
+   }
+  } else {
+   setEditorContent("");
+   setEditorListItems([""]);
+  }
+  setIsEditorOpen(true);
+ };
+
+ const closeEditor = () => {
+  setIsEditorOpen(false);
+  setEditorType(null);
+  setEditIndex(null);
+  setEditorContent("");
+  setEditorListItems([""]);
+ };
+
+ const addListItem = () => {
+  setEditorListItems([...editorListItems, ""]);
+ };
+
+ const updateListItem = (index: number, value: string) => {
+  const newItems = [...editorListItems];
+  newItems[index] = value;
+  setEditorListItems(newItems);
+ };
+
+ const saveElement = (note: Note) => {
+  if (!editorType) return;
+
+  let newElement: NoteBody;
+  if (editorType === "list") {
+   const filteredItems = editorListItems.filter(item => item.trim() !== "");
+   if (filteredItems.length === 0) return;
+   newElement = { type: "list", content: filteredItems };
+  } else {
+   if (!editorContent.trim()) return;
+   newElement = { type: editorType, content: editorContent };
+  }
+
+  let updatedBody: NoteBody[];
+  if (editIndex !== null) {
+   updatedBody = [...noteBody];
+   updatedBody[editIndex] = newElement;
+  } else {
+   updatedBody = [...noteBody, newElement];
+  }
+
+  setNoteBody(updatedBody);
+
+  // WARNING: Mutating notesData directly is not recommended.
+  // In a real app, persist changes via an API or database.
+  const noteIndex = notesData.findIndex(n => n.id === note.id);
+  if (noteIndex !== -1) {
+   notesData[noteIndex] = { ...note, body: updatedBody };
+  }
+
+  closeEditor();
+ };
+
+ const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+   opacity: 1,
+   transition: {
+    staggerChildren: 0.1
+   }
+  }
+ };
+
+ const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+ };
+
+ return (
+  <div className="flex flex-col min-h-screen font-light">
+   <div className="py-6 px-3">
+    <Button btn_type="ghost" onClick={() => navigate(-1)}>
+     <FaArrowLeft />
+    </Button>
+   </div>
+   <Suspense
+    fallback={
+     <motion.div
+      className="flex flex-col justify-center items-center min-h-[50vh]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+     >
+      <Spinner size={60} strokeWidth={6} color="#0071c2" />
+      <div className="text-white text-lg mt-4">Loading note...</div>
+     </motion.div>
+    }
+   >
+    <Await
+     resolve={deferredNote}
+     errorElement={
+      <div className="text-red-400 text-center py-8">
+       Failed to load note. Please try again.
+      </div>
+     }
+    >
+     {(note: Note) => {
+      // Initialize noteBody if not already set
+      if (noteBody.length === 0) {
+       setNoteBody(note.body);
+      }
+
+      return (
+       <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col min-h-screen font-light"
+       >
+        {/* Header */}
+        <motion.div
+         variants={itemVariants}
+         className="flex flex-col md:flex-row md:items-center md:justify-between px-8 md:px-10 pt-4 pb-6 border-b border-zinc-700"
+        >
+         <div className="flex flex-col gap-4">
+          <motion.h1
+           variants={itemVariants}
+           className="text-3xl md:text-5xl font-medium text-white tracking-tight"
+          >
+           {note.title}
+          </motion.h1>
+          <div className="flex flex-wrap gap-2">
+           {note.tags.map(tag => (
+            <motion.span
+             key={tag}
+             variants={itemVariants}
+             className="inline-flex items-center rounded-md bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400 ring-1 ring-green-400/30 ring-inset"
+            >
+             {tag}
+            </motion.span>
+           ))}
+          </div>
+          <motion.div
+           variants={itemVariants}
+           className="flex items-center text-gray-400 text-xs md:text-sm gap-2"
+          >
+           <p>Created {formatRelativeTime(note.createdAt)}</p>
+           <div className="h-1 w-1 bg-gray-500 rounded-full"></div>
+           <p>Last modified {formatRelativeTime(note.updatedAt)}</p>
+          </motion.div>
+         </div>
+         <motion.div
+          variants={itemVariants}
+          className="flex items-center gap-2 mt-4 md:mt-0 -space-x-4"
+         >
+          {note.owners.map(owner => (
+           <motion.img
+            key={owner.id}
+            variants={itemVariants}
+            alt={owner.name}
+            src={owner.avatar}
+            className="w-6 h-6 md:w-8 md:h-8 rounded-full ring-2 ring-gray-800"
+            title={owner.name}
+           />
+          ))}
+         </motion.div>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+         variants={itemVariants}
+         className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-28 overflow-y-auto pr-4 scrollbar-thin scrollbar-color-[var(--thumb-color,#4b5563)_var(--track-color,#1f2937)] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+        >
+         <div className="flex-1 flex flex-col gap-6">
+          <AnimatePresence>
+           {noteBody.map((item, index) => (
+            <motion.div
+             key={index}
+             variants={itemVariants}
+             initial="hidden"
+             animate="visible"
+             exit={{ opacity: 0, y: -20 }}
+             className="relative group"
+             onMouseEnter={() => setHoveredIndex(index)}
+             onMouseLeave={() => setHoveredIndex(null)}
+            >
+             {editIndex === index && editorType ? (
+              <Form
+               elementType={editorType}
+               initialContent={editorContent}
+               initialListItems={editorListItems}
+               setContent={setEditorContent}
+               setListItems={setEditorListItems}
+               onSubmit={() => saveElement(note)}
+               onCancel={closeEditor}
+              />
+             ) : (
+              <motion.div layout className="space-y-3">
+               {hoveredIndex === index && (
+                <motion.button
+                 initial={{ opacity: 0, scale: 0.8, top: 1 }}
+                 animate={{
+                  opacity: 1,
+                  scale: 1,
+                  top:
+                   item.type === "heading"
+                    ? -8
+                    : item.type === "subheading"
+                    ? -14
+                    : -22
+                 }}
+                 exit={{ opacity: 0, scale: 0.8, top: 1 }}
+                 transition={{
+                  duration: item.type === "heading" ? 0.125 : 0.3,
+                  ease: "easeIn"
+                 }}
+                 onClick={() => openEditor(item.type, index, item.content)}
+                 className="absolute right-0 p-2 text-gray-400 hover:text-white"
+                >
+                 <HiPencil className="w-5 h-5" />
+                </motion.button>
+               )}
+               <motion.div variants={itemVariants} layout className="mt-2">
+                <AnimatePresence>
+                 {item.type === "heading" && (
+                  <motion.h2
+                   variants={itemVariants}
+                   className="text-xl md:text-2xl font-normal text-white mt-6 mb-2"
+                  >
+                   {item.content}
+                  </motion.h2>
+                 )}
+                 {item.type === "subheading" && (
+                  <motion.h3
+                   variants={itemVariants}
+                   className="text-lg md:text-xl font-light text-white mt-4 mb-2"
+                  >
+                   {item.content}
+                  </motion.h3>
+                 )}
+                 {item.type === "paragraph" && (
+                  <motion.p
+                   variants={itemVariants}
+                   className={`text-gray-300 leading-relaxed ${
+                    textSizeClasses[textSize]
+                   } ${
+                    index === 0
+                     ? "bg-yellow-800/50 p-4 rounded-md text-yellow-200"
+                     : ""
+                   }`}
+                  >
+                   {renderContentWithLinks(item.content as string)}
+                  </motion.p>
+                 )}
+                 {item.type === "list" && Array.isArray(item.content) && (
+                  <motion.ul
+                   variants={containerVariants}
+                   className={`list-disc pl-6 text-gray-300 space-y-2 ${textSizeClasses[textSize]}`}
+                  >
+                   {item.content.map((li, i) => (
+                    <motion.li key={i} variants={itemVariants}>
+                     {renderContentWithLinks(li.replace(/^[0-9a-z]\.\s/, ""))}
+                    </motion.li>
+                   ))}
+                  </motion.ul>
+                 )}
+                 {item.type === "code" && (
+                  <motion.pre
+                   variants={itemVariants}
+                   className={`bg-gray-800 rounded-md p-4 text-gray-200 overflow-x-auto ${textSizeClasses[textSize]}`}
+                  >
+                   <code>{item.content}</code>
+                  </motion.pre>
+                 )}
+                </AnimatePresence>
+               </motion.div>
+              </motion.div>
+             )}
+            </motion.div>
+           ))}
+          </AnimatePresence>
+         </div>
+        </motion.div>
+
+        {/* Sticky Footer */}
+        <motion.div
+         variants={itemVariants}
+         className="fixed sm:sticky bottom-0 sm:bottom-0 left-0 right-0 bg-zinc-900 w-full shadow-md py-3 px-4 md:px-2"
+        >
+         <div className="flex items-center justify-end gap-8">
+          <AddElementMenu openModal={openEditor} />
+          <TextSizeMenu textSize={textSize} setTextSize={setTextSize} />
+         </div>
+        </motion.div>
+
+        {/* Editor Modal */}
+        <Transition appear show={isEditorOpen} as={Fragment}>
+         <Dialog as="div" className="relative z-10" onClose={closeEditor}>
+          <Transition.Child
+           as={Fragment}
+           enter="ease-out duration-300"
+           enterFrom="opacity-0"
+           enterTo="opacity-100"
+           leave="ease-in duration-200"
+           leaveFrom="opacity-100"
+           leaveTo="opacity-0"
+          >
+           <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+           <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Transition.Child
+             as={Fragment}
+             enter="ease-out duration-300"
+             enterFrom="opacity-0 scale-95"
+             enterTo="opacity-100 scale-100"
+             leave="ease-in duration-200"
+             leaveFrom="opacity-100 scale-100"
+             leaveTo="opacity-0 scale-95"
+            >
+             <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-md bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Title
+               as="h3"
+               className="text-lg font-medium leading-6 text-white"
+              >
+               {editorType
+                ? `${editIndex !== null ? "Edit" : "Add"} ${
+                   editorType.charAt(0).toUpperCase() + editorType.slice(1)
+                  }`
+                : "Add Element"}
+              </Dialog.Title>
+              <div className="mt-4">
+               {editorType === "list" ? (
+                <div className="space-y-3">
+                 {editorListItems.map((item, index) => (
+                  <input
+                   key={index}
+                   type="text"
+                   value={item}
+                   onChange={e => updateListItem(index, e.target.value)}
+                   placeholder={`Item ${index + 1}`}
+                   className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  />
+                 ))}
+                 <button
+                  type="button"
+                  onClick={addListItem}
+                  className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+                 >
+                  Add List Item
+                 </button>
+                </div>
+               ) : (
+                <textarea
+                 value={editorContent}
+                 onChange={e => setEditorContent(e.target.value)}
+                 placeholder={
+                  editorType
+                   ? `Enter ${editorType} content...`
+                   : "Enter content..."
+                 }
+                 rows={4}
+                 className="w-full rounded-md bg-gray-700 text-gray-300 px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+               )}
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+               <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                onClick={closeEditor}
+               >
+                Cancel
+               </button>
+               <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                onClick={() => saveElement(note)}
+               >
+                {editIndex !== null ? "Update" : "Add"}
+               </button>
+              </div>
+             </Dialog.Panel>
+            </Transition.Child>
+           </div>
+          </div>
+         </Dialog>
+        </Transition>
+       </motion.div>
+      );
+     }}
+    </Await>
+   </Suspense>
+  </div>
+ );
+}
+, import { Form, redirect, useNavigate } from "@remix-run/react";
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import Badge from "~/components/Badge";
+import Button from "~/components/Button";
+import Input from "~/components/Input";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { v4 as uuid } from "uuid";
+import { createNote } from "~/data/notes";
+import type { Note, Owner } from "~/types/notes";
+
+interface Item {
+ id: string;
+ value: string;
+}
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+ const formData = await request.formData();
+ const title = formData.get("title") as string;
+ const tags = JSON.parse(formData.get("tags") as string) as Item[];
+ const owners = JSON.parse(formData.get("owners") as string) as Item[];
+
+ if (!title) {
+  return json({ error: "Title is required" }, { status: 400 });
+ }
+
+ const note: Note = {
+  id: uuid(),
+  title,
+  body: [
+   {
+    type: "paragraph",
+    content: "Begin from here"
+   }
+  ],
+  updatedAt: new Date().toISOString(),
+  createdAt: new Date().toISOString(),
+  owners: owners.map(owner => ({
+   id: uuid(),
+   name: owner.value,
+   avatar: "https://placecats.com/200/200"
+  })),
+  tags: tags.map(tag => tag.value)
+ };
+
+ await createNote(note);
+ return redirect("/notes");
+};
+
+export default function NewNote() {
+ const [tags, setTags] = useState<Item[]>([]);
+ const [title, setTitle] = useState("");
+ const [tagInput, setTagInput] = useState("");
+ const [isTagOpen, setIsTagOpen] = useState(false);
+ const [owners, setOwners] = useState<Item[]>([]);
+ const [ownerInput, setOwnerInput] = useState("");
+ const [isOwnerOpen, setIsOwnerOpen] = useState(false);
+ const navigate = useNavigate();
+
+ const handleTagClick = () => {
+  if (isTagOpen && tagInput.trim()) {
+   setTags([...tags, { id: uuid(), value: tagInput.trim() }]);
+   setTagInput("");
+   setIsTagOpen(false);
+  } else {
+   setIsTagOpen(prev => !prev);
+   setTagInput("");
+  }
+ };
+
+ const handleAddTag = (value: string) => {
+  if (value.trim()) {
+   setTags([...tags, { id: uuid(), value: value.trim() }]);
+   setTagInput("");
+   setIsTagOpen(false);
+  }
+ };
+
+ const handleRemoveTag = (id: string) => {
+  setTags(tags.filter(tag => tag.id !== id));
+ };
+
+ const handleOwnerClick = () => {
+  if (isOwnerOpen && ownerInput.trim()) {
+   setOwners([...owners, { id: uuid(), value: ownerInput.trim() }]);
+   setOwnerInput("");
+   setIsOwnerOpen(false);
+  } else {
+   setIsOwnerOpen(prev => !prev);
+   setOwnerInput("");
+  }
+ };
+
+ const handleAddOwner = (value: string) => {
+  if (value.trim()) {
+   setOwners([...owners, { id: uuid(), value: value.trim() }]);
+   setOwnerInput("");
+   setIsOwnerOpen(false);
+  }
+ };
+
+ const handleRemoveOwner = (id: string) => {
+  setOwners(owners.filter(owner => owner.id !== id));
+ };
+
+ return (
+  <div className="w-full h-full px-8 md:px-10 pt-14">
+   <h1 className="text-4xl font-semibold">Add a new note</h1>
+   <Form method="post" className="mt-6 relative h-[75%]">
+    <input type="hidden" name="tags" value={JSON.stringify(tags)} />
+    <input type="hidden" name="owners" value={JSON.stringify(owners)} />
+    <Input
+     name="title"
+     value={title}
+     onChange={e => setTitle(e.target.value)}
+     placeholder="Enter your note title"
+     label="Note Title"
+    />
+    <Tags
+     tags={tags}
+     handleRemoveTag={handleRemoveTag}
+     isTagOpen={isTagOpen}
+     tagInput={tagInput}
+     setTagInput={setTagInput}
+     handleAddTag={handleAddTag}
+     handleTagClick={handleTagClick}
+    />
+    <Owners
+     owners={owners}
+     handleRemoveOwner={handleRemoveOwner}
+     isOwnerOpen={isOwnerOpen}
+     ownerInput={ownerInput}
+     setOwnerInput={setOwnerInput}
+     handleAddOwner={handleAddOwner}
+     handleOwnerClick={handleOwnerClick}
+    />
+    <div className="absolute bottom-12 sm:bottom-6 right-0 flex gap-4">
+     <Button type="submit" className="px-8">
+      Add
+     </Button>
+     <Button type="button" className="px-8" onClick={() => navigate(-1)}>
+      Cancel
+     </Button>
+    </div>
+   </Form>
+  </div>
+ );
+}
+
+const Tags = ({
+ tags,
+ handleRemoveTag,
+ isTagOpen,
+ tagInput,
+ setTagInput,
+ handleAddTag,
+ handleTagClick
+}) => (
+ <div className="mt-10 flex flex-col gap-5">
+  <motion.div>
+   <AnimatePresence>
+    {tags.length > 0 ? (
+     <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.125, ease: "easeInOut" }}
+      className="flex gap-3 overflow-x-hidden flex-wrap"
+     >
+      <AnimatePresence>
+       {tags.map((tag, index) => (
+        <Badge
+         key={tag.id}
+         label={tag.value}
+         onRemove={() => handleRemoveTag(tag.id)}
+         index={index}
+         isAnimate={true}
+        />
+       ))}
+      </AnimatePresence>
+     </motion.div>
+    ) : (
+     <AnimatePresence>
+      <motion.p
+       initial={{ opacity: 0, y: 24, x: 0 }}
+       animate={{ opacity: 1, y: 0, x: 0 }}
+       exit={{ opacity: 0, x: -24, y: 0 }}
+       transition={{ duration: 0.125, ease: "easeInOut" }}
+       className="text-gray-500"
+      >
+       No tags added
+      </motion.p>
+     </AnimatePresence>
+    )}
+   </AnimatePresence>
+  </motion.div>
+  <AnimatePresence>
+   {isTagOpen && (
+    <motion.div
+     initial={{ opacity: 0, height: 0 }}
+     animate={{ opacity: 1, height: "auto" }}
+     exit={{ opacity: 0, height: 0 }}
+     transition={{ duration: 0.3 }}
+    >
+     <Input
+      label="Tag Name"
+      className="w-full sm:max-w-[14rem]"
+      value={tagInput}
+      onChange={e => setTagInput(e.target.value)}
+      onKeyDown={e => {
+       if (e.key === "Enter") {
+        handleAddTag(tagInput);
+       }
+      }}
+     />
+    </motion.div>
+   )}
+  </AnimatePresence>
+  <div>
+   <Button btn_type="ghost" onClick={handleTagClick}>
+    {isTagOpen ? (tagInput.trim() ? "Add Tag" : "Cancel") : "+ Add Tag"}
+   </Button>
+  </div>
+ </div>
+);
+
+const Owners = ({
+ owners,
+ handleRemoveOwner,
+ isOwnerOpen,
+ ownerInput,
+ setOwnerInput,
+ handleAddOwner,
+ handleOwnerClick
+}) => (
+ <div className="mt-10 flex flex-col gap-5">
+  <motion.div>
+   <AnimatePresence>
+    {owners.length > 0 ? (
+     <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.125, ease: "easeInOut" }}
+      className="flex gap-3 overflow-x-hidden flex-wrap"
+     >
+      <AnimatePresence>
+       {owners.map((owner, index) => (
+        <Badge
+         key={owner.id}
+         label={owner.value}
+         onRemove={() => handleRemoveOwner(owner.id)}
+         index={index}
+         isAnimate={true}
+        />
+       ))}
+      </AnimatePresence>
+     </motion.div>
+    ) : (
+     <AnimatePresence>
+      <motion.p
+       initial={{ opacity: 0, y: 24, x: 0 }}
+       animate={{ opacity: 1, y: 0, x: 0 }}
+       exit={{ opacity: 0, x: -24, y: 0 }}
+       transition={{ duration: 0.125, ease: "easeInOut" }}
+       className="text-gray-500"
+      >
+       No owners added
+      </motion.p>
+     </AnimatePresence>
+    )}
+   </AnimatePresence>
+  </motion.div>
+  <AnimatePresence>
+   {isOwnerOpen && (
+    <motion.div
+     initial={{ opacity: 0, height: 0 }}
+     animate={{ opacity: 1, height: "auto" }}
+     exit={{ opacity: 0, height: 0 }}
+     transition={{ duration: 0.3 }}
+    >
+     <Input
+      label="Owner Name"
+      className="w-full sm:max-w-[14rem]"
+      value={ownerInput}
+      onChange={e => setOwnerInput(e.target.value)}
+      onKeyDown={e => {
+       if (e.key === "Enter") {
+        handleAddOwner(ownerInput);
+       }
+      }}
+     />
+    </motion.div>
+   )}
+  </AnimatePresence>
+  <div>
+   <Button btn_type="ghost" onClick={handleOwnerClick}>
+    {isOwnerOpen ? (ownerInput.trim() ? "Add Owner" : "Cancel") : "+ Owner Tag"}
+   </Button>
+  </div>
+ </div>
+);
+,import React from "react";
+
+// Regular expression to match URLs
+const urlRegex = /(https?:\/\/[^\s<>"']+[^\s<>"'.,!?])/g;
+
+export const renderContentWithLinks = (content: string): React.ReactNode => {
+  if (!content) return content;
+
+  // Split content by URLs and render links
+  const parts = content.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:underline"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};,import type { MetaFunction } from "@remix-run/node";
+import { useNavigation } from "@remix-run/react";
+import React, { useState, useEffect, Suspense } from "react";
+import { Form } from "~/components/Form";
+import Spinner from "~/components/Spinner";
+
+export const meta: MetaFunction = () => {
+ return [
+  { title: "My Stuff" },
+  { name: "description", content: "Welcome to Remix!" }
+ ];
+};
+
+interface ErrorBoundaryProps {
+ error?: Error;
+ children: React.ReactNode;
+}
+
+function ErrorBoundary({ error, children }: ErrorBoundaryProps) {
+ if (error) {
+  return (
+   <div className="flex items-center justify-center h-screen text-red-500">
+    <div>
+     <h1>Error</h1>
+     <p>{error.message}</p>
+    </div>
+   </div>
+  );
+ }
+ return <>{children}</>;
+}
+
+export default function Index() {
+ const navigation = useNavigation();
+ const [time, setTime] = useState(new Date());
+ let hours = time.getHours();
+ const [todos, setTodos] = useState<TODO[]>([
+  {
+   id: 1,
+   text: "Take out trash",
+   checked: false,
+   time: "5 mins"
+  },
+  {
+   id: 2,
+   text: "Do laundry",
+   checked: false,
+   time: "10 mins"
+  },
+  {
+   id: 3,
+   text: "Have existential crisis",
+   checked: true,
+   time: "12 hrs"
+  },
+  {
+   id: 4,
+   text: "Get dog food",
+   checked: false,
+   time: "1 hrs"
+  }
+ ]);
+
+ const isLoading = navigation.state !== "idle";
+ return (
+  <ErrorBoundary>
+   {isLoading ? (
+    <div className="h-full w-full grid place-content-center">
+     <Spinner size={60} strokeWidth={6} color="#0071c2" />
+    </div>
+   ) : (
+    <div className="h-full w-full flex">
+     <div className="py-5 pt-8 px-3 sm:px-6 flex flex-col gap-4 w-full">
+      <nav className="flex items-center">
+       <div className="text-[22px] sm:text-2xl tracking-tight font-normal flex gap-1.5">
+        <div className="text-white/80">
+         Good {
+          hours < 12 ? "morning" : hours === 12 ? "afternoon" : "evening"
+         }
+         ,
+        </div>
+        <div>Raymond</div>
+       </div>
+      </nav>
+      <main></main>
+     </div>
+    </div>
+   )}
+  </ErrorBoundary>
+ );
+}
+
+export type TODO = {
+ id: number;
+ text: string;
+ checked: boolean;
+ time: string;
+};
+, 

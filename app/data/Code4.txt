@@ -1,0 +1,556 @@
+Using this from remix docs can u fix:import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+
+export const Form = ({
+ elementType,
+ initialContent = "",
+ initialListItems = [""],
+ setContent,
+ setListItems,
+ onSubmit,
+ onCancel
+}: {
+ elementType: "heading" | "subheading" | "paragraph" | "code" | "list";
+ initialContent?: string;
+ initialListItems?: string[];
+ setContent: (content: string) => void;
+ setListItems: (items: string[]) => void;
+ onSubmit: () => void;
+ onCancel: () => void;
+}) => {
+ const [text, setText] = useState(initialContent);
+ const [listItems, setLocalListItems] = useState<string[]>(initialListItems);
+
+ const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  onSubmit();
+ };
+
+ const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  setText(e.target.value);
+  setContent(e.target.value);
+ };
+
+ const handleListItemChange = (index: number, value: string) => {
+  const newItems = [...listItems];
+  newItems[index] = value;
+  setLocalListItems(newItems);
+  setListItems(newItems);
+ };
+
+ const addListItem = () => {
+  const newItems = [...listItems, ""];
+  setLocalListItems(newItems);
+  setListItems(newItems);
+ };
+
+ return (
+  <AnimatePresence>
+   <motion.form
+    initial={{ opacity: 0, y: 25 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 25 }}
+    transition={{ duration: 0.3 }}
+    onSubmit={handleSubmit}
+    className="w-full rounded border border-zinc-700 bg-zinc-900 p-3"
+   >
+    {elementType === "list" ? (
+     <div className="space-y-3">
+      {listItems.map((item, index) => (
+       <input
+        key={index}
+        type="text"
+        value={item}
+        name={`Item-${index}`}
+        onChange={e => handleListItemChange(index, e.target.value)}
+        placeholder={`Item ${index + 1}`}
+        className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+       />
+      ))}
+      <button
+       type="button"
+       onClick={addListItem}
+       className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+      >
+       Add List Item
+      </button>
+     </div>
+    ) : (
+     <textarea
+      value={text}
+      name={elementType}
+      onChange={handleTextChange}
+      placeholder={`Enter ${elementType} content...`}
+      className="h-24 w-full resize-none rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+     />
+    )}
+    <div className="flex items-center justify-end gap-3 mt-3">
+     <button
+      type="button"
+      onClick={onCancel}
+      className="rounded px-1.5 py-1 text-xs bg-zinc-300/20 text-zinc-300 transition-colors hover:bg-zinc-600 hover:text-zinc-200"
+     >
+      Cancel
+     </button>
+     <button
+      type="submit"
+      className="rounded bg-orange-600 px-1.5 py-1 text-xs text-orange-50 transition-colors hover:bg-orange-500"
+     >
+      Update
+     </button>
+    </div>
+   </motion.form>
+  </AnimatePresence>
+ );
+};
+, import type { ActionFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { updateNote } from "~/data/notes";
+
+export const action = async ({ params, request }: ActionFunctionArgs) => {
+ console.log("Hello", request);
+ // const { id } = request.params;
+ // let formData = await request.formData();
+ //let title = await formData.get("title");
+
+ try {
+  //await updateNote(noteId, { body: updatedBody });
+  return json({ ok: true });
+ } catch (error) {
+  console.error("Failed to update note:", error);
+  return json({ error: `Failed to update note: ${error}` });
+ }
+};
+, import Button from "~/components/Button";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { json, defer } from "@remix-run/node";
+import { useLoaderData, Await, useNavigate } from "@remix-run/react";
+import { Suspense, useState, useEffect } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { AnimatePresence, motion } from "framer-motion";
+import TextSizeMenu from "~/components/TextSizeMenu";
+import AddElementMenu from "~/components/AddElementMenu";
+import ElementFormModal from "~/components/ElementFormModal";
+import { Form } from "~/components/Form";
+import { formatRelativeTime } from "~/utils/dateUtils";
+import { renderContentWithLinks } from "~/utils/renderContentWithLinks";
+import type { Note, NoteBody } from "~/types/notes";
+import Spinner from "~/components/Spinner";
+import { getNotes, updateNote } from "~/data/notes";
+import { useFetcher } from "@remix-run/react";
+
+export const meta: MetaFunction = ({ data }) => {
+ const note = (data as { note: Promise<Note> })?.note;
+ return [{ title: note ? `${note.title} - Notes` : "Note Details - Notes" }];
+};
+
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+ const notes = await getNotes();
+ const note = notes.find(n => n.id === params.id);
+ if (!note) {
+  throw new Response("Not Found", { status: 404 });
+ }
+ return defer({ note });
+};
+
+export default function NoteDetails() {
+ const { note: deferredNote } = useLoaderData<{ note: Promise<Note> }>();
+ const [textSize, setTextSize] = useState<"sm" | "base" | "lg">("base");
+ const [isModalOpen, setIsModalOpen] = useState(false);
+ const [isEditing, setIsEditing] = useState(false);
+ const [editorType, setEditorType] = useState<
+  "heading" | "subheading" | "paragraph" | "code" | "list" | null
+ >(null);
+ const [editorContent, setEditorContent] = useState<string>("");
+ const [editorListItems, setEditorListItems] = useState<string[]>([""]);
+ const [editIndex, setEditIndex] = useState<number | null>(null);
+ const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+ const [noteBody, setNoteBody] = useState<NoteBody[]>([]);
+ const [noteId, setNoteId] = useState<string | null>(null);
+ const navigate = useNavigate();
+ const fetcher = useFetcher();
+
+ const textSizeClasses = {
+  sm: "text-xs md:text-sm",
+  base: "text-sm md:text-base",
+  lg: "text-base md:text-lg"
+ };
+
+ const openModal = (
+  type: string,
+  index?: number,
+  content?: string | string[]
+ ) => {
+  setEditorType(
+   type as "heading" | "subheading" | "paragraph" | "code" | "list"
+  );
+  setEditIndex(index ?? null);
+  if (content) {
+   if (Array.isArray(content)) {
+    setEditorListItems(content);
+   } else {
+    setEditorContent(content);
+   }
+  } else {
+   setEditorContent("");
+   setEditorListItems([""]);
+  }
+  setIsModalOpen(true);
+ };
+
+ const closeModal = () => {
+  setIsModalOpen(false);
+  setEditorType(null);
+  setEditIndex(null);
+  setEditorContent("");
+  setEditorListItems([""]);
+ };
+
+ const openEditor = (
+  type: string,
+  index: number,
+  content: string | string[]
+ ) => {
+  setEditorType(
+   type as "heading" | "subheading" | "paragraph" | "code" | "list"
+  );
+  setEditIndex(index);
+  if (Array.isArray(content)) {
+   setEditorListItems(content);
+  } else {
+   setEditorContent(content);
+  }
+  setIsEditing(true);
+ };
+
+ const closeEditor = () => {
+  setIsEditing(false);
+  setEditorType(null);
+  setEditIndex(null);
+  setEditorContent("");
+  setEditorListItems([""]);
+ };
+
+ const saveElement = async (
+  type: string,
+  content: string | string[],
+  index?: number
+ ) => {
+  if (!type || !noteId) return;
+
+  const newElement: NoteBody =
+   type === "list"
+    ? {
+       type: "list",
+       content: (content as string[]).filter(item => item.trim() !== "")
+      }
+    : {
+       type: type as "heading" | "subheading" | "paragraph" | "code",
+       content: content as string
+      };
+
+  if (newElement.type !== "list" && !newElement.content.trim()) return;
+
+  let updatedBody: NoteBody[];
+  if (index !== undefined) {
+   updatedBody = [...noteBody];
+   updatedBody[index] = newElement;
+  } else {
+   updatedBody = [...noteBody, newElement];
+  }
+
+  setNoteBody(updatedBody);
+  try {
+   fetcher.submit(
+    { body: JSON.stringify(updatedBody) },
+    {
+     action: `/notes/update/${noteId}qwerty`,
+     method: "put",
+     body: JSON.stringify(updatedBody)
+    }
+   );
+
+   await fetch(`/notes/update/${noteId}qwerty`, {
+    method: "PUT",
+    body: { ui: 35 }
+   });
+   //await updateNote(noteId, { body: updatedBody });
+  } catch (error) {
+   console.error("Failed to update note:", error);
+  }
+
+  if (index !== undefined) {
+   closeEditor();
+  } else {
+   closeModal();
+  }
+ };
+
+ const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+   opacity: 1,
+   transition: {
+    staggerChildren: 0.1
+   }
+  }
+ };
+
+ const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+ };
+
+ return (
+  <div className="flex flex-col min-h-screen font-light">
+   <div className="py-6 px-3">
+    <Button btn_type="ghost" onClick={() => navigate(-1)}>
+     <FaArrowLeft />
+    </Button>
+   </div>
+   <Suspense
+    fallback={
+     <motion.div
+      className="flex flex-col justify-center items-center min-h-[50vh]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+     >
+      <Spinner size={60} strokeWidth={6} color="#0071c2" />
+      <div className="text-white text-lg mt-4">Loading note...</div>
+     </motion.div>
+    }
+   >
+    <Await
+     resolve={deferredNote}
+     errorElement={
+      <div className="text-red-400 text-center py-8">
+       Failed to load note. Please try again.
+      </div>
+     }
+    >
+     {(note: Note) => {
+      // Initialize noteBody and noteId
+      useEffect(() => {
+       if (noteBody.length === 0) {
+        setNoteBody(note.body);
+        setNoteId(note.id);
+       }
+      }, [note]);
+
+      return (
+       <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col min-h-screen font-light"
+        key={note.id}
+       >
+        {/* Header */}
+        <motion.div
+         variants={itemVariants}
+         className="flex flex-col md:flex-row md:items-center md:justify-between px-8 md:px-10 pt-4 pb-6 border-b border-zinc-700"
+        >
+         <div className="flex flex-col gap-4">
+          <motion.h1
+           variants={itemVariants}
+           className="text-3xl md:text-5xl font-medium text-white tracking-tight"
+          >
+           {note.title}
+          </motion.h1>
+          <div className="flex flex-wrap gap-2">
+           {note.tags.map(tag => (
+            <motion.span
+             key={tag}
+             variants={itemVariants}
+             className="inline-flex items-center rounded-md bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400 ring-1 ring-green-400/30 ring-inset"
+            >
+             {tag}
+            </motion.span>
+           ))}
+          </div>
+          <motion.div
+           variants={itemVariants}
+           className="flex items-center text-gray-400 text-xs md:text-sm gap-2"
+          >
+           <p>Created {formatRelativeTime(note.createdAt)}</p>
+           <div className="h-1 w-1 bg-gray-500 rounded-full"></div>
+           <p>Last modified {formatRelativeTime(note.updatedAt)}</p>
+          </motion.div>
+         </div>
+         <motion.div
+          variants={itemVariants}
+          className="flex items-center gap-2 mt-4 md:mt-0 -space-x-4"
+         >
+          {note.owners.map(owner => (
+           <motion.img
+            key={owner.id}
+            variants={itemVariants}
+            alt={owner.name}
+            src={owner.avatar}
+            className="w-6 h-6 md:w-8 md:h-8 rounded-full ring-2 ring-gray-800"
+            title={owner.name}
+           />
+          ))}
+         </motion.div>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+         variants={itemVariants}
+         className="flex-1 flex flex-col px-4 md:px-10 py-8 gap-4 md:gap-8 pb-28 overflow-y-auto pr-4 scrollbar-thin scrollbar-color-[var(--thumb-color,#4b5563)_var(--track-color,#1f2937)] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+        >
+         <div className="flex-1 flex flex-col gap-6">
+          <AnimatePresence mode="popLayout">
+           {noteBody.map((item, index) => (
+            <motion.div
+             key={`${item.type}-${index}`}
+             variants={itemVariants}
+             initial="hidden"
+             animate="visible"
+             exit={{ opacity: 0, y: -20 }}
+             layout
+             className="relative group"
+             onMouseEnter={() => setHoveredIndex(index)}
+             onMouseLeave={() => setHoveredIndex(null)}
+            >
+             {isEditing && editIndex === index && editorType ? (
+              <Form
+               elementType={editorType}
+               initialContent={editorContent}
+               initialListItems={editorListItems}
+               setContent={setEditorContent}
+               setListItems={setEditorListItems}
+               onSubmit={() =>
+                saveElement(
+                 editorType,
+                 editorType === "list" ? editorListItems : editorContent,
+                 index
+                )
+               }
+               onCancel={closeEditor}
+              />
+             ) : (
+              <motion.div layout className="space-y-3">
+               {hoveredIndex === index && (
+                <motion.button
+                 initial={{ opacity: 0, scale: 0.8 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 exit={{ opacity: 0, scale: 0.8 }}
+                 transition={{ duration: 0.2 }}
+                 onClick={() => openEditor(item.type, index, item.content)}
+                 className="absolute right-0 p-2 text-gray-400 hover:text-white"
+                >
+                 <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                 >
+                  <path
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                   strokeWidth="2"
+                   d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
+                 </svg>
+                </motion.button>
+               )}
+               <motion.div variants={itemVariants} layout className="mt-2">
+                <AnimatePresence>
+                 {item.type === "heading" && (
+                  <motion.h2
+                   variants={itemVariants}
+                   className="text-xl md:text-2xl font-normal text-white mt-6 mb-2"
+                  >
+                   {item.content}
+                  </motion.h2>
+                 )}
+                 {item.type === "subheading" && (
+                  <motion.h3
+                   variants={itemVariants}
+                   className="text-lg md:text-xl font-light text-white mt-4 mb-2"
+                  >
+                   {item.content}
+                  </motion.h3>
+                 )}
+                 {item.type === "paragraph" && (
+                  <motion.p
+                   variants={itemVariants}
+                   className={`text-gray-300 leading-relaxed ${
+                    textSizeClasses[textSize]
+                   } ${
+                    index === 0
+                     ? "bg-yellow-800/50 p-4 rounded-md text-yellow-200"
+                     : ""
+                   }`}
+                  >
+                   {renderContentWithLinks(item.content as string)}
+                  </motion.p>
+                 )}
+                 {item.type === "list" && Array.isArray(item.content) && (
+                  <motion.ul
+                   variants={containerVariants}
+                   className={`list-disc pl-6 text-gray-300 space-y-2 ${textSizeClasses[textSize]}`}
+                  >
+                   {item.content.map((li, i) => (
+                    <motion.li key={i} variants={itemVariants}>
+                     {renderContentWithLinks(li.replace(/^[0-9a-z]\.\s/, ""))}
+                    </motion.li>
+                   ))}
+                  </motion.ul>
+                 )}
+                 {item.type === "code" && (
+                  <motion.pre
+                   variants={itemVariants}
+                   className={`bg-gray-800 rounded-md p-4 text-gray-200 overflow-x-auto ${textSizeClasses[textSize]}`}
+                  >
+                   <code>{item.content}</code>
+                  </motion.pre>
+                 )}
+                </AnimatePresence>
+               </motion.div>
+              </motion.div>
+             )}
+            </motion.div>
+           ))}
+          </AnimatePresence>
+         </div>
+        </motion.div>
+
+        {/* Sticky Footer */}
+        <motion.div
+         variants={itemVariants}
+         className="fixed sm:sticky bottom-0 sm:bottom-0 left-0 right-0 bg-zinc-900 w-full shadow-md py-3 px-4 md:px-2"
+        >
+         <div className="flex items-center justify-end gap-8">
+          <AddElementMenu openModal={openModal} />
+          <TextSizeMenu textSize={textSize} setTextSize={setTextSize} />
+         </div>
+        </motion.div>
+
+        {/* Editor Modal for Adding Elements */}
+        <ElementFormModal
+         isOpen={isModalOpen}
+         onClose={closeModal}
+         element={
+          editorType
+           ? {
+              type: editorType,
+              index: editIndex,
+              content: editorType === "list" ? editorListItems : editorContent
+             }
+           : null
+         }
+         onSave={saveElement}
+        />
+       </motion.div>
+      );
+     }}
+    </Await>
+   </Suspense>
+  </div>
+ );
+}
+plus can u fix it because when i try updating the animation after pressing update doesn't show up the element
