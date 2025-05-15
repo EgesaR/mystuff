@@ -48,7 +48,7 @@ const SideBar = ({ sidebarOpen, toggleSidebar, isMobile }: SideBarProps) => {
 
   const getSidebarWidth = () => {
     if (isMobile) {
-      return `${containerWidth * 0.7}px`;
+      return `${containerWidth * 0.525}px`;
     }
     return `${Math.max(containerWidth * 0.2, 200)}px`; // 20% or min 200px
   };
@@ -62,7 +62,7 @@ const SideBar = ({ sidebarOpen, toggleSidebar, isMobile }: SideBarProps) => {
       transition={isMobile ? { type: "tween", duration: 0.3 } : { duration: 0 }}
       className={`h-full py-4 px-1 flex flex-col justify-between ${
         isMobile ? "absolute" : "relative"
-      } bg-zinc-900 rounded-r-2xl z-10 pt-8 min-w-[200px]`}
+      } bg-zinc-900 rounded-r-2xl z-10 pt-8 w-[10%]`}
       style={{ width: getSidebarWidth() }}
       role="navigation"
       aria-label="Main navigation"
@@ -114,7 +114,7 @@ const SideBar = ({ sidebarOpen, toggleSidebar, isMobile }: SideBarProps) => {
   );
 
   return (
-    <div ref={measureRef} className="h-full w-[70%] sm:w-[20%] md:w-[15%]">
+    <div ref={measureRef} className={`h-full ${isMobile && sidebarOpen ? "bg-neutral-950/70 absolute inset-0 w-full" : ""} ${sidebarOpen ? "" : ""}`}>
       {isMobile ? (
         <AnimatePresence>{sidebarOpen && renderSidebar()}</AnimatePresence>
       ) : (
