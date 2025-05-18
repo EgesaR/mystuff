@@ -113,7 +113,7 @@ const SideBar = ({ sidebarOpen, toggleSidebar, isMobile }: SideBarProps) => {
     </motion.div>
   );
 
-  return (
+  return (  
     <div ref={measureRef} className={`h-full ${isMobile && sidebarOpen ? "bg-neutral-950/70 absolute inset-0 w-full" : ""} ${sidebarOpen ? "" : ""}`}>
       {isMobile ? (
         <AnimatePresence>{sidebarOpen && renderSidebar()}</AnimatePresence>

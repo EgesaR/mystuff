@@ -16,7 +16,7 @@ export const renderContentWithLinks = (content: string): React.ReactNode => {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:underline"
+          className="text-blue-400 hover:underline"
         >
           {part}
         </a>

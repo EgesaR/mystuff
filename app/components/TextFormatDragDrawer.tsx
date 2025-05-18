@@ -8,12 +8,15 @@ import {
   FiBold,
   FiItalic,
   FiUnderline,
-  FiCheck
+  FiCheck,
 } from "react-icons/fi";
 import { Select } from "@headlessui/react";
 import DragCloseDrawer from "~/components/DragCloseDrawer";
+import { PiTextSubscriptBold, PiTextSuperscriptBold } from "react-icons/pi";
 
 type AlignmentVariant = "left" | "center" | "justify" | "right";
+
+type textScriptVariant = "none" | "subscript" | "superscript";
 
 interface TextFormatData {
   font: string;
@@ -34,7 +37,7 @@ interface TextFormatDragDrawerProps {
 const TextFormatDragDrawer = ({
   drawerOpen,
   setDrawerOpen,
-  setData
+  setData,
 }: TextFormatDragDrawerProps) => {
   const [font, setFont] = useState("Calibri");
   const [fontSize, setFontSize] = useState(12);
@@ -43,6 +46,7 @@ const TextFormatDragDrawer = ({
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
+  const [textScript, settextScript] = useState<textScriptVariant>("none");
 
   const fontList = [
     "Calibri",
@@ -54,10 +58,11 @@ const TextFormatDragDrawer = ({
     "Roboto",
     "Roboto Light",
     "Roboto Condensed",
-    "Roboto Black"
+    "Roboto Black",
   ];
   const fontSizeList = [
-    12, 14, 16, 18, 20, 24, 26, 28, 32, 36, 38, 40, 44, 48, 52, 56, 60, 64, 68, 72
+    12, 14, 16, 18, 20, 24, 26, 28, 32, 36, 38, 40, 44, 48, 52, 56, 60, 64, 68,
+    72,
   ];
 
   const handleSave = () => {
@@ -68,7 +73,7 @@ const TextFormatDragDrawer = ({
       alignment,
       bold,
       italic,
-      underline
+      underline,
     });
   };
 
@@ -159,7 +164,9 @@ const TextFormatDragDrawer = ({
             className="w-full inline-flex items-center gap-x-2 text-sm font-medium rounded-lg px-4 py-2 focus:outline-none disabled:opacity-50 disabled:pointer-events-none transition-colors duration-200 border border-transparent bg-transparent text-neutral-200 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-800/30 dark:hover:text-orange-400 dark:focus:bg-orange-800/30 dark:focus:text-orange-400"
           >
             {fontList.map((fontItem, id) => (
-              <option key={id} value={fontItem}>{fontItem}</option>
+              <option key={id} value={fontItem}>
+                {fontItem}
+              </option>
             ))}
           </Select>
         </section>
@@ -171,7 +178,7 @@ const TextFormatDragDrawer = ({
                 ? "dark:bg-orange-800/30 dark:text-orange-500"
                 : "dark:text-neutral-200"
             }`}
-            onClick={() => setBold(prev => !prev)}
+            onClick={() => setBold((prev) => !prev)}
           >
             <FiBold />
           </Button>
@@ -182,7 +189,7 @@ const TextFormatDragDrawer = ({
                 ? "dark:bg-orange-800/30 dark:text-orange-500"
                 : "dark:text-neutral-200"
             }`}
-            onClick={() => setItalic(prev => !prev)}
+            onClick={() => setItalic((prev) => !prev)}
           >
             <FiItalic />
           </Button>
@@ -193,10 +200,33 @@ const TextFormatDragDrawer = ({
                 ? "dark:bg-orange-800/30 dark:text-orange-500"
                 : "dark:text-neutral-200"
             }`}
-            onClick={() => setUnderline(prev => !prev)}
+            onClick={() => setUnderline((prev) => !prev)}
           >
             <FiUnderline />
           </Button>
+          <Button
+            btn_type="outline"
+            className={`px-6 py-2.5 ${
+              textScript === "subscript"
+                ? "dark:bg-orange-800/30 dark:text-orange-500"
+                : "dark:text-neutral-200"
+            }`}
+            onClick={() => settextScript("subscript")}
+          >
+            <PiTextSubscriptBold />
+          </Button>
+          <Button
+            btn_type="outline"
+            className={`px-6 py-2.5 ${
+              textScript === "superscript"
+                ? "dark:bg-orange-800/30 dark:text-orange-500"
+                : "dark:text-neutral-200"
+            }`}
+            onClick={() => settextScript("superscript")}
+          >
+            <PiTextSuperscriptBold />
+          </Button>
+
           <Select
             name="fontSize"
             value={fontSize}
@@ -204,16 +234,14 @@ const TextFormatDragDrawer = ({
             className="w-full inline-flex items-center gap-x-2 text-sm font-medium rounded-lg px-1 py-2 focus:outline-none transition-colors duration-200 border border-transparent bg-transparent text-neutral-200 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-800/30 dark:hover:text-orange-400 dark:focus:bg-orange-800/30 dark:focus:text-orange-400"
           >
             {fontSizeList.map((fontSizeItem, id) => (
-              <option key={id} value={fontSizeItem}>{fontSizeItem}</option>
+              <option key={id} value={fontSizeItem}>
+                {fontSizeItem}
+              </option>
             ))}
           </Select>
         </section>
         <section>
-          <Button
-            btn_type="primary"
-            onClick={handleSave}
-            className="w-full"
-          >
+          <Button btn_type="primary" onClick={handleSave} className="w-full">
             Save Changes
           </Button>
         </section>

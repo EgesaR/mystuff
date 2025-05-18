@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { updateNote } from "~/data/notes";
 
-export const action = async ({ params, request }: ActionFunctionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
   const { id } = params;
   if (!id) {
     return json({ error: "Note ID is required" }, { status: 400 });
@@ -19,10 +19,10 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
     console.log("Server updating note:", { id, body: updatedBody });
     await updateNote(id, { body: updatedBody });
     return json({ ok: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to update note:", error);
     return json(
-      { error: `Failed to update note: ${error.message || error}` },
+      { error: `Failed to update note: ${error.message || String(error)}` },
       { status: 500 }
     );
   }

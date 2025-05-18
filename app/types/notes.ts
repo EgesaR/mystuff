@@ -4,18 +4,6 @@ export interface Owner {
   avatar: string;
 }
 
-export interface TextNoteBody {
-  type: "heading" | "subheading" | "paragraph" | "code";
-  content: string;
-}
-
-export interface ListNoteBody {
-  type: "list";
-  content: string[];
-}
-
-export type NoteBody = TextNoteBody | ListNoteBody;
-
 export interface Note {
   id: string;
   title: string;
@@ -25,3 +13,9 @@ export interface Note {
   owners: Owner[];
   tags: string[];
 }
+
+export type NoteBody =
+  | { type: "heading" | "subheading" | "paragraph" | "code"; content: string }
+  | { type: "list" | "checkbox" | "grid" | "flexbox"; content: string[] }
+  | { type: "image"; content: { url: string; caption?: string } }
+  | { type: "table"; content: { headers: string[]; rows: string[][] } };
