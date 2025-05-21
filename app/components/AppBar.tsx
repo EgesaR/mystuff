@@ -36,14 +36,16 @@ const AppBar = memo(({ toggleSidebar, isSidebarOpen }: AppBarProps) => {
         {/* Search Form */}
         <div className="w-[30%] pb-0.5 relative">
           <Form className="w-full h-full">
-            <Input
-              label="Search"
-              name="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setIsInputFocused(true)}
-              onBlur={() => setIsInputFocused(false)}
-            />
+          <Input
+      label="Search"
+      name="search"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      onFocus={() => setIsInputFocused(true)}
+      onBlur={() => setIsInputFocused(false)}
+      focusInputClass="" // Custom input focus styles
+      focusLabelClass="" // Custom label focus styles
+    />
           </Form>
           {/* SearchList: Only show when input is focused */}
           {isInputFocused && filteredItems.length > 0 && (

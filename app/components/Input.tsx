@@ -10,11 +10,13 @@ interface InputProps {
   disabled?: boolean;
   hasError?: boolean;
   className?: string;
+  focusInputClass?: string; // New prop for input focus styles
+  focusLabelClass?: string; // New prop for label focus styles
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   value?: string;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  onFocus?: () => void; // Added for focus handling
+  onFocus?: () => void;
   name?: string;
 }
 
@@ -27,6 +29,8 @@ const Input = memo(
     disabled = false,
     hasError = false,
     className = "",
+    focusInputClass = "", // Default to empty string
+    focusLabelClass = "", // Default to empty string
     onBlur,
     value = "",
     onKeyDown,
@@ -66,8 +70,17 @@ const Input = memo(
       "focus:border-b-orange-500 dark:focus:border-b-orange-600 focus:outline-0 focus:ring-0",
       "disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400",
       "transition-all duration-200 ease-in-out",
-      value && "pt-6 pb-0",
+      value && "pt-6 pb-0.5",
       className,
+      isFocused && focusInputClass, // Apply focusInputClass when focused
+    );
+
+    const labelStyles = twMerge(
+      "absolute left-0 top-3 text-sm",
+      "transition-all duration-200 ease-in-out origin-left pointer-events-none",
+      "peer-disabled:opacity-50 peer-disabled:pointer-events-none",
+      hasError && "text-red-500 dark:text-red-400",
+      isFocused && focusLabelClass, // Apply focusLabelClass when focused
     );
 
     const labelVariants = {
@@ -77,7 +90,7 @@ const Input = memo(
         color: hasError ? "rgb(239, 68, 68)" : "rgb(107, 114, 128)", // gray-500
       },
       focused: {
-        y: -20,
+        y: -17,
         scale: 0.9,
         color: hasError
           ? "rgb(239, 68, 68)"
@@ -111,12 +124,7 @@ const Input = memo(
         />
         <motion.label
           htmlFor={id}
-          className={twMerge(
-            "absolute left-0 top-3 text-sm",
-            "transition-all duration-200 ease-in-out origin-left pointer-events-none",
-            "peer-disabled:opacity-50 peer-disabled:pointer-events-none",
-            hasError && "text-red-500 dark:text-red-400",
-          )}
+          className={labelStyles}
           id={`${id}-label`}
           variants={labelVariants}
           initial="idle"
