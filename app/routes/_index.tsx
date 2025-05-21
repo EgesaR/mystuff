@@ -5,6 +5,8 @@ import Button from "~/components/Button";
 import Spinner from "~/components/Spinner";
 import DragCloseDrawer from "~/components/DragCloseDrawer";
 import TextFormatDragDrawer from "~/components/TextFormatDragDrawer";
+import { CgFileAdd } from "react-icons/cg";
+import { CiHashtag } from "react-icons/ci";
 
 export const meta: MetaFunction = () => {
   return [
@@ -65,16 +67,52 @@ export default function Index() {
         </div>
       ) : (
         <div className="h-full w-full flex">
-          <div className="py-5 pt-8 px-3 sm:px-6 flex flex-col gap-4 w-full">
-            <nav className="flex items-center">
-              <div className="text-[22px] sm:text-2xl tracking-tight font-normal flex gap-1.5">
-                <div className="text-white/80">
-                  Good {hours < 12 ? "morning" : hours >= 17 ? "evening" : "afternoon"},
+          <div className="py-5 pt-10 px-3 sm:px-6 sm:pr-0 flex flex-col gap-4 w-full">
+            <section className="relative flex items-center justify-center h-[205px] rounded-xl bg-gray-100 shadow-lg overflow-hidden">
+              <img
+                alt="Hello"
+                src="/bg.webp"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-start sm:px-12">
+                <div className="text-[22px] sm:text-3xl tracking-tight font-medium text-white flex flex-col sm:flex-row gap-1.5 text-center sm:text-left">
+                  <span className="text-white/80">
+                    Good{" "}
+                    {hours < 12
+                      ? "morning"
+                      : hours >= 17
+                      ? "evening"
+                      : "afternoon"}
+                    ,
+                  </span>
+                  <span className="font-semibold">Raymond</span>
                 </div>
-                <div>Raymond</div>
               </div>
-            </nav>
+            </section>
             <main>
+              {/* Recent Section */}
+              <section className="px-2 sm:px-3 my-4 rounded-xl shadow-sm flex itemms-center justify-between">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Recents
+                </h1>
+                <div className="space-x-1">
+                  <Button
+                    btn_type="outline"
+                  >
+                    <CgFileAdd className="text-lg" /> New Note
+                  </Button>
+                  <Button
+                    btn_type="outline"
+                  >
+                    <CiHashtag className="text-lg" /> New Task
+                  </Button>
+                  <Button
+                    btn_type="outline"
+                  >
+                    <CgFileAdd className="text-lg" /> Plan a new schedule
+                  </Button>
+                </div>
+              </section>
               <Button onClick={() => setDrawerOpen(true)}>Open Drawer</Button>
               <div>{JSON.stringify(textData)}</div>
               <TextFormatDragDrawer

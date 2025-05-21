@@ -2,7 +2,7 @@ import Button from "~/components/Button";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
 import TextSizeMenu from "~/components/TextSizeMenu";
@@ -12,11 +12,22 @@ import { Form } from "~/components/Form";
 import { formatRelativeTime } from "~/utils/dateUtils";
 import { renderContentWithLinks } from "~/utils/renderContentWithLinks";
 import type { Note, NoteBody } from "~/types/notes";
-import Spinner from "~/components/Spinner";
-import { getNotes, updateNote } from "~/data/notes";
+import { getNotes } from "~/data/notes";
 import { useFetcher } from "@remix-run/react";
 import { IoPencil } from "react-icons/io5";
 import { IoMdTrash } from "react-icons/io";
+
+type ElementType =
+  | "heading"
+  | "subheading"
+  | "paragraph"
+  | "code"
+  | "list"
+  | "checkbox"
+  | "image"
+  | "table"
+  | "grid"
+  | "flexbox";
 
 interface FetcherData {
   ok?: boolean;
@@ -42,26 +53,15 @@ export default function NoteDetails() {
   const [textSize, setTextSize] = useState<"sm" | "base" | "lg">("base");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editorType, setEditorType] = useState<
-    | "heading"
-    | "subheading"
-    | "paragraph"
-    | "code"
-    | "list"
-    | "checkbox"
-    | "image"
-    | "table"
-    | "grid"
-    | "flexbox"
-    | null
-  >(null);
+  const [editorType, setEditorType] = useState<ElementType | null>(null);
   const [editorContent, setEditorContent] = useState<string>("");
   const [editorListItems, setEditorListItems] = useState<string[]>([""]);
   const [editorImageCaption, setEditorImageCaption] = useState<string>("");
+  const [editorRows, setEditorRows] = useState<string[][]>([[]]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [noteBody, setNoteBody] = useState<NoteBody[]>(note.body);
-  const [noteId, setNoteId] = useState<string>(note.id);
+  const [noteId] = useState<string>(note.id);
   const navigate = useNavigate();
   const fetcher = useFetcher<FetcherData>();
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -73,49 +73,60 @@ export default function NoteDetails() {
     lg: "text-base md:text-lg",
   };
 
+  const modalElement = useMemo(() => {
+    if (!editorType) return null;
+    return {
+      type: editorType,
+      index: editIndex,
+      content:
+        editorType === "list" ||
+        editorType === "checkbox" ||
+        editorType === "grid" ||
+        editorType === "flexbox"
+          ? editorListItems
+          : editorType === "image"
+          ? { url: editorContent, caption: editorImageCaption || undefined }
+          : editorType === "table"
+          ? { headers: editorListItems, rows: editorRows }
+          : editorContent,
+    };
+  }, [editorType, editIndex, editorContent, editorListItems, editorImageCaption, editorRows]);
+
   const openModal = (
     type: string,
     index: number | null = null,
     content?: string | string[] | { url: string; caption?: string } | { headers: string[]; rows: string[][] }
   ) => {
-    setEditorType(
-      type as
-        | "heading"
-        | "subheading"
-        | "paragraph"
-        | "code"
-        | "list"
-        | "checkbox"
-        | "image"
-        | "table"
-        | "grid"
-        | "flexbox"
-    );
+    setEditorType(type as ElementType);
     setEditIndex(index);
     if (content) {
       if (Array.isArray(content)) {
         setEditorListItems(content.length > 0 ? content : [""]);
         setEditorContent("");
         setEditorImageCaption("");
+        setEditorRows([[]]);
       } else if (typeof content === "object" && "url" in content) {
         setEditorContent(content.url);
         setEditorImageCaption(content.caption || "");
         setEditorListItems([""]);
+        setEditorRows([[]]);
       } else if (typeof content === "object" && "headers" in content) {
         setEditorListItems(content.headers.length > 0 ? content.headers : [""]);
         setEditorContent("");
         setEditorImageCaption("");
+        setEditorRows(content.rows.length > 0 ? content.rows : [content.headers.map(() => "")]);
       } else {
         setEditorContent(content as string);
         setEditorListItems([""]);
         setEditorImageCaption("");
+        setEditorRows([[]]);
       }
     } else {
       setEditorContent("");
       setEditorListItems([""]);
       setEditorImageCaption("");
+      setEditorRows([[]]);
     }
-    console.log("Opening modal:", { type, index, content });
     setIsModalOpen(true);
   };
 
@@ -126,6 +137,7 @@ export default function NoteDetails() {
     setEditorContent("");
     setEditorListItems([""]);
     setEditorImageCaption("");
+    setEditorRows([[]]);
   };
 
   const openEditor = (
@@ -133,36 +145,28 @@ export default function NoteDetails() {
     index: number,
     content: string | string[] | { url: string; caption?: string } | { headers: string[]; rows: string[][] }
   ) => {
-    setEditorType(
-      type as
-        | "heading"
-        | "subheading"
-        | "paragraph"
-        | "code"
-        | "list"
-        | "checkbox"
-        | "image"
-        | "table"
-        | "grid"
-        | "flexbox"
-    );
+    setEditorType(type as ElementType);
     setEditIndex(index);
     if (Array.isArray(content)) {
       setEditorListItems(content.length > 0 ? content : [""]);
       setEditorContent("");
       setEditorImageCaption("");
+      setEditorRows([[]]);
     } else if (typeof content === "object" && "url" in content) {
       setEditorContent(content.url);
       setEditorImageCaption(content.caption || "");
       setEditorListItems([""]);
+      setEditorRows([[]]);
     } else if (typeof content === "object" && "headers" in content) {
       setEditorListItems(content.headers.length > 0 ? content.headers : [""]);
       setEditorContent("");
       setEditorImageCaption("");
+      setEditorRows(content.rows.length > 0 ? content.rows : [content.headers.map(() => "")]);
     } else {
       setEditorContent(content as string);
       setEditorListItems([""]);
       setEditorImageCaption("");
+      setEditorRows([[]]);
     }
     setIsEditing(true);
   };
@@ -174,6 +178,7 @@ export default function NoteDetails() {
     setEditorContent("");
     setEditorListItems([""]);
     setEditorImageCaption("");
+    setEditorRows([[]]);
   };
 
   const saveElement = (
@@ -200,7 +205,10 @@ export default function NoteDetails() {
         : type === "table"
         ? {
             type: "table",
-            content: typeof content === "object" && "headers" in content ? content : { headers: content as string[], rows: [] },
+            content:
+              typeof content === "object" && "headers" in content
+                ? content
+                : { headers: content as string[], rows: [] },
           }
         : {
             type: type as "heading" | "subheading" | "paragraph" | "code",
@@ -227,7 +235,6 @@ export default function NoteDetails() {
       updatedBody = [...noteBody, newElement];
     }
 
-    console.log("Updating noteBody:", updatedBody);
     setNoteBody(updatedBody);
 
     if (index === null) {
@@ -242,7 +249,6 @@ export default function NoteDetails() {
 
     const formData = new FormData();
     formData.append("body", JSON.stringify(updatedBody));
-    console.log("Submitting to server:", { noteId, body: updatedBody });
     fetcher.submit(formData, {
       method: "put",
       action: `/notes/${noteId}/update`,
@@ -285,10 +291,7 @@ export default function NoteDetails() {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0.3 },
-    },
+    visible: { opacity: 1, transition: { duration: 0.3 } },
   };
 
   const itemVariants = {
@@ -389,16 +392,11 @@ export default function NoteDetails() {
                   exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
                   className="relative group p-2 flex"
                   onMouseEnter={() => {
-                    if (hoverTimeoutRef.current) {
-                      clearTimeout(hoverTimeoutRef.current);
-                    }
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
                     setHoveredIndex(index);
                     const element = elementRefs.current[index];
                     if (element) {
-                      element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "nearest",
-                      });
+                      element.scrollIntoView({ behavior: "smooth", block: "nearest" });
                     }
                   }}
                   onMouseLeave={() => {
@@ -407,53 +405,49 @@ export default function NoteDetails() {
                     }, 200);
                   }}
                 >
-                  <div className="flex-shrink-0 w-8 relative">
-                    {hoveredIndex === index && (
-                      <motion.div
-                        variants={buttonVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="absolute left-0 top-0 flex flex-col gap-1 z-10"
-                        onMouseEnter={() => {
-                          if (hoverTimeoutRef.current) {
-                            clearTimeout(hoverTimeoutRef.current);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          hoverTimeoutRef.current = setTimeout(() => {
-                            setHoveredIndex(null);
-                          }, 200);
-                        }}
-                      >
-                        <motion.button
-                          onClick={() =>
-                            openEditor(item.type, index, item.content)
-                          }
-                          className="p-1 text-zinc-400 hover:text-zinc-50 bg-zinc-800 rounded"
-                        >
-                          <IoPencil className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          onClick={() => {
-                            const updatedBody = [...noteBody];
-                            updatedBody.splice(index, 1);
-                            setNoteBody(updatedBody);
-                            const formData = new FormData();
-                            formData.append(
-                              "body",
-                              JSON.stringify(updatedBody)
-                            );
-                            fetcher.submit(formData, {
-                              method: "put",
-                              action: `/notes/${noteId}/update`,
-                            });
+                  <div className="flex-shrink-0 w-8 relative z-10">
+                    <AnimatePresence>
+                      {hoveredIndex === index && (
+                        <motion.div
+                          variants={buttonVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="hidden"
+                          className="absolute left-0 top-0 flex flex-col gap-1"
+                          onMouseEnter={() => {
+                            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
                           }}
-                          className="p-1 text-zinc-400 hover:text-zinc-50 bg-zinc-800 rounded"
+                          onMouseLeave={() => {
+                            hoverTimeoutRef.current = setTimeout(() => {
+                              setHoveredIndex(null);
+                            }, 200);
+                          }}
                         >
-                          <IoMdTrash className="w-4 h-4" />
-                        </motion.button>
-                      </motion.div>
-                    )}
+                          <motion.button
+                            onClick={() => openEditor(item.type, index, item.content)}
+                            className="p-1 text-zinc-400 hover:text-orange-500 bg-zinc-800 rounded"
+                          >
+                            <IoPencil className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            onClick={() => {
+                              const updatedBody = [...noteBody];
+                              updatedBody.splice(index, 1);
+                              setNoteBody(updatedBody);
+                              const formData = new FormData();
+                              formData.append("body", JSON.stringify(updatedBody));
+                              fetcher.submit(formData, {
+                                method: "put",
+                                action: `/notes/${noteId}/update`,
+                              });
+                            }}
+                            className="p-1 text-zinc-400 hover:text-orange-500 bg-zinc-800 rounded"
+                          >
+                            <IoMdTrash className="w-4 h-4" />
+                          </motion.button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="flex-1">
                     {isEditing && editIndex === index && editorType ? (
@@ -469,21 +463,23 @@ export default function NoteDetails() {
                           initialContent={editorContent}
                           initialListItems={editorListItems}
                           initialImageCaption={editorImageCaption}
+                          initialRows={editorRows}
                           setContent={setEditorContent}
                           setListItems={setEditorListItems}
                           setImageCaption={setEditorImageCaption}
+                          setRows={setEditorRows}
                           onSubmit={() =>
                             saveElement(
                               editorType,
                               editorType === "list" ||
-                                editorType === "checkbox" ||
-                                editorType === "grid" ||
-                                editorType === "flexbox"
+                              editorType === "checkbox" ||
+                              editorType === "grid" ||
+                              editorType === "flexbox"
                                 ? editorListItems
                                 : editorType === "image"
                                 ? { url: editorContent, caption: editorImageCaption || undefined }
                                 : editorType === "table"
-                                ? { headers: editorListItems, rows: [] }
+                                ? { headers: editorListItems, rows: editorRows }
                                 : editorContent,
                               index
                             )
@@ -498,9 +494,6 @@ export default function NoteDetails() {
                           <motion.h2
                             key={`heading-${index}`}
                             variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className="text-xl md:text-2xl font-normal text-zinc-50 mt-1 mb-1"
                           >
                             {item.content}
@@ -510,9 +503,6 @@ export default function NoteDetails() {
                           <motion.h3
                             key={`subheading-${index}`}
                             variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className="text-lg md:text-xl font-light text-zinc-50 mt-1 mb-1"
                           >
                             {item.content}
@@ -522,9 +512,6 @@ export default function NoteDetails() {
                           <motion.p
                             key={`paragraph-${index}`}
                             variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`text-zinc-300 leading-relaxed ${textSizeClasses[textSize]} mt-1 mb-1`}
                           >
                             {renderContentWithLinks(item.content as string)}
@@ -534,22 +521,11 @@ export default function NoteDetails() {
                           <motion.ul
                             key={`list-${index}`}
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`list-disc pl-6 text-zinc-300 space-y-0.5 ${textSizeClasses[textSize]} mt-1 mb-1`}
                           >
                             {item.content.map((li, i) => (
-                              <motion.li
-                                key={`${index}-li-${i}`}
-                                variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit={{ opacity: 0, y: -20 }}
-                              >
-                                {renderContentWithLinks(
-                                  li.replace(/^[0-9a-z]\.\s/, "")
-                                )}
+                              <motion.li key={`list-${index}-${i}`} variants={itemVariants}>
+                                {renderContentWithLinks(li.replace(/^[0-9a-z]\.\s/, ""))}
                               </motion.li>
                             ))}
                           </motion.ul>
@@ -558,23 +534,16 @@ export default function NoteDetails() {
                           <motion.div
                             key={`checkbox-${index}`}
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
-                            className={`text-zinc-300 ${textSizeClasses[textSize]} mt-1 mb-1`}
+                            className={`text-zinc-300 ${textSizeClasses[textSize]} mt-1 mb-1 space-y-1`}
                           >
-                            <h3 className="text-lg font-light text-zinc-50 mb-0.5">Checklist</h3>
                             {item.content.map((li, i) => (
                               <motion.label
-                                key={`${index}-checkbox-${i}`}
+                                key={`checkbox-${index}-${i}`}
                                 variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit={{ opacity: 0, y: -20 }}
                                 className="flex items-center gap-2"
                               >
-                                <input type="checkbox" className="h-4 w-4 text-orange-600" />
-                                {renderContentWithLinks(li)}
+                                <input type="checkbox" className="h-4 w-4 text-orange-600 rounded" />
+                                <span>{renderContentWithLinks(li)}</span>
                               </motion.label>
                             ))}
                           </motion.div>
@@ -583,9 +552,6 @@ export default function NoteDetails() {
                           <motion.pre
                             key={`code-${index}`}
                             variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`bg-zinc-800 rounded-md p-4 text-zinc-200 overflow-x-auto ${textSizeClasses[textSize]} mt-1 mb-1`}
                           >
                             <code>{item.content}</code>
@@ -595,9 +561,6 @@ export default function NoteDetails() {
                           <motion.div
                             key={`image-${index}`}
                             variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className="mt-1 mb-1"
                           >
                             <img
@@ -616,9 +579,6 @@ export default function NoteDetails() {
                           <motion.div
                             key={`table-${index}`}
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`overflow-x-auto mt-1 mb-1 ${textSizeClasses[textSize]}`}
                           >
                             <table className="w-full text-zinc-300 border-collapse">
@@ -626,11 +586,8 @@ export default function NoteDetails() {
                                 <tr>
                                   {item.content.headers.map((header, i) => (
                                     <motion.th
-                                      key={`${index}-th-${i}`}
+                                      key={`table-th-${index}-${i}`}
                                       variants={itemVariants}
-                                      initial="hidden"
-                                      animate="visible"
-                                      exit={{ opacity: 0, y: -20 }}
                                       className="border border-zinc-500 p-2 bg-zinc-700"
                                     >
                                       {header}
@@ -640,20 +597,11 @@ export default function NoteDetails() {
                               </thead>
                               <tbody>
                                 {item.content.rows.map((row, i) => (
-                                  <motion.tr
-                                    key={`${index}-tr-${i}`}
-                                    variants={itemVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit={{ opacity: 0, y: -20 }}
-                                  >
+                                  <motion.tr key={`table-tr-${index}-${i}`} variants={itemVariants}>
                                     {row.map((cell, j) => (
                                       <motion.td
-                                        key={`${index}-td-${i}-${j}`}
+                                        key={`table-td-${index}-${i}-${j}`}
                                         variants={itemVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit={{ opacity: 0, y: -20 }}
                                         className="border border-zinc-500 p-2"
                                       >
                                         {cell}
@@ -669,18 +617,12 @@ export default function NoteDetails() {
                           <motion.div
                             key={`grid-${index}`}
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`grid grid-cols-2 md:grid-cols-3 gap-4 mt-1 mb-1 ${textSizeClasses[textSize]}`}
                           >
                             {item.content.map((contentItem, i) => (
                               <motion.div
-                                key={`${index}-grid-${i}`}
+                                key={`grid-${index}-${i}`}
                                 variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit={{ opacity: 0, y: -20 }}
                                 className="bg-zinc-700 p-4 rounded-md text-zinc-300"
                               >
                                 {renderContentWithLinks(contentItem)}
@@ -692,18 +634,12 @@ export default function NoteDetails() {
                           <motion.div
                             key={`flexbox-${index}`}
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit={{ opacity: 0, y: -20 }}
                             className={`flex flex-wrap gap-4 mt-1 mb-1 ${textSizeClasses[textSize]}`}
                           >
                             {item.content.map((contentItem, i) => (
                               <motion.div
-                                key={`${index}-flex-${i}`}
+                                key={`flexbox-${index}-${i}`}
                                 variants={itemVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit={{ opacity: 0, y: -20 }}
                                 className="bg-zinc-700 p-4 rounded-md text-zinc-300 flex-1 min-w-[150px]"
                               >
                                 {renderContentWithLinks(contentItem)}
@@ -722,7 +658,7 @@ export default function NoteDetails() {
 
         <motion.div
           variants={itemVariants}
-          className="fixed sm:sticky bottom-0 sm:bottom-0 left-0 right-0 bg-zinc-900 w-full shadow-md py-3 px-4 md:px-2"
+          className="fixed sm:sticky bottom-0 left-0 right-0 bg-zinc-900 w-full shadow-md py-3 px-4 md:px-2"
         >
           <div className="flex items-center justify-end gap-8">
             <AddElementMenu openModal={openModal} />
@@ -733,25 +669,7 @@ export default function NoteDetails() {
         <ElementFormModal
           isOpen={isModalOpen}
           onClose={closeModal}
-          element={
-            editorType
-              ? {
-                  type: editorType,
-                  index: editIndex,
-                  content:
-                    editorType === "list" ||
-                    editorType === "checkbox" ||
-                    editorType === "grid" ||
-                    editorType === "flexbox"
-                      ? editorListItems
-                      : editorType === "image"
-                      ? { url: editorContent, caption: editorImageCaption || undefined }
-                      : editorType === "table"
-                      ? { headers: editorListItems, rows: [] }
-                      : editorContent,
-                }
-              : null
-          }
+          element={modalElement}
           onSave={saveElement}
         />
       </motion.div>

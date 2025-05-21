@@ -1,44 +1,54 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import Button from "~/components/Button";
 
-export const Form = ({
+type ElementType =
+  | "heading"
+  | "subheading"
+  | "paragraph"
+  | "code"
+  | "list"
+  | "checkbox"
+  | "image"
+  | "table"
+  | "grid"
+  | "flexbox";
+
+interface FormProps {
+  elementType: ElementType;
+  initialContent?: string;
+  initialListItems?: string[];
+  initialImageCaption?: string;
+  initialRows?: string[][];
+  setContent: (content: string) => void;
+  setListItems: (items: string[]) => void;
+  setImageCaption?: (caption: string) => void;
+  setRows?: (rows: string[][]) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  isEditing?: boolean;
+}
+
+export const Form: React.FC<FormProps> = ({
   elementType,
   initialContent = "",
   initialListItems = [""],
   initialImageCaption = "",
+  initialRows = [[]],
   setContent,
   setListItems,
   setImageCaption,
+  setRows,
   onSubmit,
   onCancel,
   isEditing = false,
-}: {
-  elementType:
-    | "heading"
-    | "subheading"
-    | "paragraph"
-    | "code"
-    | "list"
-    | "checkbox"
-    | "image"
-    | "table"
-    | "grid"
-    | "flexbox";
-  initialContent?: string;
-  initialListItems?: string[];
-  initialImageCaption?: string;
-  setContent: (content: string) => void;
-  setListItems: (items: string[]) => void;
-  setImageCaption?: (caption: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  isEditing?: boolean;
 }) => {
   const [text, setText] = useState(initialContent);
   const [listItems, setLocalListItems] = useState<string[]>(initialListItems);
   const [imageCaption, setLocalImageCaption] = useState(initialImageCaption);
-  const [tableRows, setTableRows] = useState<string[][]>([]);
+  const [tableRows, setTableRows] = useState<string[][]>(
+    elementType === "table" && initialRows.length > 0 ? initialRows : [initialListItems.map(() => "")]
+  );
   const firstInputRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -46,8 +56,10 @@ export const Form = ({
     setText(initialContent);
     setLocalListItems(initialListItems);
     setLocalImageCaption(initialImageCaption);
-    setTableRows([]); // Reset rows for simplicity; extend if needed
-  }, [initialContent, initialListItems, initialImageCaption]);
+    if (elementType === "table") {
+      setTableRows(initialRows.length > 0 ? initialRows : [initialListItems.map(() => "")]);
+    }
+  }, [initialContent, initialListItems, initialImageCaption, initialRows, elementType]);
 
   useEffect(() => {
     if (
@@ -66,10 +78,10 @@ export const Form = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", { elementType, text, listItems, imageCaption, tableRows });
     setContent(text);
     setListItems(listItems);
     if (setImageCaption) setImageCaption(imageCaption);
+    if (setRows && elementType === "table") setRows(tableRows);
     onSubmit();
   };
 
@@ -95,12 +107,21 @@ export const Form = ({
     const newItems = [...listItems, ""];
     setLocalListItems(newItems);
     setListItems(newItems);
+    if (elementType === "table") {
+      setTableRows(tableRows.map((row) => [...row, ""]));
+    }
   };
 
   const removeListItem = (index: number) => {
     const newItems = listItems.filter((_, i) => i !== index);
-    setLocalListItems(newItems.length > 0 ? newItems : [""]);
-    setListItems(newItems.length > 0 ? newItems : [""]);
+    const updatedItems = newItems.length > 0 ? newItems : [""];
+    setLocalListItems(updatedItems);
+    setListItems(updatedItems);
+    if (elementType === "table") {
+      setTableRows(
+        tableRows.map((row) => row.filter((_, i) => i !== index)).map((row) => (row.length > 0 ? row : [""]))
+      );
+    }
   };
 
   const addTableRow = () => {
@@ -108,17 +129,27 @@ export const Form = ({
   };
 
   const removeTableRow = (rowIndex: number) => {
-    setTableRows(tableRows.filter((_, i) => i !== rowIndex));
+    const newRows = tableRows.filter((_, i) => i !== rowIndex);
+    setTableRows(newRows.length > 0 ? newRows : [Array(listItems.length).fill("")]);
   };
 
   const isSubmitDisabled =
+    (elementType === "list" ||
+      elementType === "checkbox" ||
+      elementType === "grid" ||
+      elementType === "flexbox") &&
+    listItems.every((item) => !item.trim()) ||
+    (elementType === "image" && !text.trim()) ||
+    (elementType === "table" &&
+      listItems.every((item) => !item.trim()) &&
+      tableRows.every((row) => row.every((cell) => !cell.trim()))) ||
     (elementType !== "list" &&
       elementType !== "checkbox" &&
       elementType !== "grid" &&
       elementType !== "flexbox" &&
-      !text.trim()) ||
-    (elementType === "image" && !text.trim()) ||
-    (elementType === "table" && listItems.every((item) => !item.trim()));
+      elementType !== "image" &&
+      elementType !== "table" &&
+      !text.trim());
 
   return (
     <motion.form
@@ -128,29 +159,15 @@ export const Form = ({
       transition={{ duration: 0.3 }}
       onSubmit={handleSubmit}
       className="w-full rounded border border-zinc-700 bg-zinc-900 p-3"
-      layout
     >
       <AnimatePresence mode="wait">
         {elementType === "list" ||
         elementType === "checkbox" ||
         elementType === "grid" ||
         elementType === "flexbox" ? (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-3"
-          >
+          <div key="list" className="space-y-3">
             {listItems.map((item, index) => (
-              <motion.div
-                key={`list-item-${index}-${item}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-                className="flex gap-2"
-              >
+              <div key={`list-item-${index}`} className="flex gap-2">
                 <input
                   ref={index === 0 ? firstInputRef : null}
                   type="text"
@@ -158,35 +175,29 @@ export const Form = ({
                   name={`Item-${index}`}
                   onChange={(e) => handleListItemChange(index, e.target.value)}
                   placeholder={`Item ${index + 1}`}
-                  className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+                  className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
-                <button
+                <Button
                   type="button"
+                  btn_type="ghost"
                   onClick={() => removeListItem(index)}
                   className="text-red-400 hover:text-red-300"
                 >
                   Remove
-                </button>
-              </motion.div>
+                </Button>
+              </div>
             ))}
-            <motion.button
+            <Button
               type="button"
+              btn_type="ghost"
               onClick={addListItem}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+              className="mt-2 text-orange-600 hover:text-orange-500"
             >
               Add Item
-            </motion.button>
-          </motion.div>
+            </Button>
+          </div>
         ) : elementType === "image" ? (
-          <motion.div
-            key="image"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-3"
-          >
+          <div key="image" className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-zinc-300">Image URL</label>
               <input
@@ -195,7 +206,7 @@ export const Form = ({
                 value={text}
                 onChange={handleTextChange}
                 placeholder="https://example.com/image.jpg"
-                className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+                className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <div>
@@ -208,67 +219,39 @@ export const Form = ({
                   if (setImageCaption) setImageCaption(e.target.value);
                 }}
                 placeholder="Image caption"
-                className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+                className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-          </motion.div>
+          </div>
         ) : elementType === "table" ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="space-y-3"
-          >
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Headers</label>
+          <div key="table" className="space-y-3">
+            <div className="block text-sm font-medium text-zinc-300">Table</div>
+            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${listItems.length + 1}, minmax(0, 1fr))` }}>
               {listItems.map((item, index) => (
-                <motion.div
-                  key={`header-${index}-${item}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex gap-2 mt-2"
-                >
+                <div key={`header-${index}`} className="flex flex-col gap-1">
                   <input
                     ref={index === 0 ? firstInputRef : null}
                     type="text"
                     value={item}
                     onChange={(e) => handleListItemChange(index, e.target.value)}
                     placeholder={`Header ${index + 1}`}
-                    className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+                    className="rounded bg-zinc-900 p-2 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeListItem(index)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    Remove
-                  </button>
-                </motion.div>
+                  {listItems.length > 1 && (
+                    <Button
+                      type="button"
+                      btn_type="ghost"
+                      onClick={() => removeListItem(index)}
+                      className="text-red-400 hover:text-red-300 text-xs"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
               ))}
-              <motion.button
-                type="button"
-                onClick={addListItem}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
-              >
-                Add Header
-              </motion.button>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Rows</label>
+              <div></div>
               {tableRows.map((row, rowIndex) => (
-                <motion.div
-                  key={`row-${rowIndex}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex gap-2 mt-2"
-                >
+                <React.Fragment key={`row-${rowIndex}`}>
                   {row.map((cell, cellIndex) => (
                     <input
                       key={`cell-${rowIndex}-${cellIndex}`}
@@ -276,69 +259,74 @@ export const Form = ({
                       value={cell}
                       onChange={(e) => handleTableRowChange(rowIndex, cellIndex, e.target.value)}
                       placeholder={`Cell ${cellIndex + 1}`}
-                      className="w-full rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
+                      className="rounded bg-zinc-900 p-2 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   ))}
-                  <button
+                  <Button
                     type="button"
+                    btn_type="ghost"
                     onClick={() => removeTableRow(rowIndex)}
-                    className="text-red-400 hover:text-red-300"
+                    className="text-red-400 hover:text-red-300 text-xs"
                   >
                     Remove
-                  </button>
-                </motion.div>
+                  </Button>
+                </React.Fragment>
               ))}
-              <motion.button
+            </div>
+            <div className="flex gap-2">
+              <Button
                 type="button"
+                btn_type="ghost"
+                onClick={addListItem}
+                className="text-orange-600 hover:text-orange-500"
+              >
+                Add Column
+              </Button>
+              <Button
+                type="button"
+                btn_type="ghost"
                 onClick={addTableRow}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-2 px-3 py-1 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+                className="text-orange-600 hover:text-orange-500"
               >
                 Add Row
-              </motion.button>
+              </Button>
             </div>
-          </motion.div>
+          </div>
         ) : (
-          <motion.textarea
-            key="textarea"
-            ref={textareaRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            value={text}
-            name={elementType}
-            onChange={handleTextChange}
-            placeholder={`Enter ${elementType} content...`}
-            className="h-24 w-full resize-none rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-0"
-            rows={elementType === "code" ? 6 : 4}
-          />
+          <div key="textarea">
+            <label className="block text-sm font-medium text-zinc-300 capitalize">{elementType}</label>
+            <textarea
+              ref={textareaRef}
+              value={text}
+              name={elementType}
+              onChange={handleTextChange}
+              placeholder={`Enter ${elementType} content...`}
+              className="h-24 w-full resize-none rounded bg-zinc-900 p-3 text-sm text-zinc-50 placeholder-zinc-500 caret-zinc-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              rows={elementType === "code" ? 6 : 4}
+            />
+          </div>
         )}
       </AnimatePresence>
-      <motion.div
-        className="flex items-center justify-end gap-3 mt-3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <button
+      <div className="flex items-center justify-end gap-3 mt-3">
+        <Button
           type="button"
+          btn_type="ghost"
           onClick={onCancel}
-          className="rounded px-1.5 py-1 text-xs bg-zinc-300/20 text-zinc-300 transition-colors hover:bg-zinc-600 hover:text-zinc-200"
+          className="rounded px-1.5 py-1 text-xs bg-zinc-300/20 text-zinc-300 hover:bg-zinc-600 hover:text-orange-500"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          btn_type="primary"
           disabled={isSubmitDisabled}
-          className={`rounded bg-orange-600 px-1.5 py-1 text-xs text-orange-50 transition-colors ${
-            isSubmitDisabled
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-orange-500"
+          className={`rounded px-1.5 py-1 text-xs text-orange-50 transition-colors ${
+            isSubmitDisabled ? "opacity-50 cursor-not-allowed bg-orange-600" : "bg-orange-600 hover:bg-orange-500"
           }`}
         >
           {isEditing ? "Update" : "Add"}
-        </button>
-      </motion.div>
+        </Button>
+      </div>
     </motion.form>
   );
 };
