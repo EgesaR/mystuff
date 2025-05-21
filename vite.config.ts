@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { vitePlugin as remix } from "@remix-run/dev";
 import tsconfigPaths from "vite-tsconfig-paths";
+import tailwindcss from "@tailwindcss/vite";
 
 declare module "@remix-run/node" {
   interface Future {
@@ -10,6 +11,7 @@ declare module "@remix-run/node" {
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     remix({
       future: {
         v3_fetcherPersist: true,
@@ -32,10 +34,27 @@ export default defineConfig({
     },
   },
   esbuild: {
-    jsx: "automatic", // Handle JSX automatically for .tsx files
+    jsx: "automatic",
   },
   resolve: {
-    extensions: [".js", ".jsx", ".ts", ".tsx"], // Ensure Vite resolves these extensions
+    extensions: [".js", ".jsx", ".ts", ".tsx"],
+  },
+  optimizeDeps: {
+    exclude: [
+      "react-icons/fa",
+      "react-icons/ci",
+      "react-icons/io",
+      "react-icons/pi",
+      "react-icons/fi",
+      "react-icons/ri",
+      "react-icons/bs",
+      "react-icons/md",
+      "react-icons/cg",
+      "framer-motion",
+      "react-use-measure",
+      "tailwind-merge",
+      "@headlessui/react",
+    ],
   },
   build: {
     rollupOptions: {
