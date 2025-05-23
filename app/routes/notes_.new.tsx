@@ -1,76 +1,14 @@
-import { Form, redirect, useNavigate, useActionData } from "@remix-run/react";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { Form, useNavigate, useActionData } from "@remix-run/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { v4 as uuid } from "uuid";
 import Badge from "~/components/Badge";
 import Button from "~/components/Button";
 import Input from "~/components/Input";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { v4 as uuid } from "uuid";
-import { createNote } from "~/data/notes";
-import type { Note, Owner } from "~/types/notes";
-
-interface Item {
-  id: string;
-  value: string;
-}
-
-interface ActionData {
-  error?: string;
-}
-
-interface TagsProps {
-  tags: Item[];
-  handleRemoveTag: (id: string) => void;
-  isTagOpen: boolean;
-  tagInput: string;
-  setTagInput: (value: string) => void;
-  handleAddTag: (value: string) => void;
-  handleTagClick: () => void;
-}
-
-interface OwnersProps {
-  owners: Item[];
-  handleRemoveOwner: (id: string) => void;
-  isOwnerOpen: boolean;
-  ownerInput: string;
-  setOwnerInput: (value: string) => void;
-  handleAddOwner: (value: string) => void;
-  handleOwnerClick: () => void;
-}
-
-export const action = async ({ request }: ActionFunctionArgs): Promise<Response> => {
-  const formData = await request.formData();
-  const title = formData.get("title") as string;
-  const tags = JSON.parse(formData.get("tags") as string) as Item[];
-  const owners = JSON.parse(formData.get("owners") as string) as Item[];
-
-  if (!title) {
-    return json<ActionData>({ error: "Title is required" }, { status: 400 });
-  }
-
-  const note: Note = {
-    id: uuid(),
-    title,
-    body: [
-      {
-        type: "paragraph",
-        content: "Begin from here",
-      },
-    ],
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    owners: owners.map((owner) => ({
-      id: uuid(),
-      name: owner.value,
-      avatar: "https://placecats.com/200/200",
-    })),
-    tags: tags.map((tag) => tag.value),
-  };
-
-  await createNote(note);
-  return redirect("/notes");
-};
+import Tags from "~/components/Tags";
+import Owners from "~/components/Owners";
+import type { Item, ActionData, Note } from "~/types/notes";
 
 export default function NewNote() {
   const [tags, setTags] = useState<Item[]>([]);
@@ -82,8 +20,63 @@ export default function NewNote() {
   const [isOwnerOpen, setIsOwnerOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const actionData = useActionData<ActionData>();
+  const queryClient = useQueryClient();
 
-  const handleTagClick = (): void => {
+  const mutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch("/api/action/notes/new", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create note");
+      }
+      return response.json();
+    },
+    onMutate: async (formData) => {
+      const tempId = uuid();
+      const title = formData.get("title") as string;
+      const tags = JSON.parse(formData.get("tags") as string) as Item[];
+      const owners = JSON.parse(formData.get("owners") as string) as Item[];
+
+      const optimisticNote: Note = {
+        id: tempId,
+        title,
+        body: [{ type: "paragraph", content: "Begin from here" }],
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        owners: owners.map((owner) => ({
+          id: uuid(),
+          name: owner.value,
+          avatar: "https://placecats.com/200/200",
+        })),
+        tags: tags.map((tag) => tag.value),
+      };
+
+      await queryClient.cancelQueries({ queryKey: ["notes"] });
+      const previousNotes = queryClient.getQueryData<Note[]>(["notes"]) || [];
+      queryClient.setQueryData(["notes"], [...previousNotes, optimisticNote]);
+
+      return { optimisticNote, previousNotes };
+    },
+    onError: (error, variables, context) => {
+      queryClient.setQueryData(["notes"], context?.previousNotes);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["notes"], (old: Note[] | undefined) => {
+        const withoutOptimistic = (old || []).filter(
+          (note) => note.id !== data.note.id
+        );
+        return [...withoutOptimistic, data.note];
+      });
+      // Invalidate to ensure all clients refetch
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      navigate("/notes", { replace: true });
+    },
+  });
+
+  const handleTagClick = useCallback((): void => {
     if (isTagOpen && tagInput.trim()) {
       setTags([...tags, { id: uuid(), value: tagInput.trim() }]);
       setTagInput("");
@@ -92,21 +85,21 @@ export default function NewNote() {
       setIsTagOpen((prev) => !prev);
       setTagInput("");
     }
-  };
+  }, [isTagOpen, tagInput, tags]);
 
-  const handleAddTag = (value: string): void => {
+  const handleAddTag = useCallback((value: string): void => {
     if (value.trim()) {
       setTags([...tags, { id: uuid(), value: value.trim() }]);
       setTagInput("");
       setIsTagOpen(false);
     }
-  };
+  }, [tags]);
 
-  const handleRemoveTag = (id: string): void => {
+  const handleRemoveTag = useCallback((id: string): void => {
     setTags(tags.filter((tag) => tag.id !== id));
-  };
+  }, [tags]);
 
-  const handleOwnerClick = (): void => {
+  const handleOwnerClick = useCallback((): void => {
     if (isOwnerOpen && ownerInput.trim()) {
       setOwners([...owners, { id: uuid(), value: ownerInput.trim() }]);
       setOwnerInput("");
@@ -115,24 +108,35 @@ export default function NewNote() {
       setIsOwnerOpen((prev) => !prev);
       setOwnerInput("");
     }
-  };
+  }, [isOwnerOpen, ownerInput, owners]);
 
-  const handleAddOwner = (value: string): void => {
+  const handleAddOwner = useCallback((value: string): void => {
     if (value.trim()) {
       setOwners([...owners, { id: uuid(), value: value.trim() }]);
       setOwnerInput("");
       setIsOwnerOpen(false);
     }
-  };
+  }, [owners]);
 
-  const handleRemoveOwner = (id: string): void => {
+  const handleRemoveOwner = useCallback((id: string): void => {
     setOwners(owners.filter((owner) => owner.id !== id));
+  }, [owners]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    mutation.mutate(formData);
   };
 
   return (
     <div className="w-full min-h-screen px-8 md:px-10 pt-14 pb-28 bg-zinc-900 font-light">
       <h1 className="text-4xl font-semibold text-zinc-50">Add a new note</h1>
-      <Form method="post" className="mt-6 flex flex-col gap-6">
+      <Form
+        method="post"
+        className="mt-6 flex flex-col gap-6"
+        onSubmit={handleSubmit}
+        aria-busy={mutation.isPending}
+      >
         <input type="hidden" name="tags" value={JSON.stringify(tags)} />
         <input type="hidden" name="owners" value={JSON.stringify(owners)} />
         <div>
@@ -143,17 +147,21 @@ export default function NewNote() {
             placeholder="Enter your note title"
             label="Note Title"
             className="w-full sm:max-w-[24rem]"
+            disabled={mutation.isPending}
+            aria-invalid={!!(actionData?.error || mutation.error)}
+            aria-describedby="title-error"
           />
           <AnimatePresence>
-            {actionData?.error && (
+            {(actionData?.error || mutation.error) && (
               <motion.p
+                id="title-error"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.125, ease: "easeInOut" }}
                 className="text-red-400 text-sm mt-2"
               >
-                {actionData.error}
+                {actionData?.error || mutation.error?.message || "An error occurred"}
               </motion.p>
             )}
           </AnimatePresence>
@@ -166,6 +174,7 @@ export default function NewNote() {
           setTagInput={setTagInput}
           handleAddTag={handleAddTag}
           handleTagClick={handleTagClick}
+          disabled={mutation.isPending}
         />
         <Owners
           owners={owners}
@@ -175,12 +184,24 @@ export default function NewNote() {
           setOwnerInput={setOwnerInput}
           handleAddOwner={handleAddOwner}
           handleOwnerClick={handleOwnerClick}
+          disabled={mutation.isPending}
         />
         <div className="flex gap-4 mt-8">
-          <Button type="submit" className="px-8">
-            Add
+          <Button
+            type="submit"
+            className="px-8"
+            disabled={mutation.isPending}
+            aria-label="Add new note"
+          >
+            {mutation.isPending ? "Adding..." : "Add"}
           </Button>
-          <Button type="button" className="px-8" onClick={() => navigate(-1)}>
+          <Button
+            type="button"
+            className="px-8"
+            onClick={() => navigate(-1)}
+            disabled={mutation.isPending}
+            aria-label="Cancel and go back"
+          >
             Cancel
           </Button>
         </div>
@@ -188,157 +209,3 @@ export default function NewNote() {
     </div>
   );
 }
-
-const Tags: React.FC<TagsProps> = ({
-  tags,
-  handleRemoveTag,
-  isTagOpen,
-  tagInput,
-  setTagInput,
-  handleAddTag,
-  handleTagClick,
-}) => (
-  <div className="flex flex-col gap-5">
-    <motion.div>
-      <AnimatePresence>
-        {tags.length > 0 ? (
-          <motion.div className="flex gap-3 flex-wrap">
-            <AnimatePresence>
-              {tags.map((tag, index) => (
-                <motion.div
-                  key={tag.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.125, ease: "easeInOut" }}
-                >
-                  <Badge
-                    label={tag.value}
-                    onRemove={() => handleRemoveTag(tag.id)}
-                    index={index}
-                    isAnimate={false}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        ) : (
-          <motion.p
-            key="no-tags"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.125, ease: "easeInOut" }}
-            className="text-zinc-500"
-          >
-            No tags added
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </motion.div>
-    <AnimatePresence>
-      {isTagOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Input
-            label="Tag Name"
-            className="w-full sm:max-w-[14rem]"
-            value={tagInput}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTagInput(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") {
-                handleAddTag(tagInput);
-              }
-            }}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-    <div>
-      <Button btn_type="ghost" onClick={handleTagClick}>
-        {isTagOpen ? (tagInput.trim() ? "Add Tag" : "Cancel") : "+ Add Tag"}
-      </Button>
-    </div>
-  </div>
-);
-
-const Owners: React.FC<OwnersProps> = ({
-  owners,
-  handleRemoveOwner,
-  isOwnerOpen,
-  ownerInput,
-  setOwnerInput,
-  handleAddOwner,
-  handleOwnerClick,
-}) => (
-  <div className="flex flex-col gap-5">
-    <motion.div>
-      <AnimatePresence>
-        {owners.length > 0 ? (
-          <motion.div className="flex gap-3 flex-wrap">
-            <AnimatePresence>
-              {owners.map((owner, index) => (
-                <motion.div
-                  key={owner.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.125, ease: "easeInOut" }}
-                >
-                  <Badge
-                    label={owner.value}
-                    onRemove={() => handleRemoveOwner(owner.id)}
-                    index={index}
-                    isAnimate={false}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        ) : (
-          <motion.p
-            key="no-owners"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -24 }}
-            transition={{ duration: 0.125, ease: "easeInOut" }}
-            className="text-zinc-500"
-          >
-            No owners added
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </motion.div>
-    <AnimatePresence>
-      {isOwnerOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Input
-            label="Owner Name"
-            className="w-full sm:max-w-[14rem]"
-            value={ownerInput}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOwnerInput(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === "Enter") {
-                handleAddOwner(ownerInput);
-              }
-            }}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-    <div>
-      <Button btn_type="ghost" onClick={handleOwnerClick}>
-        {isOwnerOpen ? (ownerInput.trim() ? "Add Owner" : "Cancel") : "+ Add Owner"}
-      </Button>
-    </div>
-  </div>
-);

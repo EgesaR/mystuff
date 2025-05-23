@@ -1,15 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
 import AppBar from "~/components/AppBar";
 import SideBar from "~/components/SideBar";
 import styles from "./tailwind.css?url";
 import { useIsMobile } from "~/hooks/useIsMobile";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+    },
+  },
+});
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  {
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
+  },
   {
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
@@ -18,20 +38,21 @@ export const links: LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const getInitialSidebarOpen = () =>
+    typeof window !== "undefined" && window.innerWidth >= 640;
+  const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebarOpen());
   const [hasInteracted, setHasInteracted] = useState(false);
 
+  const toggleSidebar = useCallback(() => {
+    setHasInteracted(true);
+    setSidebarOpen((prev) => !prev);
+  }, []);
+
   useEffect(() => {
-    // Only set sidebarOpen on initial render or mode change, unless user has interacted
     if (!hasInteracted) {
       setSidebarOpen(!isMobile);
     }
   }, [isMobile, hasInteracted]);
-
-  const toggleSidebar = () => {
-    setHasInteracted(true);
-    setSidebarOpen((prev) => !prev);
-  };
 
   return (
     <html lang="en">
@@ -41,28 +62,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="w-full h-screen overflow-hidden">
-        <div className="h-full w-full overflow-hidden">
-          <AppBar toggleSidebar={toggleSidebar} isSidebarOpen={sidebarOpen} />
-          <div className="w-full h-[90%] flex relative pr-4 gap-4">
-            <SideBar
-              toggleSidebar={toggleSidebar}
-              sidebarOpen={sidebarOpen}
-              isMobile={isMobile}
-            />
-            <div
-              className={`h-full bg-zinc-900 sm:rounded-t-2xl sm:pr-3 min-w-0 ${
-                isMobile && !sidebarOpen ? "w-full" : "flex-1"
-              }`}
-            >
-              <div className="h-full overflow-y-auto sm:pr-4 scrollbar-thin [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-red-600 [&::-webkit-scrollbar-thumb]:bg-blue-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-                {children}
-              </div>
+      <body className="w-full h-screen overflow-hidden font-inter bg-zinc-950">
+        <style>
+          {`
+            :root {
+              --sidebar-width: 280px;
+              --sidebar-mobile-width: 75vw;
+              --appbar-height: 4rem;
+            }
+
+            @media (max-width: 640px) {
+              .sidebar-hidden {
+                transform: translateX(-100%);
+                opacity: 0;
+                visibility: hidden;
+              }
+              .sidebar-visible {
+                transform: translateX(0);
+                opacity: 1;
+                visibility: visible;
+              }
+            }
+
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: #3f3f46;
+              border-radius: 9999px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #71717a;
+              border-radius: 9999px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #a1a1aa;
+            }
+          `}
+        </style>
+        <QueryClientProvider client={queryClient}>
+          <div className="h-full w-full overflow-hidden transition-all duration-300 ease-in-out">
+            <AppBar toggleSidebar={toggleSidebar} isSidebarOpen={sidebarOpen} />
+            <div className="w-full h-[calc(100%-var(--appbar-height))] flex relative gap-0 sm:gap-4">
+              <SideBar
+                toggleSidebar={toggleSidebar}
+                sidebarOpen={sidebarOpen}
+                isMobile={isMobile}
+                className={isMobile ? (sidebarOpen ? "sidebar-visible" : "sidebar-hidden") : ""}
+              />
+              <main
+                className={`h-full bg-zinc-900 sm:rounded-t-2xl min-w-0 transition-all duration-300 ease-in-out custom-scrollbar ${
+                  isMobile && sidebarOpen
+                    ? "opacity-50 pointer-events-none flex-1"
+                    : "flex-1"
+                }`}
+              >
+                <div className="h-full overflow-y-auto pr-4 sm:pr-3">
+                  {children}
+                </div>
+              </main>
             </div>
           </div>
-        </div>
-        <ScrollRestoration />
-        <Scripts />
+          <ScrollRestoration />
+          <Scripts />
+        </QueryClientProvider>
       </body>
     </html>
   );

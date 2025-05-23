@@ -80,10 +80,12 @@ const validateNotes = (data: any[]): Note[] => {
   return validNotes;
 };
 
-// In-memory notes store
+// In-memory cache, updated after reads and writes
 let notes: Note[] = validateNotes(readNotes());
 
 export const getNotes = async (): Promise<Note[]> => {
+  // Always read from notes.json to ensure freshness
+  notes = validateNotes(readNotes());
   return notes;
 };
 
@@ -111,4 +113,26 @@ export const updateNote = async (id: string, updatedNote: Partial<Note>): Promis
   };
   writeNotes(notes);
   return notes[noteIndex];
+};
+
+export const getTagSuggestions = async (query: string): Promise<string[]> => {
+  // Ensure notes is fresh
+  notes = validateNotes(readNotes());
+  const allTags = notes.flatMap((note) => note.tags);
+  const uniqueTags = [...new Set(allTags)];
+  if (!query.trim()) return uniqueTags;
+  return uniqueTags.filter((tag) =>
+    tag.toLowerCase().includes(query.toLowerCase())
+  );
+};
+
+export const getOwnerSuggestions = async (query: string): Promise<string[]> => {
+  // Ensure notes is fresh
+  notes = validateNotes(readNotes());
+  const allOwners = notes.flatMap((note) => note.owners.map((owner) => owner.name));
+  const uniqueOwners = [...new Set(allOwners)];
+  if (!query.trim()) return uniqueOwners;
+  return uniqueOwners.filter((owner) =>
+    owner.toLowerCase().includes(query.toLowerCase())
+  );
 };
