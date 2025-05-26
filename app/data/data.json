@@ -1,145 +1,442 @@
 [
     {
-        "user": {
-            "name": "Egesa Raymond",
-            "email": "egesaraymond644@gmail.com"
-        },
-        "space": [
+      "space": [
+        {
+          "id": "space_298659",
+          "name": "Main Workspace",
+          "folders": [
             {
-                "name": "My Starter",
-                "createdAt": "Mon May 19 2025 00:17:26 GMT+0300 (East Africa Time)",
-                "icon": "https://placecats.com/200/200",
-                "folders": [
+              "id": "folder_f38d9e",
+              "name": "Hobby",
+              "tasks": [
+                {
+                  "id": "task_c504fb",
+                  "title": "Develop Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": true,
+                  "folderId": null
+                },
+                {
+                  "id": "task_c81a7a",
+                  "title": "Research Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": false,
+                  "folderId": null
+                },
+                {
+                  "id": "task_0e1da1",
+                  "title": "Plan Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": false,
+                  "folderId": null
+                }
+              ],
+              "notes": [],
+              "calendarSchedules": [],
+              "subfolders": []
+            },
+            {
+              "id": "folder_e05c42",
+              "name": "Hobby",
+              "tasks": [],
+              "notes": [],
+              "calendarSchedules": [],
+              "subfolders": []
+            },
+            {
+              "id": "folder_58989a",
+              "name": "Personal",
+              "tasks": [],
+              "notes": [],
+              "calendarSchedules": [],
+              "subfolders": [
+                {
+                  "id": "subfolder_74ec70",
+                  "name": "Sub Gamma",
+                  "tasks": [
                     {
-                        "id": "folder_001",
-                        "name": "Work Projects",
-                        "icon": "📋",
-                        "createdAt": "Mon May 19 2025 00:20:00 GMT+0300 (East Africa Time)",
-                        "updatedAt": "Mon May 19 2025 00:20:00 GMT+0300 (East Africa Time)",
-                        "parentFolderId": null,
-                        "subfolders": [
-                            {"id": "subfolder_001_01", "name": "Project Alpha", "icon": "https://placecats.com/201/201", "createdAt": "Mon May 19 2025 00:22:00 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_02", "name": "Project Beta", "icon": "🚀", "createdAt": "Mon May 19 2025 00:22:05 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_03", "name": "Client Sync", "icon": "🤝", "createdAt": "Mon May 19 2025 00:22:10 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_04", "name": "Research", "icon": "🔍", "createdAt": "Mon May 19 2025 00:22:15 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_05", "name": "Design Phase", "icon": "https://placecats.com/202/202", "createdAt": "Mon May 19 2025 00:22:20 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_06", "name": "Development", "icon": "💻", "createdAt": "Mon May 19 2025 00:22:25 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_07", "name": "Testing", "icon": "🧪", "createdAt": "Mon May 19 2025 00:22:30 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_08", "name": "Deployment", "icon": "🌐", "createdAt": "Mon May 19 2025 00:22:35 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_09", "name": "Documentation", "icon": "https://placecats.com/203/203", "createdAt": "Mon May 19 2025 00:22:40 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_10", "name": "Training", "icon": "🎓", "createdAt": "Mon May 19 2025 00:22:45 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_11", "name": "Maintenance", "icon": "🛠️", "createdAt": "Mon May 19 2025 00:22:50 GMT+0300", "parentFolderId": "folder_001"},
-                            {"id": "subfolder_001_12", "name": "Feedback", "icon": "📬", "createdAt": "Mon May 19 2025 00:22:55 GMT+0300", "parentFolderId": "folder_001"}
-                        ],
-                        "tasks": [
-                            {"id": "task_001_01", "title": "Draft proposal", "description": "Create initial draft for Project Alpha", "status": "in_progress", "priority": "high", "dueDate": "Wed May 21 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:00 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_02", "title": "Review budget", "description": "Check financials for Beta", "status": "todo", "priority": "medium", "dueDate": "Thu May 22 2025 12:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:05 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_03", "title": "Schedule sync", "description": "Book client meeting", "status": "todo", "priority": "high", "dueDate": "Tue May 20 2025 15:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:10 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_04", "title": "Market research", "description": "Analyze competitors", "status": "in_progress", "priority": "medium", "dueDate": "Fri May 23 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:15 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_05", "title": "UI mockups", "description": "Design initial layouts", "status": "todo", "priority": "high", "dueDate": "Wed May 21 2025 14:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:20 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_06", "title": "Code backend", "description": "Set up API endpoints", "status": "todo", "priority": "high", "dueDate": "Mon May 26 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:25 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_07", "title": "Run tests", "description": "Perform unit tests", "status": "todo", "priority": "medium", "dueDate": "Tue May 27 2025 12:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:30 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_08", "title": "Deploy app", "description": "Push to production", "status": "todo", "priority": "high", "dueDate": "Wed May 28 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:35 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_09", "title": "Write docs", "description": "Create user manual", "status": "todo", "priority": "medium", "dueDate": "Thu May 29 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:40 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_10", "title": "Train team", "description": "Conduct training session", "status": "todo", "priority": "medium", "dueDate": "Fri May 30 2025 14:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:45 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_11", "title": "Monitor app", "description": "Check for bugs", "status": "todo", "priority": "low", "dueDate": "Mon Jun 02 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:50 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_001_12", "title": "Gather feedback", "description": "Collect user reviews", "status": "todo", "priority": "medium", "dueDate": "Tue Jun 03 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:25:55 GMT+0300", "folderId": "folder_001", "assignee": "egesaraymond644@gmail.com"}
-                        ],
-                        "notes": [
-                            {"id": "note_001_01", "title": "Alpha Kickoff", "content": "Discussed goals and timeline", "createdAt": "Mon May 19 2025 00:30:00 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:00 GMT+0300", "folderId": "folder_001", "tags": ["meeting", "work"]},
-                            {"id": "note_001_02", "title": "Beta Specs", "content": "Outlined technical requirements", "createdAt": "Mon May 19 2025 00:30:05 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:05 GMT+0300", "folderId": "folder_001", "tags": ["work", "technical"]},
-                            {"id": "note_001_03", "title": "Client Feedback", "content": "Noted client preferences", "createdAt": "Mon May 19 2025 00:30:10 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:10 GMT+0300", "folderId": "folder_001", "tags": ["client", "work"]},
-                            {"id": "note_001_04", "title": "Research Findings", "content": "Summarized competitor analysis", "createdAt": "Mon May 19 2025 00:30:15 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:15 GMT+0300", "folderId": "folder_001", "tags": ["research", "work"]},
-                            {"id": "note_001_05", "title": "Design Ideas", "content": "Sketched UI concepts", "createdAt": "Mon May 19 2025 00:30:20 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:20 GMT+0300", "folderId": "folder_001", "tags": ["design", "work"]},
-                            {"id": "note_001_06", "title": "API Notes", "content": "Listed endpoint requirements", "createdAt": "Mon May 19 2025 00:30:25 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:25 GMT+0300", "folderId": "folder_001", "tags": ["development", "work"]},
-                            {"id": "note_001_07", "title": "Test Cases", "content": "Drafted test scenarios", "createdAt": "Mon May 19 2025 00:30:30 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:30 GMT+0300", "folderId": "folder_001", "tags": ["testing", "work"]},
-                            {"id": "note_001_08", "title": "Deployment Plan", "content": "Outlined rollout steps", "createdAt": "Mon May 19 2025 00:30:35 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:35 GMT+0300", "folderId": "folder_001", "tags": ["deployment", "work"]},
-                            {"id": "note_001_09", "title": "Doc Outline", "content": "Structured user guide", "createdAt": "Mon May 19 2025 00:30:40 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:40 GMT+0300", "folderId": "folder_001", "tags": ["documentation", "work"]},
-                            {"id": "note_001_10", "title": "Training Plan", "content": "Listed training topics", "createdAt": "Mon May 19 2025 00:30:45 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:45 GMT+0300", "folderId": "folder_001", "tags": ["training", "work"]},
-                            {"id": "note_001_11", "title": "Bug Tracking", "content": "Set up monitoring system", "createdAt": "Mon May 19 2025 00:30:50 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:50 GMT+0300", "folderId": "folder_001", "tags": ["maintenance", "work"]},
-                            {"id": "note_001_12", "title": "Feedback Form", "content": "Designed user survey", "createdAt": "Mon May 19 2025 00:30:55 GMT+0300", "updatedAt": "Mon May 19 2025 00:30:55 GMT+0300", "folderId": "folder_001", "tags": ["feedback", "work"]}
-                        ],
-                        "calendarSchedules": [
-                            {"id": "event_001_01", "title": "Alpha Kickoff", "description": "Project Alpha start meeting", "startTime": "Mon May 19 2025 10:00:00 GMT+0300", "endTime": "Mon May 19 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:00 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_02", "title": "Beta Planning", "description": "Discuss Beta scope", "startTime": "Mon May 19 2025 14:00:00 GMT+0300", "endTime": "Mon May 19 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:05 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_03", "title": "Client Sync", "description": "Review progress", "startTime": "Tue May 20 2025 10:00:00 GMT+0300", "endTime": "Tue May 20 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:10 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com", "clientX@example.com"]},
-                            {"id": "event_001_04", "title": "Research Review", "description": "Share findings", "startTime": "Tue May 20 2025 14:00:00 GMT+0300", "endTime": "Tue May 20 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:15 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_05", "title": "Design Critique", "description": "Review UI mockups", "startTime": "Wed May 21 2025 10:00:00 GMT+0300", "endTime": "Wed May 21 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:20 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_06", "title": "Dev Sprint", "description": "Plan backend tasks", "startTime": "Wed May 21 2025 14:00:00 GMT+0300", "endTime": "Wed May 21 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:25 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_07", "title": "Test Planning", "description": "Define test cases", "startTime": "Thu May 22 2025 10:00:00 GMT+0300", "endTime": "Thu May 22 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:30 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_08", "title": "Deployment Prep", "description": "Review rollout plan", "startTime": "Thu May 22 2025 14:00:00 GMT+0300", "endTime": "Thu May 22 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:35 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_09", "title": "Doc Review", "description": "Finalize user guide", "startTime": "Fri May 23 2025 10:00:00 GMT+0300", "endTime": "Fri May 23 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:40 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_10", "title": "Training Prep", "description": "Plan session", "startTime": "Fri May 23 2025 14:00:00 GMT+0300", "endTime": "Fri May 23 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:45 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_11", "title": "Monitor Review", "description": "Check system status", "startTime": "Mon May 26 2025 10:00:00 GMT+0300", "endTime": "Mon May 26 2025 11:00:00 GMT+0300", "location": "Zoom", "createdAt": "Mon May 19 2025 00:35:50 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_001_12", "title": "Feedback Session", "description": "Review user feedback", "startTime": "Mon May 26 2025 14:00:00 GMT+0300", "endTime": "Mon May 26 2025 15:00:00 GMT+0300", "location": "Office", "createdAt": "Mon May 19 2025 00:35:55 GMT+0300", "folderId": "folder_001", "attendees": ["egesaraymond644@gmail.com"]}
-                        ]
+                      "id": "task_141e37",
+                      "title": "Research Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": false,
+                      "folderId": null
                     },
                     {
-                        "id": "folder_002",
-                        "name": "Personal",
-                        "icon": "🏠",
-                        "createdAt": "Mon May 19 2025 00:21:00 GMT+0300 (East Africa Time)",
-                        "updatedAt": "Mon May 19 2025 00:21:00 GMT+0300 (East Africa Time)",
-                        "parentFolderId": null,
-                        "subfolders": [
-                            {"id": "subfolder_002_01", "name": "Fitness", "icon": "💪", "createdAt": "Mon May 19 2025 00:23:00 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_02", "name": "Reading", "icon": "📚", "createdAt": "Mon May 19 2025 00:23:05 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_03", "name": "Hobbies", "icon": "https://placecats.com/204/204", "createdAt": "Mon May 19 2025 00:23:10 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_04", "name": "Travel", "icon": "✈️", "createdAt": "Mon May 19 2025 00:23:15 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_05", "name": "Finance", "icon": "💰", "createdAt": "Mon May 19 2025 00:23:20 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_06", "name": "Shopping", "icon": "🛒", "createdAt": "Mon May 19 2025 00:23:25 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_07", "name": "Family", "icon": "https://placecats.com/205/205", "createdAt": "Mon May 19 2025 00:23:30 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_08", "name": "Learning", "icon": "🧠", "createdAt": "Mon May 19 2025 00:23:35 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_09", "name": "Events", "icon": "🎉", "createdAt": "Mon May 19 2025 00:23:40 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_10", "name": "Health", "icon": "🩺", "createdAt": "Mon May 19 2025 00:23:45 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_11", "name": "Goals", "icon": "🎯", "createdAt": "Mon May 19 2025 00:23:50 GMT+0300", "parentFolderId": "folder_002"},
-                            {"id": "subfolder_002_12", "name": "Miscellaneous", "icon": "https://placecats.com/206/206", "createdAt": "Mon May 19 2025 00:23:55 GMT+0300", "parentFolderId": "folder_002"}
-                        ],
-                        "tasks": [
-                            {"id": "task_002_01", "title": "Gym workout", "description": "Cardio and strength", "status": "todo", "priority": "high", "dueDate": "Tue May 20 2025 07:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:00 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_02", "title": "Read book", "description": "Finish chapter 5", "status": "in_progress", "priority": "medium", "dueDate": "Wed May 21 2025 20:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:05 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_03", "title": "Practice guitar", "description": "Learn new chords", "status": "todo", "priority": "low", "dueDate": "Thu May 22 2025 18:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:10 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_04", "title": "Plan trip", "description": "Research destinations", "status": "todo", "priority": "medium", "dueDate": "Fri May 23 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:15 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_05", "title": "Check budget", "description": "Review monthly expenses", "status": "todo", "priority": "high", "dueDate": "Mon May 19 2025 20:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:20 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_06", "title": "Grocery shopping", "description": "Buy weekly supplies", "status": "todo", "priority": "medium", "dueDate": "Tue May 20 2025 18:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:25 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_07", "title": "Call family", "description": "Check in with parents", "status": "todo", "priority": "high", "dueDate": "Wed May 21 2025 19:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:30 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_08", "title": "Online course", "description": "Complete module 3", "status": "in_progress", "priority": "medium", "dueDate": "Thu May 22 2025 20:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:35 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_09", "title": "Plan event", "description": "Organize birthday party", "status": "todo", "priority": "medium", "dueDate": "Fri May 23 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:40 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_10", "title": "Doctor visit", "description": "Annual checkup", "status": "todo", "priority": "high", "dueDate": "Mon May 26 2025 10:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:45 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_11", "title": "Set goals", "description": "Plan Q3 objectives", "status": "todo", "priority": "medium", "dueDate": "Tue May 27 2025 17:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:50 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"},
-                            {"id": "task_002_12", "title": "Clean house", "description": "Organize living space", "status": "todo", "priority": "low", "dueDate": "Wed May 28 2025 15:00:00 GMT+0300", "createdAt": "Mon May 19 2025 00:26:55 GMT+0300", "folderId": "folder_002", "assignee": "egesaraymond644@gmail.com"}
-                        ],
-                        "notes": [
-                            {"id": "note_002_01", "title": "Workout Plan", "content": "Scheduled weekly gym sessions", "createdAt": "Mon May 19 2025 00:32:00 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:00 GMT+0300", "folderId": "folder_002", "tags": ["fitness", "personal"]},
-                            {"id": "note_002_02", "title": "Book List", "content": "Added new books to read", "createdAt": "Mon May 19 2025 00:32:05 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:05 GMT+0300", "folderId": "folder_002", "tags": ["reading", "personal"]},
-                            {"id": "note_002_03", "title": "Guitar Progress", "content": "Learned new song", "createdAt": "Mon May 19 2025 00:32:10 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:10 GMT+0300", "folderId": "folder_002", "tags": ["hobbies", "personal"]},
-                            {"id": "note_002_04", "title": "Travel Ideas", "content": "Listed potential destinations", "createdAt": "Mon May 19 2025 00:32:15 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:15 GMT+0300", "folderId": "folder_002", "tags": ["travel", "personal"]},
-                            {"id": "note_002_05", "title": "Budget Notes", "content": "Tracked monthly spending", "createdAt": "Mon May 19 2025 00:32:20 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:20 GMT+0300", "folderId": "folder_002", "tags": ["finance", "personal"]},
-                            {"id": "note_002_06", "title": "Shopping List", "content": "Added groceries needed", "createdAt": "Mon May 19 2025 00:32:25 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:25 GMT+0300", "folderId": "folder_002", "tags": ["shopping", "personal"]},
-                            {"id": "note_002_07", "title": "Family Notes", "content": "Planned family gathering", "createdAt": "Mon May 19 2025 00:32:30 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:30 GMT+0300", "folderId": "folder_002", "tags": ["family", "personal"]},
-                            {"id": "note_002_08", "title": "Course Progress", "content": "Completed module 2", "createdAt": "Mon May 19 2025 00:32:35 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:35 GMT+0300", "folderId": "folder_002", "tags": ["learning", "personal"]},
-                            {"id": "note_002_09", "title": "Event Ideas", "content": "Drafted party plan", "createdAt": "Mon May 19 2025 00:32:40 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:40 GMT+0300", "folderId": "folder_002", "tags": ["events", "personal"]},
-                            {"id": "note_002_10", "title": "Health Log", "content": "Noted diet changes", "createdAt": "Mon May 19 2025 00:32:45 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:45 GMT+0300", "folderId": "folder_002", "tags": ["health", "personal"]},
-                            {"id": "note_002_11", "title": "Goal Setting", "content": "Defined Q3 goals", "createdAt": "Mon May 19 2025 00:32:50 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:50 GMT+0300", "folderId": "folder_002", "tags": ["goals", "personal"]},
-                            {"id": "note_002_12", "title": "Home Organization", "content": "Planned cleaning tasks", "createdAt": "Mon May 19 2025 00:32:55 GMT+0300", "updatedAt": "Mon May 19 2025 00:32:55 GMT+0300", "folderId": "folder_002", "tags": ["misc", "personal"]}
-                        ],
-                        "calendarSchedules": [
-                            {"id": "event_002_01", "title": "Gym Session", "description": "Cardio workout", "startTime": "Tue May 20 2025 07:00:00 GMT+0300", "endTime": "Tue May 20 2025 08:00:00 GMT+0300", "location": "Local Gym", "createdAt": "Mon May 19 2025 00:36:00 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_02", "title": "Reading Time", "description": "Read book chapter", "startTime": "Tue May 20 2025 20:00:00 GMT+0300", "endTime": "Tue May 20 2025 21:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:05 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_03", "title": "Guitar Practice", "description": "Learn chords", "startTime": "Wed May 21 2025 18:00:00 GMT+0300", "endTime": "Wed May 21 2025 19:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:10 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_04", "title": "Travel Planning", "description": "Research trip", "startTime": "Wed May 21 2025 20:00:00 GMT+0300", "endTime": "Wed May 21 2025 21:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:15 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_05", "title": "Budget Review", "description": "Check finances", "startTime": "Mon May 19 2025 20:00:00 GMT+0300", "endTime": "Mon May 19 2025 21:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:20 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_06", "title": "Grocery Shopping", "description": "Buy supplies", "startTime": "Tue May 20 2025 18:00:00 GMT+0300", "endTime": "Tue May 20 2025 19:00:00 GMT+0300", "location": "Supermarket", "createdAt": "Mon May 19 2025 00:36:25 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_07", "title": "Family Call", "description": "Catch up with parents", "startTime": "Wed May 21 2025 19:00:00 GMT+0300", "endTime": "Wed May 21 2025 20:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:30 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_08", "title": "Online Course", "description": "Study module 3", "startTime": "Thu May 22 2025 20:00:00 GMT+0300", "endTime": "Thu May 22 2025 21:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:35 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_09", "title": "Party Planning", "description": "Organize event", "startTime": "Fri May 23 2025 18:00:00 GMT+0300", "endTime": "Fri May 23 2025 19:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:40 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_10", "title": "Doctor Appointment", "description": "Annual checkup", "startTime": "Mon May 26 2025 10:00:00 GMT+0300", "endTime": "Mon May 26 2025 11:00:00 GMT+0300", "location": "Clinic", "createdAt": "Mon May 19 2025 00:36:45 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_11", "title": "Goal Setting", "description": "Plan Q3 goals", "startTime": "Tue May 27 2025 18:00:00 GMT+0300", "endTime": "Tue May 27 2025 19:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:50 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]},
-                            {"id": "event_002_12", "title": "House Cleaning", "description": "Organize home", "startTime": "Wed May 28 2025 15:00:00 GMT+0300", "endTime": "Wed May 28 2025 17:00:00 GMT+0300", "location": "Home", "createdAt": "Mon May 19 2025 00:36:55 GMT+0300", "folderId": "folder_002", "attendees": ["egesaraymond644@gmail.com"]}
-                        ]
+                      "id": "task_ec8008",
+                      "title": "Plan Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": false,
+                      "folderId": null
+                    },
+                    {
+                      "id": "task_abdbb7",
+                      "title": "Develop Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": false,
+                      "folderId": null
                     }
-                ]
+                  ],
+                  "notes": [
+                    {
+                      "id": "note_9a6989",
+                      "title": "Meeting Notes",
+                      "content": "Sample note content.",
+                      "folderId": null
+                    }
+                  ],
+                  "calendarSchedules": [
+                    {
+                      "id": "schedule_50427a",
+                      "title": "Appointment",
+                      "description": "Schedule description.",
+                      "dateTime": "2025-06-01T10:00:00",
+                      "folderId": null
+                    }
+                  ],
+                  "subfolders": [
+                    {
+                      "id": "subfolder_e98502",
+                      "name": "Sub Alpha",
+                      "tasks": [],
+                      "notes": [
+                        {
+                          "id": "note_3a20b5",
+                          "title": "Ideas",
+                          "content": "Sample note content.",
+                          "folderId": null
+                        }
+                      ],
+                      "calendarSchedules": [],
+                      "subfolders": []
+                    },
+                    {
+                      "id": "subfolder_9e18d1",
+                      "name": "Sub Gamma",
+                      "tasks": [
+                        {
+                          "id": "task_f9331a",
+                          "title": "Plan Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_71bbee",
+                          "title": "Research Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_d3b6fe",
+                          "title": "Design Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        }
+                      ],
+                      "notes": [
+                        {
+                          "id": "note_f1dc98",
+                          "title": "Meeting Notes",
+                          "content": "Sample note content.",
+                          "folderId": null
+                        }
+                      ],
+                      "calendarSchedules": [
+                        {
+                          "id": "schedule_462007",
+                          "title": "Call",
+                          "description": "Schedule description.",
+                          "dateTime": "2025-06-01T10:00:00",
+                          "folderId": null
+                        }
+                      ],
+                      "subfolders": []
+                    }
+                  ]
+                },
+                {
+                  "id": "subfolder_ea6af1",
+                  "name": "Sub Gamma",
+                  "tasks": [
+                    {
+                      "id": "task_6de409",
+                      "title": "Design Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": true,
+                      "folderId": null
+                    },
+                    {
+                      "id": "task_14973a",
+                      "title": "Write Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": true,
+                      "folderId": null
+                    },
+                    {
+                      "id": "task_9c28fe",
+                      "title": "Develop Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": false,
+                      "folderId": null
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "note_4cd6ce",
+                      "title": "Ideas",
+                      "content": "Sample note content.",
+                      "folderId": null
+                    }
+                  ],
+                  "calendarSchedules": [],
+                  "subfolders": [
+                    {
+                      "id": "subfolder_f948a7",
+                      "name": "Sub Alpha",
+                      "tasks": [
+                        {
+                          "id": "task_efed36",
+                          "title": "Research Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_3a1359",
+                          "title": "Plan Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": false,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_e84bbc",
+                          "title": "Develop Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        }
+                      ],
+                      "notes": [],
+                      "calendarSchedules": [],
+                      "subfolders": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "folder_69d7c6",
+              "name": "Fitness",
+              "tasks": [
+                {
+                  "id": "task_1ad18d",
+                  "title": "Design Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": true,
+                  "folderId": null
+                },
+                {
+                  "id": "task_fa69ee",
+                  "title": "Plan Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": false,
+                  "folderId": null
+                },
+                {
+                  "id": "task_dbee91",
+                  "title": "Plan Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": true,
+                  "folderId": null
+                },
+                {
+                  "id": "task_0be1c1",
+                  "title": "Write Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": true,
+                  "folderId": null
+                }
+              ],
+              "notes": [],
+              "calendarSchedules": [
+                {
+                  "id": "schedule_f57f47",
+                  "title": "Deadline",
+                  "description": "Schedule description.",
+                  "dateTime": "2025-06-01T10:00:00",
+                  "folderId": null
+                }
+              ],
+              "subfolders": []
+            },
+            {
+              "id": "folder_789e6c",
+              "name": "Fitness",
+              "tasks": [
+                {
+                  "id": "task_d49da1",
+                  "title": "Research Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": true,
+                  "folderId": null
+                },
+                {
+                  "id": "task_611637",
+                  "title": "Research Task",
+                  "description": "This is a task description.",
+                  "dueDate": "2025-06-01",
+                  "completed": false,
+                  "folderId": null
+                }
+              ],
+              "notes": [
+                {
+                  "id": "note_a23ccf",
+                  "title": "Meeting Notes",
+                  "content": "Sample note content.",
+                  "folderId": null
+                },
+                {
+                  "id": "note_d004eb",
+                  "title": "Ideas",
+                  "content": "Sample note content.",
+                  "folderId": null
+                }
+              ],
+              "calendarSchedules": [],
+              "subfolders": [
+                {
+                  "id": "subfolder_89bacc",
+                  "name": "Sub Alpha",
+                  "tasks": [
+                    {
+                      "id": "task_e580a9",
+                      "title": "Design Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": true,
+                      "folderId": null
+                    },
+                    {
+                      "id": "task_1d68e2",
+                      "title": "Write Task",
+                      "description": "This is a task description.",
+                      "dueDate": "2025-06-01",
+                      "completed": true,
+                      "folderId": null
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "note_4b5a12",
+                      "title": "Checklist",
+                      "content": "Sample note content.",
+                      "folderId": null
+                    }
+                  ],
+                  "calendarSchedules": [
+                    {
+                      "id": "schedule_1ad354",
+                      "title": "Call",
+                      "description": "Schedule description.",
+                      "dateTime": "2025-06-01T10:00:00",
+                      "folderId": null
+                    }
+                  ],
+                  "subfolders": [
+                    {
+                      "id": "subfolder_3b0b2f",
+                      "name": "Sub Gamma",
+                      "tasks": [
+                        {
+                          "id": "task_1f5c3c",
+                          "title": "Develop Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": false,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_aba262",
+                          "title": "Plan Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": true,
+                          "folderId": null
+                        }
+                      ],
+                      "notes": [],
+                      "calendarSchedules": [
+                        {
+                          "id": "schedule_d60532",
+                          "title": "Call",
+                          "description": "Schedule description.",
+                          "dateTime": "2025-06-01T10:00:00",
+                          "folderId": null
+                        }
+                      ],
+                      "subfolders": []
+                    },
+                    {
+                      "id": "subfolder_484bd1",
+                      "name": "Sub Alpha",
+                      "tasks": [
+                        {
+                          "id": "task_90262e",
+                          "title": "Design Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": false,
+                          "folderId": null
+                        },
+                        {
+                          "id": "task_b39875",
+                          "title": "Write Task",
+                          "description": "This is a task description.",
+                          "dueDate": "2025-06-01",
+                          "completed": false,
+                          "folderId": null
+                        }
+                      ],
+                      "notes": [
+                        {
+                          "id": "note_3f73a1",
+                          "title": "Checklist",
+                          "content": "Sample note content.",
+                          "folderId": null
+                        }
+                      ],
+                      "calendarSchedules": [],
+                      "subfolders": []
+                    }
+                  ]
+                }
+              ]
             }
-        ]
+          ]
+        }
+      ]
     }
-]
+  ]

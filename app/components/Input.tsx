@@ -1,4 +1,13 @@
-import { ChangeEvent, FocusEvent, KeyboardEvent, memo, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FocusEvent,
+  KeyboardEvent,
+  forwardRef,
+  useState,
+  useEffect,
+  useRef,
+  useImperativeHandle,
+} from "react";
 import { twMerge } from "tailwind-merge";
 import { motion } from "framer-motion";
 
@@ -10,8 +19,8 @@ interface InputProps {
   disabled?: boolean;
   hasError?: boolean;
   className?: string;
-  focusInputClass?: string; // New prop for input focus styles
-  focusLabelClass?: string; // New prop for label focus styles
+  focusInputClass?: string;
+  focusLabelClass?: string;
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   value?: string;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
@@ -20,112 +29,99 @@ interface InputProps {
   name?: string;
 }
 
-const Input = memo(
-  ({
-    label = "Title",
-    id = "hs-floating-underline-input",
-    type = "text",
-    placeholder,
-    disabled = false,
-    hasError = false,
-    className = "",
-    focusInputClass = "", // Default to empty string
-    focusLabelClass = "", // Default to empty string
-    onBlur,
-    value = "",
-    onKeyDown,
-    onChange,
-    onFocus,
-    name,
-  }: InputProps) => {
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      label = "Title",
+      id = "floating-input",
+      type = "text",
+      placeholder,
+      disabled = false,
+      hasError = false,
+      className = "",
+      focusInputClass = "",
+      focusLabelClass = "",
+      onBlur,
+      onKeyDown,
+      onChange,
+      onFocus,
+      value = "",
+      name,
+    },
+    ref
+  ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // Handle focus state on client side
-    useEffect(() => {
-      if (typeof document === "undefined") return; // Skip during SSR
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-      const handleFocus = () => setIsFocused(true);
-      const handleBlur = () => setIsFocused(false);
+    const handleFocus = () => {
+      setIsFocused(true);
+      onFocus?.();
+    };
 
-      const inputElement = document.getElementById(id);
-      if (inputElement) {
-        inputElement.addEventListener("focus", handleFocus);
-        inputElement.addEventListener("blur", handleBlur);
-      }
-
-      return () => {
-        if (inputElement) {
-          inputElement.removeEventListener("focus", handleFocus);
-          inputElement.removeEventListener("blur", handleBlur);
-        }
-      };
-    }, [id]);
+    const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
+      setIsFocused(false);
+      onBlur?.(e);
+    };
 
     const inputStyles = twMerge(
-      "peer w-full bg-transparent border-0 border-b-2",
+      "peer w-full bg-transparent border-0 border-b-2 pt-4 pb-0 text-sm placeholder-transparent transition-all duration-200 ease-in-out",
       hasError
         ? "border-red-500 dark:border-red-400"
-        : "border-gray-200 dark:border-neutral-700",
-      "pt-4 pb-0 text-sm placeholder-transparent",
-      "focus:border-b-orange-500 dark:focus:border-b-orange-600 focus:outline-0 focus:ring-0",
-      "disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400",
-      "transition-all duration-200 ease-in-out",
-      value && "pt-6 pb-0.5",
+        : "border-gray-200 dark:border-neutral-700 focus:border-b-orange-500 dark:focus:border-b-orange-600",
+      "focus:outline-0 focus:ring-0 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400",
       className,
-      isFocused && focusInputClass, // Apply focusInputClass when focused
+      isFocused && focusInputClass
     );
 
     const labelStyles = twMerge(
-      "absolute left-0 top-3 text-sm",
-      "transition-all duration-200 ease-in-out origin-left pointer-events-none",
-      "peer-disabled:opacity-50 peer-disabled:pointer-events-none",
+      "absolute left-0 top-3 text-sm transition-all duration-200 ease-in-out origin-left pointer-events-none",
       hasError && "text-red-500 dark:text-red-400",
-      isFocused && focusLabelClass, // Apply focusLabelClass when focused
+      "peer-disabled:opacity-50 peer-disabled:pointer-events-none",
+      isFocused && focusLabelClass
     );
 
     const labelVariants = {
       idle: {
         y: 0,
         scale: 1,
-        color: hasError ? "rgb(239, 68, 68)" : "rgb(107, 114, 128)", // gray-500
+        color: hasError ? "rgb(239, 68, 68)" : "rgb(107, 114, 128)",
       },
       focused: {
         y: -17,
         scale: 0.9,
-        color: hasError
-          ? "rgb(239, 68, 68)"
-          : "rgb(249, 115, 22)", // orange-500
+        color: hasError ? "rgb(239, 68, 68)" : "rgb(249, 115, 22)",
       },
     };
 
     return (
       <div className="relative w-full">
         <input
-          type={type}
+          ref={inputRef}
           id={id}
           name={name}
+          type={type}
           value={value}
           onChange={onChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           onKeyDown={onKeyDown}
-          onBlur={(e) => {
-            setIsFocused(false);
-            onBlur?.(e);
-          }}
-          onFocus={() => {
-            setIsFocused(true);
-            onFocus?.();
-          }}
           className={inputStyles}
           placeholder={placeholder || label}
-          aria-describedby={`${id}-label`}
           disabled={disabled}
-          aria-invalid={hasError}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           aria-label={label}
+          aria-invalid={hasError}
+          aria-describedby={`${id}-label`}
         />
+
         <motion.label
           htmlFor={id}
-          className={labelStyles}
           id={`${id}-label`}
+          className={labelStyles}
           variants={labelVariants}
           initial="idle"
           animate={value || isFocused ? "focused" : "idle"}
@@ -135,9 +131,8 @@ const Input = memo(
         </motion.label>
       </div>
     );
-  },
+  }
 );
 
 Input.displayName = "Input";
-
 export default Input;

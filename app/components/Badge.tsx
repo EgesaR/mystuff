@@ -7,23 +7,22 @@ interface BadgeProps {
   label: string;
   onRemove?: () => void;
   className?: string;
-  index: number;
-  isAnimate?: boolean; // Changed to lowercase boolean
-  disabled?: boolean; // Added disabled prop
+  index?: number;
+  isAnimate?: boolean;
+  disabled?: boolean;
 }
 
 const Badge: React.FC<BadgeProps> = ({
   label,
   onRemove,
   className = "",
-  index,
-  isAnimate = true, // Default to true for consistency
+  index = 1,
+  isAnimate = true,
   disabled = false,
 }) => {
   const [isPresent, safeToRemove] = usePresence();
   const [scope, animate] = useAnimate();
 
-  // Define 8 color schemes for badges, cycling every 8 indices
   const colorStyles = [
     "border-teal-500 text-teal-500",
     "border-blue-600 text-blue-600 dark:text-blue-500",
@@ -76,7 +75,7 @@ const Badge: React.FC<BadgeProps> = ({
             disabled && "opacity-50 cursor-not-allowed"
           )}
           aria-label={`Remove ${label} badge`}
-          tabIndex={disabled ? -1 : 0} // Prevent focus when disabled
+          tabIndex={disabled ? -1 : 0}
         >
           <span className="sr-only">Remove badge</span>
           <FiX className="shrink-0 size-3" />

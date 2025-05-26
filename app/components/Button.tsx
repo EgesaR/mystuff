@@ -28,7 +28,7 @@ const Button: React.FC<ButtonProps> = ({
     primary:
       "bg-orange-500 text-white hover:bg-orange-600 dark:hover:bg-orange-400 dark:focus:bg-orange-400",
     outline:
-      "border border-transparent text-orange-500 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-800/30 dark:hover:text-orange-400 'dark:focus:bg-orange-800/30 'dark:focus:text-orange-400",
+      "border border-transparent dark:text-neutral-100 hover:bg-orange-100 hover:text-orange-800 dark:hover:bg-orange-800/30 dark:hover:text-orange-400 'dark:focus:bg-orange-800/30 'dark:focus:text-orange-400",
     ghost:
       "text-gray-900 dark:text-neutral-100 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600",
   };

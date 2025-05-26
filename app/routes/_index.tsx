@@ -68,6 +68,19 @@ export default function Index() {
       ) : (
         <div className="h-full w-full flex">
           <div className="py-5 pt-10 px-3 sm:px-6 sm:pr-0 flex flex-col gap-4 w-full">
+            <section className="w-full flex justify-end itemms-center">
+              <div className="space-x-1">
+                <Button btn_type="outline">
+                  <CgFileAdd className="text-lg" /> New Note
+                </Button>
+                <Button btn_type="outline">
+                  <CiHashtag className="text-lg" /> New Task
+                </Button>
+                <Button btn_type="outline">
+                  <CgFileAdd className="text-lg" /> Plan a new schedule
+                </Button>
+              </div>
+            </section>
             <section className="relative flex items-center justify-center h-[205px] rounded-xl bg-gray-100 shadow-lg overflow-hidden">
               <img
                 alt="Hello"
@@ -75,7 +88,7 @@ export default function Index() {
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-start sm:px-12">
-                <div className="text-[22px] sm:text-3xl tracking-tight font-medium text-white flex flex-col sm:flex-row gap-1.5 text-center sm:text-left">
+                <div className="text-[22px] sm:text-3xl tracking-tight font-medium text-white flex flex-row sm:flex-row gap-1.5 text-center sm:text-left">
                   <span className="text-white/80">
                     Good{" "}
                     {hours < 12
@@ -95,23 +108,6 @@ export default function Index() {
                 <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
                   Recents
                 </h1>
-                <div className="space-x-1">
-                  <Button
-                    btn_type="outline"
-                  >
-                    <CgFileAdd className="text-lg" /> New Note
-                  </Button>
-                  <Button
-                    btn_type="outline"
-                  >
-                    <CiHashtag className="text-lg" /> New Task
-                  </Button>
-                  <Button
-                    btn_type="outline"
-                  >
-                    <CgFileAdd className="text-lg" /> Plan a new schedule
-                  </Button>
-                </div>
               </section>
               <Button onClick={() => setDrawerOpen(true)}>Open Drawer</Button>
               <div>{JSON.stringify(textData)}</div>

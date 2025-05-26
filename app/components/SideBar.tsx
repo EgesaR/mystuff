@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BsFileText, BsFolder2, BsArchive, BsBriefcase, BsCollection } from "react-icons/bs";
-import { IoIosSearch, IoMdAddCircleOutline } from "react-icons/io";
+import { IoMdAddCircleOutline } from "react-icons/io";
 import { PiHashStraightBold } from "react-icons/pi";
 import { BiTime } from "react-icons/bi";
 import { RiHomeSmile2Line } from "react-icons/ri";
@@ -20,7 +20,7 @@ interface Task {
   priority: string;
   dueDate: string;
   createdAt: string;
-  folderId: string;
+  folderId: string | null;
   assignee: string;
 }
 
@@ -30,7 +30,7 @@ interface Note {
   content: string;
   createdAt: string;
   updatedAt: string;
-  folderId: string;
+  folderId: string | null;
   tags: string[];
 }
 
@@ -42,7 +42,7 @@ interface CalendarSchedule {
   endTime: string;
   location: string;
   createdAt: string;
-  folderId: string;
+  folderId: string | null;
   attendees: string[];
 }
 
@@ -51,6 +51,10 @@ interface Subfolder {
   name: string;
   createdAt: string;
   parentFolderId: string;
+  tasks: Task[];
+  notes: Note[];
+  calendarSchedules: CalendarSchedule[];
+  subfolders: Subfolder[];
 }
 
 interface Folder {
@@ -72,12 +76,92 @@ interface SideBarProps {
   className?: string;
 }
 
+// Transform JSON data to match Folder interface
+const transformFolderData = (rawFolders: any[]): Folder[] => {
+  return rawFolders.map((folder) => ({
+    id: folder.id,
+    name: folder.name,
+    createdAt: folder.createdAt || new Date().toISOString(),
+    updatedAt: folder.updatedAt || new Date().toISOString(),
+    parentFolderId: folder.parentFolderId || null,
+    tasks: folder.tasks.map((task: any) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status || "pending",
+      priority: task.priority || "medium",
+      dueDate: task.dueDate,
+      createdAt: task.createdAt || new Date().toISOString(),
+      folderId: task.folderId || null,
+      assignee: task.assignee || "",
+    })),
+    notes: folder.notes.map((note: any) => ({
+      id: note.id,
+      title: note.title,
+      content: note.content,
+      createdAt: note.createdAt || new Date().toISOString(),
+      updatedAt: note.updatedAt || new Date().toISOString(),
+      folderId: note.folderId || null,
+      tags: note.tags || [],
+    })),
+    calendarSchedules: folder.calendarSchedules.map((schedule: any) => ({
+      id: schedule.id,
+      title: schedule.title,
+      description: schedule.description,
+      startTime: schedule.dateTime || new Date().toISOString(),
+      endTime: schedule.dateTime || new Date().toISOString(),
+      location: schedule.location || "",
+      createdAt: schedule.createdAt || new Date().toISOString(),
+      folderId: schedule.folderId || null,
+      attendees: schedule.attendees || [],
+    })),
+    subfolders: folder.subfolders.map((subfolder: any) => ({
+      id: subfolder.id,
+      name: subfolder.name,
+      createdAt: subfolder.createdAt || new Date().toISOString(),
+      parentFolderId: subfolder.parentFolderId || folder.id,
+      tasks: subfolder.tasks.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status || "pending",
+        priority: task.priority || "medium",
+        dueDate: task.dueDate,
+        createdAt: task.createdAt || new Date().toISOString(),
+        folderId: task.folderId || null,
+        assignee: task.assignee || "",
+      })),
+      notes: subfolder.notes.map((note: any) => ({
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        createdAt: note.createdAt || new Date().toISOString(),
+        updatedAt: note.updatedAt || new Date().toISOString(),
+        folderId: note.folderId || null,
+        tags: note.tags || [],
+      })),
+      calendarSchedules: subfolder.calendarSchedules.map((schedule: any) => ({
+        id: schedule.id,
+        title: schedule.title,
+        description: schedule.description,
+        startTime: schedule.dateTime || new Date().toISOString(),
+        endTime: schedule.dateTime || new Date().toISOString(),
+        location: schedule.location || "",
+        createdAt: schedule.createdAt || new Date().toISOString(),
+        folderId: schedule.folderId || null,
+        attendees: schedule.attendees || [],
+      })),
+      subfolders: subfolder.subfolders ? transformFolderData(subfolder.subfolders) : [],
+    })),
+  }));
+};
+
 const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile, className }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [measureRef, { width: containerWidth }] = useMeasure();
-  const [folders, setFolders] = useState<Folder[]>(data[0].space[0].folders);
+  const [folders, setFolders] = useState<Folder[]>(transformFolderData(data[0].space[0].folders));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"folder" | "subfolder" | "note" | "task" | "schedule">("folder");
   const [parentFolderId, setParentFolderId] = useState<string | null>(null);
@@ -116,13 +200,8 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
     const hasContent = folder.subfolders.length > 0 || folder.tasks.length > 0 || folder.notes.length > 0 || folder.calendarSchedules.length > 0;
 
     if (!hasContent) {
-      const iconOptions = [
-        { icon: <BsFolder2 />, color: "text-zinc-500" },
-        { icon: <BsArchive />, color: "text-zinc-500" },
-        { icon: <BsBriefcase />, color: "text-zinc-500" },
-        { icon: <BsCollection />, color: "text-zinc-500" },
-      ];
-      return iconOptions[folder.name.length % iconOptions.length];
+      // Always return BsFolder2 for empty folders
+      return { icon: <BsFolder2 />, color: "text-zinc-500" };
     }
 
     if (folder.notes.length > 0 && folder.tasks.length === 0 && folder.calendarSchedules.length === 0) {
@@ -239,11 +318,10 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
           <SideBarBtn
             text={folder.name}
             icon={<BsFolder2 className="w-5 h-5" />}
-            color="text-zinc-500"
+            color="text-zinc-500" // Match non-empty folder color
             to={path}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            onDelete={() => handleDeleteItem(folder.id, "subfolder", folder.parentFolderId)}
             className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
           />
         </motion.div>
@@ -251,6 +329,31 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
     }
 
     const { icon, color } = getFolderIcon(folder);
+    const hasContent = folder.subfolders.length > 0 || folder.tasks.length > 0 || folder.notes.length > 0 || folder.calendarSchedules.length > 0;
+
+    if (!hasContent) {
+      // Render empty folders as SideBarBtn instead of FileCollapsible
+      return (
+        <motion.div
+          key={folder.id}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          <SideBarBtn
+            text={folder.name}
+            icon={icon}
+            color="text-zinc-500" // Match non-empty folder color
+            to={path}
+            onClick={isMobile ? toggleSidebar : undefined}
+            //onDelete={() => handleDeleteItem(folder.id, "folder")}
+            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+          />
+        </motion.div>
+      );
+    }
+
     const children = [
       ...folder.subfolders.map((subfolder) => (
         <motion.div
@@ -279,7 +382,6 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             to={`${path}/task/${task.id}`}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            onDelete={() => handleDeleteItem(task.id, "task", folder.id)}
             className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
           />
         </motion.div>
@@ -319,7 +421,6 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             to={`${path}/schedule/${schedule.id}`}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            onDelete={() => handleDeleteItem(schedule.id, "schedule", folder.id)}
             className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
           />
         </motion.div>
@@ -416,15 +517,8 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
                   onClick={toggleSidebar}
                   className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
                 />
-                <SideBarBtn
-                  text="Search"
-                  icon={<IoIosSearch className="w-5 h-5" />}
-                  color="text-white"
-                  onClick={toggleSidebar}
-                  className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                />
                 <div className="flex flex-col gap-4 mt-6">
-                  <h1 className="uppercase text-zinc-400 px-3 text-xs font-medium tracking-wide">
+                  <h1 className="uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide">
                     Workspace
                   </h1>
                   <div className="flex flex-col gap-1.5">
@@ -456,7 +550,7 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
                 </div>
                 <div className="flex flex-col gap-4 mt-6">
                   <div className="flex justify-between items-center px-3">
-                    <h1 className="uppercase text-zinc-400 text-xs font-medium tracking-wide">
+                    <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">
                       Folders
                     </h1>
                     <IoMdAddCircleOutline
@@ -470,40 +564,17 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <AnimatePresence>
-                      {folders.map((folder) =>
-                        folder.subfolders.length === 0 &&
-                        folder.tasks.length === 0 &&
-                        folder.notes.length === 0 &&
-                        folder.calendarSchedules.length === 0 ? (
-                          <motion.div
-                            key={folder.id}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <SideBarBtn
-                              text={folder.name}
-                              icon={getFolderIcon(folder).icon}
-                              color={getFolderIcon(folder).color}
-                              to={`/${folder.name.toLowerCase().replace(/\s+/g, "-")}`}
-                              onClick={toggleSidebar}
-                              onDelete={() => handleDeleteItem(folder.id, "folder")}
-                              className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                            />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key={folder.id}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            {renderFolderContent(folder)}
-                          </motion.div>
-                        )
-                      )}
+                      {folders.map((folder) => (
+                        <motion.div
+                          key={folder.id}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {renderFolderContent(folder)}
+                        </motion.div>
+                      ))}
                     </AnimatePresence>
                   </div>
                 </div>
@@ -520,7 +591,7 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
           aria-label="Main navigation"
           aria-expanded={sidebarOpen}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-4">
             <SideBarBtn
               text="Home"
               icon={<RiHomeSmile2Line className="w-5 h-5" />}
@@ -528,14 +599,8 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
               to="/"
               className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
             />
-            <SideBarBtn
-              text="Search"
-              icon={<IoIosSearch className="w-5 h-5" />}
-              color="text-white"
-              className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-            />
-            <div className="flex flex-col gap-4 mt-6">
-              <h1 className="uppercase text-zinc-400 px-3 text-xs font-medium tracking-wide">
+            <div className="flex flex-col gap-4 mt-3">
+              <h1 className="uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide">
                 Workspace
               </h1>
               <div className="flex flex-col gap-1.5">
@@ -564,7 +629,7 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             </div>
             <div className="flex flex-col gap-4 mt-6">
               <div className="flex justify-between items-center px-3">
-                <h1 className="uppercase text-zinc-400 text-xs font-medium tracking-wide">
+                <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">
                   Folders
                 </h1>
                 <IoMdAddCircleOutline
@@ -578,39 +643,17 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
               </div>
               <div className="flex flex-col gap-1.5">
                 <AnimatePresence>
-                  {folders.map((folder) =>
-                    folder.subfolders.length === 0 &&
-                    folder.tasks.length === 0 &&
-                    folder.notes.length === 0 &&
-                    folder.calendarSchedules.length === 0 ? (
-                      <motion.div
-                        key={folder.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <SideBarBtn
-                          text={folder.name}
-                          icon={getFolderIcon(folder).icon}
-                          color={getFolderIcon(folder).color}
-                          to={`/${folder.name.toLowerCase().replace(/\s+/g, "-")}`}
-                          onDelete={() => handleDeleteItem(folder.id, "folder")}
-                          className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key={folder.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {renderFolderContent(folder)}
-                      </motion.div>
-                    )
-                  )}
+                  {folders.map((folder) => (
+                    <motion.div
+                      key={folder.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {renderFolderContent(folder)}
+                    </motion.div>
+                  ))}
                 </AnimatePresence>
               </div>
             </div>
