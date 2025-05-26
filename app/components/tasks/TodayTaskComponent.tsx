@@ -1,54 +1,53 @@
-import { useState, useEffect, useRef } from 'react';
-import { animate } from 'framer-motion';
-import Badge from '../Badge';
-import data from '~/data/data.json';
-import { formatRelativeTime } from '~/utils/dateUtils';
+import { useState, useEffect, useRef } from "react";
+import { animate } from "framer-motion";
+import data from "~/data/data.json";
 
 // Define interfaces for type safety
-interface Tag {
-  label: string;
-  color: string;
-}
-
 interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
   dueDate: string;
-  createdAt: string;
-  folderId: string;
-  assignee: string;
-  tags?: Tag[];
+  completed: boolean;
+  folderId: string | null;
 }
 
 interface TodayTaskComponentProps {
   className?: string;
+  tasks?: Task[];
 }
 
-const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' }) => {
-  const [tasks, setTasks] = useState<Task[]>(() => {
+// Utility to format relative time
+const formatRelativeTime = (date: string) => {
+  const now = new Date("2025-05-26");
+  const targetDate = new Date(date);
+  const diff = targetDate.getTime() - now.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 0) return `${Math.abs(days)}d ago`;
+  return `In ${days} days`;
+};
+
+const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = "", tasks }) => {
+  const [allTasks, setAllTasks] = useState<Task[]>(() => {
+    if (tasks) return tasks; // Use passed tasks if provided
     const allTasks: Task[] = [];
-    data.forEach((userData) => {
-      userData.space.forEach((space) => {
-        space.folders.forEach((folder) => {
-          folder.tasks.forEach((task) => {
-            allTasks.push({
-              ...task,
-              status: task.status as 'todo' | 'in_progress' | 'completed',
-              priority: task.priority as 'low' | 'medium' | 'high',
-              tags: [],
-            });
-          });
+    data[0].space[0].folders.forEach((folder) => {
+      folder.tasks.forEach((task) => {
+        allTasks.push({ ...task, folderId: folder.id });
+      });
+      folder.subfolders.forEach((subfolder) => {
+        subfolder.tasks.forEach((task) => {
+          allTasks.push({ ...task, folderId: subfolder.id });
         });
       });
     });
     return allTasks;
   });
 
-  const today = new Date('2025-05-21T11:05:00+03:00');
-  const todayTasks = tasks.filter((task) => {
+  const today = new Date("2025-05-26");
+  const todayTasks = allTasks.filter((task) => {
     const dueDate = new Date(task.dueDate);
     return (
       dueDate.getFullYear() === today.getFullYear() &&
@@ -57,74 +56,29 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
     );
   });
 
-  const formattedToday = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
+  const formattedToday = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
   });
 
   const toggleTaskCompletion = (taskId: string) => {
-    setTasks((prevTasks) =>
+    setAllTasks((prevTasks) =>
       prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: task.status === 'completed' ? 'todo' : 'completed',
-            }
-          : task
+        task.id === taskId ? { ...task, completed: !task.completed } : task
       )
     );
   };
 
-  const handleRemoveTag = (taskId: string, tagIndex: number) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              tags: task.tags?.filter((_: Tag, index: number) => index !== tagIndex) ?? [],
-            }
-          : task
-      )
-    );
-  };
-
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-500 dark:text-red-400';
-      case 'medium':
-        return 'text-yellow-500 dark:text-yellow-400';
-      case 'low':
-        return 'text-green-500 dark:text-green-400';
-      default:
-        return 'text-gray-500 dark:text-gray-400';
-    }
-  };
-
-  const getFolderName = (folderId: string) => {
-    for (const userData of data) {
-      for (const space of userData.space) {
-        for (const folder of space.folders) {
-          if (folder.id === folderId) {
-            return folder.name;
-          }
-          for (const subfolder of folder.subfolders) {
-            if (subfolder.id === folderId) {
-              return subfolder.name;
-            }
-          }
-        }
+  const getFolderName = (folderId: string | null) => {
+    if (!folderId) return "Unknown";
+    for (const folder of data[0].space[0].folders) {
+      if (folder.id === folderId) return folder.name;
+      for (const subfolder of folder.subfolders) {
+        if (subfolder.id === folderId) return subfolder.name;
       }
     }
-    return 'Unknown';
-  };
-
-  const getTaskTags = (task: Task): Tag[] => {
-    return [
-      { label: task.status.replace('_', ' '), color: 'border-blue-500 text-blue-500' },
-      { label: getFolderName(task.folderId), color: 'border-purple-500 text-purple-500' },
-    ];
+    return "Unknown";
   };
 
   // Auto-scroll logic
@@ -137,25 +91,21 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
 
     const list = listRef.current;
     const scrollHeight = list.scrollHeight - list.clientHeight;
-    if (scrollHeight <= 0) return; // No scrollable content
+    if (scrollHeight <= 0) return;
 
     const scroll = () => {
-      // Scroll to bottom
-      animate(list, { scrollTop: scrollHeight }, { duration: 5, ease: 'linear' }).then(() => {
-        // Pause briefly at bottom
+      animate(list, { scrollTop: scrollHeight }, { duration: 5, ease: "linear" }).then(() => {
         scrollTimeoutRef.current = setTimeout(() => {
-          // Scroll back to top
-          animate(list, { scrollTop: 0 }, { duration: 5, ease: 'linear' }).then(() => {
-            // Pause briefly at top
+          animate(list, { scrollTop: 0 }, { duration: 5, ease: "linear" }).then(() => {
             if (!isPaused) {
-              scrollTimeoutRef.current = setTimeout(scroll, 1000); // Loop after pause
+              scrollTimeoutRef.current = setTimeout(scroll, 1000);
             }
           });
-        }, 1000); // Pause for 1 second at bottom
+        }, 1000);
       });
     };
 
-    scrollTimeoutRef.current = setTimeout(scroll, 1000); // Initial delay
+    scrollTimeoutRef.current = setTimeout(scroll, 1000);
 
     return () => {
       if (scrollTimeoutRef.current) {
@@ -164,7 +114,6 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
     };
   }, [todayTasks.length, isPaused]);
 
-  // Pause on user interaction
   const handleInteractionStart = () => {
     setIsPaused(true);
     if (scrollTimeoutRef.current) {
@@ -173,7 +122,7 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
   };
 
   const handleInteractionEnd = () => {
-    setTimeout(() => setIsPaused(false), 500); // Delay resuming to avoid immediate restart
+    setTimeout(() => setIsPaused(false), 500);
   };
 
   return (
@@ -203,7 +152,7 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
             onTouchEnd={handleInteractionEnd}
             aria-label="Task list"
           >
-            {todayTasks.map((task, index) => (
+            {todayTasks.map((task) => (
               <li
                 key={task.id}
                 className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-2xl bg-gray-100 dark:bg-zinc-800/50 hover:bg-gray-200 dark:hover:bg-zinc-700/70 transition duration-300"
@@ -212,46 +161,32 @@ const TodayTaskComponent: React.FC<TodayTaskComponentProps> = ({ className = '' 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <input
                     type="checkbox"
-                    checked={task.status === 'completed'}
+                    checked={task.completed}
                     onChange={() => toggleTaskCompletion(task.id)}
                     className="h-5 w-5 text-blue-500 rounded focus:ring-blue-500 dark:focus:ring-blue-600"
-                    aria-label={`Mark ${task.title} as ${task.status === 'completed' ? 'incomplete' : 'complete'}`}
+                    aria-label={`Mark ${task.title} as ${task.completed ? "incomplete" : "complete"}`}
                   />
                   <div className="flex flex-col gap-2">
                     <h3
                       className={`text-lg font-semibold text-gray-900 dark:text-white ${
-                        task.status === 'completed' ? 'line-through text-gray-500 dark:text-white/50' : ''
+                        task.completed ? "line-through text-gray-500 dark:text-white/50" : ""
                       }`}
                     >
                       {task.title}
                     </h3>
                     <p className="text-gray-600 dark:text-white/70 text-sm">{task.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {getTaskTags(task).map((tag, tagIndex) => (
-                        <Badge
-                          key={`${task.id}-tag-${tagIndex}`}
-                          label={tag.label}
-                          index={tagIndex}
-                          onRemove={() => handleRemoveTag(task.id, tagIndex)}
-                          className={tag.color}
-                        />
-                      ))}
-                    </div>
                     <span className="text-gray-500 dark:text-white/60 text-xs">
-                      Created: {formatRelativeTime(task.createdAt)}
+                      Folder: {getFolderName(task.folderId)}
+                    </span>
+                    <span className="text-gray-500 dark:text-white/60 text-xs">
+                      Created: {formatRelativeTime(task.dueDate)}
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 mt-2 sm:mt-0 sm:items-end">
-                  <span className="text-gray-600 dark:text-white/70 text-sm">
-                    Due:{' '}
-                    {new Date(task.dueDate).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                  <span className={`text-sm font-semibold ${getPriorityColor(task.priority)}`}>
-                    Priority: {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                  <span className="text-gray-600 dark:text-white/70 text-sm">Due: {task.dueDate}</span>
+                  <span className="text-sm font-semibold text-gray-500 dark:text-white/60">
+                    Status: {task.completed ? "Completed" : "Not Completed"}
                   </span>
                 </div>
               </li>

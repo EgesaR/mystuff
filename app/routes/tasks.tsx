@@ -5,41 +5,84 @@ import { json, defer } from "@remix-run/node";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { FiPlus } from "react-icons/fi";
 import TodayTaskComponent from "~/components/tasks/TodayTaskComponent";
+import data from "~/data/data.json";
 
 // Meta function
 export const meta: MetaFunction = () => [{ title: "Tasks" }];
 
 // Loader function
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  return defer({});
+  return defer({ tasks: data[0].space[0].folders });
 };
 
-// Unified tab/task data
-const tabData = [
-  { id: "overdue", label: "Overdue", count: 2 },
-  { id: "upcoming", label: "Upcoming", count: 3 },
-  { id: "completed", label: "Completed", count: 1 },
+// Interfaces
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  completed: boolean;
+  folderId: string | null;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+  tasks: Task[];
+  subfolders: Folder[];
+}
+
+// Get all tasks from folders and subfolders
+const getTasks = (folders: Folder[]) => {
+  const allTasks: Task[] = [];
+  folders.forEach((folder) => {
+    folder.tasks.forEach((task) => {
+      allTasks.push({ ...task, folderId: folder.id });
+    });
+    folder.subfolders.forEach((subfolder) => {
+      subfolder.tasks.forEach((task) => {
+        allTasks.push({ ...task, folderId: subfolder.id });
+      });
+    });
+  });
+  return allTasks;
+};
+
+// Categorize tasks
+const categorizeTasks = (tasks: Task[], currentDate: Date) => {
+  const overdue: Task[] = [];
+  const upcoming: Task[] = [];
+  const completed: Task[] = [];
+
+  tasks.forEach((task) => {
+    const dueDate = new Date(task.dueDate);
+    if (task.completed) {
+      completed.push(task);
+    } else if (dueDate < currentDate) {
+      overdue.push(task);
+    } else {
+      upcoming.push(task);
+    }
+  });
+
+  return { overdue, upcoming, completed };
+};
+
+// Strongly type the tab data
+const tabData: { id: "overdue" | "upcoming" | "completed"; label: string }[] = [
+  { id: "overdue", label: "Overdue" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "completed", label: "Completed" },
 ];
 
-// Example placeholder content (could be fetched)
-const sampleTasks = {
-  overdue: [
-    { title: "Finish math homework", date: "2d ago" },
-    { title: "Submit report", date: "1d ago" },
-  ],
-  upcoming: [
-    { title: "Read history chapter", date: "Tomorrow" },
-    { title: "Group project sync", date: "In 2 days" },
-    { title: "Science quiz", date: "Friday" },
-  ],
-  completed: [
-    { title: "English essay", date: "3d ago" },
-  ],
-};
+// Tasks and categories
+const tasks = getTasks(data[0].space[0].folders);
+const currentDate = new Date("2025-05-26");
+const categorizedTasks = categorizeTasks(tasks, currentDate);
 
-// 🧩 Desktop Tabs
-function AnimatedTabs({ onChange }: { onChange?: (tab: string) => void }) {
-  const [activeTab, setActiveTab] = useState(tabData[0].id);
+// Animated desktop tabs
+function AnimatedTabs({ onChange }: { onChange?: (tab: "overdue" | "upcoming" | "completed") => void }) {
+  const [activeTab, setActiveTab] = useState<"overdue" | "upcoming" | "completed">("overdue");
 
   return (
     <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-700 p-1 rounded-full">
@@ -65,16 +108,27 @@ function AnimatedTabs({ onChange }: { onChange?: (tab: string) => void }) {
               transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
             />
           )}
-          {tab.label} ({tab.count})
+          {tab.label} ({categorizedTasks[tab.id].length})
         </button>
       ))}
     </div>
   );
 }
 
-// 🧠 Main Page
+// Main Page
 export default function TasksPage() {
-  const [currentTab, setCurrentTab] = useState("overdue");
+  const [currentTab, setCurrentTab] = useState<"overdue" | "upcoming" | "completed">("overdue");
+
+  const getFolderName = (folderId: string | null) => {
+    if (!folderId) return "Unknown";
+    for (const folder of data[0].space[0].folders) {
+      if (folder.id === folderId) return folder.name;
+      for (const subfolder of folder.subfolders) {
+        if (subfolder.id === folderId) return subfolder.name;
+      }
+    }
+    return "Unknown";
+  };
 
   return (
     <div className="w-full h-full flex">
@@ -95,21 +149,14 @@ export default function TasksPage() {
                   key={tab.id}
                   className="rounded-full px-3 py-1 text-sm font-semibold text-gray-900 dark:text-neutral-100 focus:outline-none data-selected:bg-gray-200 dark:data-selected:bg-neutral-600"
                 >
-                  {tab.label}
+                  {tab.label} ({categorizedTasks[tab.id].length})
                 </Tab>
               ))}
             </TabList>
             <TabPanels className="mt-3">
               {tabData.map((tab) => (
                 <TabPanel key={tab.id} className="rounded-xl bg-gray-100 dark:bg-neutral-700 p-3">
-                  <ul>
-                    {sampleTasks[tab.id].map((task, i) => (
-                      <li key={i} className="relative rounded-md p-3 text-sm transition hover:bg-gray-200 dark:hover:bg-neutral-600">
-                        <span className="font-semibold text-gray-900 dark:text-neutral-100">{task.title}</span>
-                        <p className="text-gray-600 dark:text-neutral-400 text-xs">{task.date}</p>
-                      </li>
-                    ))}
-                  </ul>
+                  <TodayTaskComponent tasks={categorizedTasks[tab.id]} />
                 </TabPanel>
               ))}
             </TabPanels>
@@ -131,13 +178,18 @@ export default function TasksPage() {
           <AnimatedTabs onChange={(id) => setCurrentTab(id)} />
 
           <main className="grid grid-cols-2 gap-4 h-[calc(100%-120px)] w-full mt-4">
-            {sampleTasks[currentTab].map((task, i) => (
+            {categorizedTasks[currentTab].map((task) => (
               <div
-                key={i}
+                key={task.id}
                 className="h-full w-full bg-gray-100 dark:bg-neutral-700 rounded-2xl aspect-square flex flex-col items-center justify-center p-4 text-center"
               >
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{task.title}</h2>
-                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">{task.date}</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">{task.description}</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">Due: {task.dueDate}</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">Folder: {getFolderName(task.folderId)}</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
+                  Status: {task.completed ? "Completed" : "Not Completed"}
+                </p>
               </div>
             ))}
           </main>
