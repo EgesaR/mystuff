@@ -1,17 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BsFileText, BsFolder2, BsArchive, BsBriefcase, BsCollection } from "react-icons/bs";
+import { BsFileText, BsFolder2 } from "react-icons/bs";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { PiHashStraightBold } from "react-icons/pi";
 import { BiTime } from "react-icons/bi";
 import { RiHomeSmile2Line } from "react-icons/ri";
+import { MdMenu, MdMenuOpen } from "react-icons/md";
 import useMeasure from "react-use-measure";
 import SideBarBtn from "./SideBarBtn";
 import FileCollapsible from "./FileCollapsible";
 import AddItemModal from "./AddItemModal";
 import data from "~/data/data.json";
 
-// Define types for data structure
+// Define types
 interface Task {
   id: string;
   title: string;
@@ -57,16 +58,9 @@ interface Subfolder {
   subfolders: Subfolder[];
 }
 
-interface Folder {
-  id: string;
-  name: string;
-  createdAt: string;
+interface Folder extends Subfolder {
   updatedAt: string;
   parentFolderId: string | null;
-  subfolders: Subfolder[];
-  tasks: Task[];
-  notes: Note[];
-  calendarSchedules: CalendarSchedule[];
 }
 
 interface SideBarProps {
@@ -76,9 +70,12 @@ interface SideBarProps {
   className?: string;
 }
 
-// Transform JSON data to match Folder interface
-const transformFolderData = (rawFolders: any[]): Folder[] => {
-  return rawFolders.map((folder) => ({
+// Utility to generate unique ID
+const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+// Transform JSON data (memoized outside component)
+const transformFolderData = (rawFolders: any[]): Folder[] =>
+  rawFolders.map((folder) => ({
     id: folder.id,
     name: folder.name,
     createdAt: folder.createdAt || new Date().toISOString(),
@@ -154,27 +151,24 @@ const transformFolderData = (rawFolders: any[]): Folder[] => {
       subfolders: subfolder.subfolders ? transformFolderData(subfolder.subfolders) : [],
     })),
   }));
-};
 
-const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+// Memoized initial folder data
+const initialFolders = transformFolderData(data[0].space[0].folders);
 
 const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile, className }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [measureRef, { width: containerWidth }] = useMeasure();
-  const [folders, setFolders] = useState<Folder[]>(transformFolderData(data[0].space[0].folders));
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"folder" | "subfolder" | "note" | "task" | "schedule">("folder");
-  const [parentFolderId, setParentFolderId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<Folder[]>(initialFolders);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: "folder" | "subfolder" | "note" | "task" | "schedule";
+    parentFolderId: string | null;
+  }>({ isOpen: false, type: "folder", parentFolderId: null });
 
-  // Handle clicks outside sidebar and escape key
+  // Handle clicks outside and escape key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isMobile &&
-        sidebarOpen &&
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)
-      ) {
+      if (isMobile && sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
         toggleSidebar();
       }
     };
@@ -187,126 +181,75 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
 
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscapeKey);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscapeKey);
     };
   }, [sidebarOpen, toggleSidebar, isMobile]);
 
-  const getSidebarWidth = () => (isMobile ? `var(--sidebar-mobile-width)` : `var(--sidebar-width)`);
+  // Get sidebar width based on state
+  const getSidebarWidth = () => (isMobile ? `var(--sidebar-mobile-width)` : sidebarOpen ? `var(--sidebar-width)` : "60px");
 
-  const getFolderIcon = (folder: Folder) => {
+  // Get folder icon and color
+  const getFolderIcon = (folder: Folder): { icon: JSX.Element; color: string } => {
     const hasContent = folder.subfolders.length > 0 || folder.tasks.length > 0 || folder.notes.length > 0 || folder.calendarSchedules.length > 0;
-
-    if (!hasContent) {
-      // Always return BsFolder2 for empty folders
-      return { icon: <BsFolder2 />, color: "text-zinc-500" };
-    }
-
-    if (folder.notes.length > 0 && folder.tasks.length === 0 && folder.calendarSchedules.length === 0) {
+    if (!hasContent) return { icon: <BsFolder2 />, color: "text-zinc-500" };
+    if (folder.notes.length > 0 && folder.tasks.length === 0 && folder.calendarSchedules.length === 0)
       return { icon: <BsFileText />, color: "text-blue-400" };
-    }
-    if (folder.tasks.length > 0 && folder.notes.length === 0 && folder.calendarSchedules.length === 0) {
+    if (folder.tasks.length > 0 && folder.notes.length === 0 && folder.calendarSchedules.length === 0)
       return { icon: <PiHashStraightBold />, color: "text-green-400" };
-    }
-    if (folder.calendarSchedules.length > 0 && folder.notes.length === 0 && folder.tasks.length === 0) {
+    if (folder.calendarSchedules.length > 0 && folder.notes.length === 0 && folder.tasks.length === 0)
       return { icon: <BiTime />, color: "text-purple-400" };
-    }
     return { icon: <BsFolder2 />, color: "text-zinc-500" };
   };
 
-  const handleAddItem = (
-    item: Folder | Subfolder | Note | Task | CalendarSchedule,
-    type: "folder" | "subfolder" | "note" | "task" | "schedule"
-  ) => {
+  // Handle adding items
+  const handleAddItem = (item: Folder | Subfolder | Note | Task | CalendarSchedule, type: typeof modalState.type) => {
     setFolders((prev) => {
-      if (type === "folder") {
-        return [...prev, item as Folder];
-      }
-      if (type === "subfolder") {
-        return prev.map((folder) =>
-          folder.id === parentFolderId
-            ? { ...folder, subfolders: [...folder.subfolders, item as Subfolder] }
-            : folder
-        );
-      }
-      if (type === "note") {
-        return prev.map((folder) =>
-          folder.id === parentFolderId
-            ? { ...folder, notes: [...folder.notes, item as Note], updatedAt: new Date().toISOString() }
-            : folder
-        );
-      }
-      if (type === "task") {
-        return prev.map((folder) =>
-          folder.id === parentFolderId
-            ? { ...folder, tasks: [...folder.tasks, item as Task], updatedAt: new Date().toISOString() }
-            : folder
-        );
-      }
-      if (type === "schedule") {
-        return prev.map((folder) =>
-          folder.id === parentFolderId
-            ? {
-                ...folder,
-                calendarSchedules: [...folder.calendarSchedules, item as CalendarSchedule],
-                updatedAt: new Date().toISOString(),
-              }
-            : folder
-        );
-      }
-      return prev;
+      if (type === "folder") return [...prev, item as Folder];
+      return prev.map((folder) =>
+        folder.id !== modalState.parentFolderId
+          ? folder
+          : {
+              ...folder,
+              updatedAt: new Date().toISOString(),
+              ...(type === "subfolder" && { subfolders: [...folder.subfolders, item as Subfolder] }),
+              ...(type === "note" && { notes: [...folder.notes, item as Note] }),
+              ...(type === "task" && { tasks: [...folder.tasks, item as Task] }),
+              ...(type === "schedule" && { calendarSchedules: [...folder.calendarSchedules, item as CalendarSchedule] }),
+            }
+      );
     });
-    setIsModalOpen(false);
+    setModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const handleDeleteItem = (
-    itemId: string,
-    type: "folder" | "subfolder" | "note" | "task" | "schedule",
-    parentFolderId?: string
-  ) => {
+  // Handle deleting items
+  const handleDeleteItem = (itemId: string, type: typeof modalState.type, parentFolderId?: string) => {
     if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
-
     setFolders((prev) => {
-      if (type === "folder") {
-        return prev.filter((folder) => folder.id !== itemId);
-      }
+      if (type === "folder") return prev.filter((folder) => folder.id !== itemId);
       return prev.map((folder) =>
-        folder.id === parentFolderId
-          ? {
+        folder.id !== parentFolderId
+          ? folder
+          : {
               ...folder,
-              subfolders:
-                type === "subfolder"
-                  ? folder.subfolders.filter((sub) => sub.id !== itemId)
-                  : folder.subfolders,
-              notes:
-                type === "note"
-                  ? folder.notes.filter((note) => note.id !== itemId)
-                  : folder.notes,
-              tasks:
-                type === "task"
-                  ? folder.tasks.filter((task) => task.id !== itemId)
-                  : folder.tasks,
-              calendarSchedules:
-                type === "schedule"
-                  ? folder.calendarSchedules.filter((schedule) => schedule.id !== itemId)
-                  : folder.calendarSchedules,
               updatedAt: new Date().toISOString(),
+              subfolders: type === "subfolder" ? folder.subfolders.filter((sub) => sub.id !== itemId) : folder.subfolders,
+              notes: type === "note" ? folder.notes.filter((note) => note.id !== itemId) : folder.notes,
+              tasks: type === "task" ? folder.tasks.filter((task) => task.id !== itemId) : folder.tasks,
+              calendarSchedules:
+                type === "schedule" ? folder.calendarSchedules.filter((schedule) => schedule.id !== itemId) : folder.calendarSchedules,
             }
-          : folder
       );
     });
   };
 
-  const isFolder = (item: Folder | Subfolder): item is Folder => "subfolders" in item;
+  // Render folder content
+  const renderFolderContent = (folder: Folder | Subfolder, isSubfolder: boolean = false, parentPath: string = ""): JSX.Element => {
+    const path = isSubfolder ? `${parentPath}/${folder.name.toLowerCase().replace(/\s+/g, "-")}` : `/${folder.name.toLowerCase().replace(/\s+/g, "-")}`;
+    const isFolderType = "subfolders" in folder;
 
-  const renderFolderContent = (folder: Folder | Subfolder, isSubfolder: boolean = false, parentPath: string = "") => {
-    const path = isSubfolder
-      ? `${parentPath}/${folder.name.toLowerCase().replace(/\s+/g, "-")}`
-      : `/${folder.name.toLowerCase().replace(/\s+/g, "-")}`;
-
-    if (!isFolder(folder)) {
+    if (!isFolderType) {
       return (
         <motion.div
           key={folder.id}
@@ -318,11 +261,12 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
           <SideBarBtn
             text={folder.name}
             icon={<BsFolder2 className="w-5 h-5" />}
-            color="text-zinc-500" // Match non-empty folder color
+            color="text-zinc-500"
             to={path}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+            isCollapsed={!sidebarOpen}
+            className="rounded-lg"
           />
         </motion.div>
       );
@@ -332,7 +276,6 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
     const hasContent = folder.subfolders.length > 0 || folder.tasks.length > 0 || folder.notes.length > 0 || folder.calendarSchedules.length > 0;
 
     if (!hasContent) {
-      // Render empty folders as SideBarBtn instead of FileCollapsible
       return (
         <motion.div
           key={folder.id}
@@ -344,11 +287,11 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
           <SideBarBtn
             text={folder.name}
             icon={icon}
-            color="text-zinc-500" // Match non-empty folder color
+            color={color}
             to={path}
             onClick={isMobile ? toggleSidebar : undefined}
-            //onDelete={() => handleDeleteItem(folder.id, "folder")}
-            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+            isCollapsed={!sidebarOpen}
+            className="rounded-lg"
           />
         </motion.div>
       );
@@ -356,25 +299,12 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
 
     const children = [
       ...folder.subfolders.map((subfolder) => (
-        <motion.div
-          key={subfolder.id}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="pl-6"
-        >
+        <motion.div key={subfolder.id} className="pl-6" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           {renderFolderContent(subfolder, true, path)}
         </motion.div>
       )),
       ...folder.tasks.map((task) => (
-        <motion.div
-          key={task.id}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div key={task.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           <SideBarBtn
             text={task.title}
             icon={<PiHashStraightBold className="w-5 h-5" />}
@@ -382,18 +312,13 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             to={`${path}/task/${task.id}`}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+            isCollapsed={!sidebarOpen}
+            className="rounded-lg"
           />
         </motion.div>
       )),
       ...folder.notes.map((note) => (
-        <motion.div
-          key={note.id}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div key={note.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           <SideBarBtn
             text={note.title}
             icon={<BsFileText className="w-5 h-5" />}
@@ -402,18 +327,13 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
             onDelete={() => handleDeleteItem(note.id, "note", folder.id)}
-            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+            isCollapsed={!sidebarOpen}
+            className="rounded-lg"
           />
         </motion.div>
       )),
       ...folder.calendarSchedules.map((schedule) => (
-        <motion.div
-          key={schedule.id}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div key={schedule.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
           <SideBarBtn
             text={schedule.title}
             icon={<BiTime className="w-5 h-5" />}
@@ -421,29 +341,27 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             to={`${path}/schedule/${schedule.id}`}
             onClick={isMobile ? toggleSidebar : undefined}
             isSubfolder
-            className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+            isCollapsed={!sidebarOpen}
+            className="rounded-lg"
           />
         </motion.div>
       )),
       <motion.div
         key={`add-${folder.id}`}
+        className="pl-6"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="pl-6"
       >
         <SideBarBtn
           text="Add Item"
           icon={<IoMdAddCircleOutline className="w-5 h-5" />}
           color="text-zinc-500"
-          onClick={() => {
-            setModalType("subfolder");
-            setParentFolderId(folder.id);
-            setIsModalOpen(true);
-          }}
+          onClick={() => setModalState({ isOpen: true, type: "subfolder", parentFolderId: folder.id })}
           isSubfolder
-          className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+          isCollapsed={!sidebarOpen}
+          className="rounded-lg"
         />
       </motion.div>,
     ];
@@ -457,6 +375,7 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
         to={path}
         onClick={isMobile ? toggleSidebar : undefined}
         onDelete={() => handleDeleteItem(folder.id, "folder")}
+        isCollapsed={!sidebarOpen}
       >
         <div className="flex flex-col gap-1.5">{children}</div>
       </FileCollapsible>
@@ -482,17 +401,45 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
             opacity: 1;
           }
           .sidebar-desktop {
-            width: var(--sidebar-width);
+            width: ${getSidebarWidth()};
             transition: width 0.3s ease-in-out;
+            overflow-x: hidden;
+          }
+          .sidebar-desktop.collapsed .sidebar-text {
+            display: none;
+          }
+          .sidebar-desktop.collapsed .sidebar-btn {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+          }
+          .sidebar-desktop.collapsed .file-collapsible-header {
+            justify-content: center;
+          }
+          .sidebar-desktop.collapsed .file-collapsible-content {
+            display: none;
+          }
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
           }
         `}
       </style>
       <AddItemModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
         onSubmit={handleAddItem}
-        type={modalType}
-        parentFolderId={parentFolderId}
+        type={modalState.type}
+        parentFolderId={modalState.parentFolderId}
       />
       {isMobile ? (
         <AnimatePresence>
@@ -509,69 +456,27 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
               aria-expanded={sidebarOpen}
             >
               <div className="flex flex-col gap-2">
-                <SideBarBtn
-                  text="Home"
-                  icon={<RiHomeSmile2Line className="w-5 h-5" />}
-                  color="text-white"
-                  to="/"
-                  onClick={toggleSidebar}
-                  className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                />
+                <SideBarBtn text="Home" icon={<RiHomeSmile2Line className="w-5 h-5" />} color="text-white" to="/" onClick={toggleSidebar} className="rounded-lg" />
                 <div className="flex flex-col gap-4 mt-6">
-                  <h1 className="uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide">
-                    Workspace
-                  </h1>
+                  <h1 className="uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide">Workspace</h1>
                   <div className="flex flex-col gap-1.5">
-                    <SideBarBtn
-                      text="Notes"
-                      icon={<BsFileText className="w-5 h-5" />}
-                      color="text-blue-400"
-                      to="/notes"
-                      onClick={toggleSidebar}
-                      className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                    />
-                    <SideBarBtn
-                      text="Tasks"
-                      icon={<PiHashStraightBold className="w-5 h-5" />}
-                      color="text-green-400"
-                      to="/tasks"
-                      onClick={toggleSidebar}
-                      className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                    />
-                    <SideBarBtn
-                      text="Calendar"
-                      icon={<BiTime className="w-5 h-5" />}
-                      color="text-purple-400"
-                      to="/calendar"
-                      onClick={toggleSidebar}
-                      className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                    />
+                    <SideBarBtn text="Notes" icon={<BsFileText className="w-5 h-5" />} color="text-blue-400" to="/notes" onClick={toggleSidebar} className="rounded-lg" />
+                    <SideBarBtn text="Tasks" icon={<PiHashStraightBold className="w-5 h-5" />} color="text-green-400" to="/tasks" onClick={toggleSidebar} className="rounded-lg" />
+                    <SideBarBtn text="Calendar" icon={<BiTime className="w-5 h-5" />} color="text-purple-400" to="/calendar" onClick={toggleSidebar} className="rounded-lg" />
                   </div>
                 </div>
                 <div className="flex flex-col gap-4 mt-6">
                   <div className="flex justify-between items-center px-3">
-                    <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">
-                      Folders
-                    </h1>
+                    <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">Folders</h1>
                     <IoMdAddCircleOutline
-                      className="text-white/70 hover:text-white w-5 h-5 cursor-pointer transition-colors duration-200"
-                      onClick={() => {
-                        setModalType("folder");
-                        setParentFolderId(null);
-                        setIsModalOpen(true);
-                      }}
+                      className="text-white/70 w-5 h-5 cursor-pointer"
+                      onClick={() => setModalState({ isOpen: true, type: "folder", parentFolderId: null })}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <AnimatePresence>
                       {folders.map((folder) => (
-                        <motion.div
-                          key={folder.id}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
+                        <motion.div key={folder.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                           {renderFolderContent(folder)}
                         </motion.div>
                       ))}
@@ -579,78 +484,58 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
                   </div>
                 </div>
               </div>
-              <div></div>
+              <div />
             </motion.div>
           )}
         </AnimatePresence>
       ) : (
         <motion.div
           ref={sidebarRef}
-          className={`sidebar-desktop h-full py-4 px-3 flex flex-col justify-between bg-zinc-900 rounded-r-2xl z-10 overflow-y-auto custom-scrollbar ${className}`}
+          className={`sidebar-desktop h-full py-4 px-3 flex flex-col justify-between bg-zinc-900 rounded-r-2xl z-10 overflow-y-auto custom-scrollbar ${!sidebarOpen ? "collapsed" : ""} ${className}`}
           role="navigation"
           aria-label="Main navigation"
           aria-expanded={sidebarOpen}
         >
-          <div className="flex flex-col gap-2 mt-4">
-            <SideBarBtn
-              text="Home"
-              icon={<RiHomeSmile2Line className="w-5 h-5" />}
-              color="text-white"
-              to="/"
-              className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-            />
+          <div className="flex flex-col gap-2">
+            {!isMobile && (
+              <div className="flex items-center justify-end mb-2">
+                <button
+                  onClick={toggleSidebar}
+                  className="text-white/70 hover:text-white w-6 h-6"
+                  aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+                >
+                  {sidebarOpen ? <MdMenuOpen size={24} /> : <MdMenu size={24} />}
+                </button>
+              </div>
+            )}
+            <SideBarBtn text="Home" icon={<RiHomeSmile2Line className="w-5 h-5" />} color="text-white" to="/" isCollapsed={!sidebarOpen} className="rounded-lg sidebar-btn" />
             <div className="flex flex-col gap-4 mt-3">
-              <h1 className="uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide">
-                Workspace
-              </h1>
+              <h1 className={`uppercase text-zinc-300 px-3 text-xs font-medium tracking-wide ${!sidebarOpen ? "hidden" : ""}`}>Workspace</h1>
               <div className="flex flex-col gap-1.5">
-                <SideBarBtn
-                  text="Notes"
-                  icon={<BsFileText className="w-5 h-5" />}
-                  color="text-blue-400"
-                  to="/notes"
-                  className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                />
-                <SideBarBtn
-                  text="Tasks"
-                  icon={<PiHashStraightBold className="w-5 h-5" />}
-                  color="text-green-400"
-                  to="/tasks"
-                  className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
-                />
+                <SideBarBtn text="Notes" icon={<BsFileText className="w-5 h-5" />} color="text-blue-400" to="/notes" isCollapsed={!sidebarOpen} className="rounded-lg sidebar-btn" />
+                <SideBarBtn text="Tasks" icon={<PiHashStraightBold className="w-5 h-5" />} color="text-green-400" to="/tasks" isCollapsed={!sidebarOpen} className="rounded-lg sidebar-btn" />
                 <SideBarBtn
                   text="Calendar"
                   icon={<BiTime className="w-5 h-5" />}
                   color="text-purple-400"
                   to="/calendar"
-                  className="hover:bg-zinc-800 rounded-lg transition-colors duration-200"
+                  isCollapsed={!sidebarOpen}
+                  className="rounded-lg sidebar-btn"
                 />
               </div>
             </div>
             <div className="flex flex-col gap-4 mt-6">
-              <div className="flex justify-between items-center px-3">
-                <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">
-                  Folders
-                </h1>
+              <div className={`flex justify-between items-center px-3 ${!sidebarOpen ? "hidden" : ""}`}>
+                <h1 className="uppercase text-zinc-300 text-xs font-medium tracking-wide">Folders</h1>
                 <IoMdAddCircleOutline
-                  className="text-white/70 hover:text-white w-5 h-5 cursor-pointer transition-colors duration-200"
-                  onClick={() => {
-                    setModalType("folder");
-                    setParentFolderId(null);
-                    setIsModalOpen(true);
-                  }}
+                  className="text-white/70 w-5 h-5 cursor-pointer"
+                  onClick={() => setModalState({ isOpen: true, type: "folder", parentFolderId: null })}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
                 <AnimatePresence>
                   {folders.map((folder) => (
-                    <motion.div
-                      key={folder.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
+                    <motion.div key={folder.id} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                       {renderFolderContent(folder)}
                     </motion.div>
                   ))}
@@ -658,11 +543,11 @@ const SideBar: React.FC<SideBarProps> = ({ sidebarOpen, toggleSidebar, isMobile,
               </div>
             </div>
           </div>
-          <div></div>
+          <div />
         </motion.div>
       )}
     </div>
   );
 };
 
-export default SideBar;
+export default memo(SideBar);

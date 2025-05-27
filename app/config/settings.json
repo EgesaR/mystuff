@@ -1,0 +1,7 @@
+{
+    "sidebarWidth": "280px",
+    "mobileSidebarWidth": "75vw",
+    "collapsedWidth": "60px",
+    "menuButtonHoverColor": "hover:text-blue-400",
+    "buttonHoverColor": "hover:text-green-400"
+  }

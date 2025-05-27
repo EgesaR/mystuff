@@ -9,6 +9,7 @@ interface SideBarBtnProps {
   onClick?: () => void;
   onDelete?: () => void;
   isSubfolder?: boolean;
+  isCollapsed?: boolean;
   className?: string;
 }
 
@@ -20,18 +21,19 @@ const SideBarBtn: React.FC<SideBarBtnProps> = ({
   onClick,
   onDelete,
   isSubfolder,
+  isCollapsed,
   className,
 }) => {
   const content = (
     <div
       className={`flex items-center gap-2 px-3 py-2 text-sm font-medium ${color} ${
         isSubfolder ? "pl-5" : ""
-      } ${className}`}
+      } ${isCollapsed ? "justify-center px-0" : ""} ${className} sidebar-btn`}
       onClick={onClick}
     >
       {icon}
-      <span className="truncate">{text}</span>
-      {onDelete && (
+      {!isCollapsed && <span className="truncate sidebar-text">{text}</span>}
+      {!isCollapsed && onDelete && (
         <button
           className="ml-auto text-zinc-500 hover:text-red-400 transition-colors duration-200"
           onClick={(e) => {
