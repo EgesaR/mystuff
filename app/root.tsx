@@ -12,6 +12,7 @@ import SideBar from "~/components/SideBar";
 import styles from "./tailwind.css?url";
 import { useIsMobile } from "~/hooks/useIsMobile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import WelcomeDialog from "./components/WelcomeDialog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="w-full h-screen overflow-hidden font-inter bg-zinc-950">
+        <WelcomeDialog />
         <style>
           {`
             :root {

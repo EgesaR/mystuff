@@ -7,7 +7,7 @@ interface SideBarBtnProps {
   color: string;
   to?: string;
   onClick?: () => void;
-  onDelete?: () => void;
+  onDelete?: (parentFolderId?: string) => void; // Updated to accept parentFolderId
   isSubfolder?: boolean;
   isCollapsed?: boolean;
   className?: string;
@@ -38,10 +38,15 @@ const SideBarBtn: React.FC<SideBarBtnProps> = ({
           className="ml-auto text-zinc-500 hover:text-red-400 transition-colors duration-200"
           onClick={(e) => {
             e.stopPropagation();
-            onDelete();
+            onDelete(); // Call onDelete without parentFolderId (handled in SideBar)
           }}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

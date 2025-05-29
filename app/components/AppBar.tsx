@@ -1,6 +1,6 @@
 import { Form } from "@remix-run/react";
 import { BiTime } from "react-icons/bi";
-import { FaBars , FaFolderPlus } from "react-icons/fa";
+import { FaBars, FaFolderPlus } from "react-icons/fa";
 import Input from "./Input";
 import SearchList from "./SearchList";
 import { useState, memo, useRef, useEffect } from "react";
@@ -103,10 +103,10 @@ const AppBar = memo(({ toggleSidebar, isSidebarOpen }: AppBarProps) => {
               label="Search... (Ctrl+K or ⌘+K)"
               name="search"
               value={search}
+              placeholder=" "
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setTimeout(() => setIsInputFocused(false), 100)}
-              placeholder="Search... (Ctrl+K or ⌘+K)"
               focusInputClass="border-orange-500"
               focusLabelClass="text-orange-500"
               ref={inputRef}
