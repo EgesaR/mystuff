@@ -13,6 +13,7 @@ import styles from "./tailwind.css?url";
 import { useIsMobile } from "~/hooks/useIsMobile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import WelcomeDialog from "./components/WelcomeDialog";
+import { AnimatePresence } from "framer-motion";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,7 +111,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 toggleSidebar={toggleSidebar}
                 sidebarOpen={sidebarOpen}
                 isMobile={isMobile}
-                className={isMobile ? (sidebarOpen ? "sidebar-visible" : "sidebar-hidden") : ""}
+                className={
+                  isMobile
+                    ? sidebarOpen
+                      ? "sidebar-visible"
+                      : "sidebar-hidden"
+                    : ""
+                }
               />
               <main
                 className={`h-full bg-zinc-900 sm:rounded-t-2xl min-w-0 transition-all duration-300 ease-in-out custom-scrollbar ${
