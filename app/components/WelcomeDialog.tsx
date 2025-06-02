@@ -8,12 +8,82 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaStickyNote, FaTasks, FaCalendarAlt } from "react-icons/fa";
 import Button from "./Button";
-import {
-  childVariants,
-  containerVariants,
-  iconVariants,
-  sectionVariants,
-} from "~/animations/variants";
+
+// Define variants inline to ensure correct typing
+const containerVariants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3, // Number (in seconds)
+    },
+  },
+  exit: { opacity: 0 },
+};
+
+const childVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
+};
+
+const iconVariants = {
+  initial: { scale: 0, opacity: 0 },
+  animate: { scale: 1, opacity: 1, transition: { duration: 0.5 } },
+  exit: { scale: 0, opacity: 0, transition: { duration: 0.3 } },
+};
+
+const sectionVariants = {
+  initial: { y: 20, opacity: 0 },
+  animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeInOut" } },
+  exit: { y: -20, opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } },
+};
+
+const customTitleVariants = {
+  initial: { y: 50, opacity: 0 },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+    },
+  },
+  exit: { y: -50, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+const customDescriptionVariants = {
+  initial: { y: 30, opacity: 0 },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.5, ease: "easeOut", delay: 0.5 },
+  },
+  exit: { y: -30, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+const leftSideVariants = {
+  initial: { x: -100, opacity: 0 },
+  animate: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+  exit: { x: 100, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+const rightSideVariants = {
+  initial: { y: 100, opacity: 0 },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.6, ease: "easeOut", delay: 0.2 },
+  },
+  exit: { y: -100, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
+};
 
 interface Tab {
   title: string;
@@ -101,61 +171,8 @@ const WelcomeDialog: React.FC = () => {
       y: 0,
       opacity: 1,
       transition: { duration: 0.7, ease: "easeInOut", delay: 0.2 },
-    },
+    }, 
   };
-
-  const optimizedSectionVariants = {
-    initial: { y: 20, opacity: 0 },
-    animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeInOut" } },
-    exit: { y: -20, opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } },
-  };
-
-  const customTitleVariants = {
-    initial: { y: 50, opacity: 0 },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-      },
-    },
-    exit: { y: -50, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
-  };
-
-  const customDescriptionVariants = {
-    initial: { y: 30, opacity: 0 },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut", delay: 0.5 },
-    },
-    exit: { y: -30, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
-  };
-
-  const leftSideVariants = {
-    initial: { x: -100, opacity: 0 },
-    animate: {
-      x: 0,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-    exit: { x: 100, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
-  };
-
-  const rightSideVariants = {
-    initial: { y: 100, opacity: 0 },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut", delay: 0.2 },
-    },
-    exit: { y: -100, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } },
-  };
-
   return (
     <Dialog
       static
@@ -188,7 +205,7 @@ const WelcomeDialog: React.FC = () => {
               }
               className={`bg-white dark:bg-zinc-950 rounded-lg flex justify-center items-center flex-col w-full overflow-hidden ${
                 tabIndex === 0
-                  ? "max-w-4xl h-[80vh] p-6 sm:p-12"
+                  ? "max-w-4xl h-[80vh] p-6 sm:p-12 sm:py-0"
                   : tabIndex === 4
                   ? "max-w-4xl h-[80vh] p-8"
                   : "h-full p-0"
@@ -198,15 +215,15 @@ const WelcomeDialog: React.FC = () => {
               <AnimatePresence mode="wait">
                 <motion.section
                   key={tabIndex}
-                  variants={optimizedSectionVariants}
+                  variants={sectionVariants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
                   className={`w-full h-full flex ${
                     tabIndex >= 1 && tabIndex <= 3 ? "flex-row" : "flex-col"
                   } justify-center items-center ${
-                    tabIndex >= 1 && tabIndex <= 3 ? "p-4 sm:p-6" : "p-8"
-                  } space-y-6 overflow-visible`}
+                    tabIndex >= 1 && tabIndex <= 3 ? "pl-4 sm:pl-6" : "p-8"
+                  } space-y-6 overflow-visible`} // Only left padding for tabs 1-3
                 >
                   <motion.div
                     variants={containerVariants}
@@ -215,7 +232,7 @@ const WelcomeDialog: React.FC = () => {
                     exit="exit"
                     className={`flex ${
                       tabIndex >= 1 && tabIndex <= 3 ? "flex-row w-full" : "flex-col w-full"
-                    } items-center justify-center h-full space-y-6 sm:space-y-0 sm:space-x-6`}
+                    } items-center justify-center space-y-4 sm:space-y-4 sm:space-x-4 items-center h-full`}
                   >
                     <motion.div
                       variants={tabIndex >= 1 && tabIndex <= 3 ? leftSideVariants : childVariants}
@@ -224,8 +241,8 @@ const WelcomeDialog: React.FC = () => {
                       exit="exit"
                       className={`flex flex-col space-y-6 ${
                         tabIndex >= 1 && tabIndex <= 3
-                          ? "w-1/2 h-full justify-center pl-4 sm:pl-6 py-6 items-start text-left"
-                          : "w-full items-center text-center"
+                          ? "w-1/2 h-full justify-center pl-4 sm:pl-10 sm:pt-12 sm:pb-14  items-start text-left"
+                          : "w-full items-center"
                       }`}
                     >
                       <motion.div
@@ -242,10 +259,10 @@ const WelcomeDialog: React.FC = () => {
                         {tabs.map((_, index) => (
                           <div
                             key={index}
-                            className={`h-2 w-2 rounded-full transition-all duration-300 ease-in-out ${
+                            className={`h-2 w-4 rounded-full transition-all duration-300 ease-in-out ${
                               index === tabIndex
                                 ? "bg-orange-500 dark:bg-orange-400"
-                                : "bg-gray-300 dark:bg-gray-600"
+                                : "bg-gray-200 dark:bg-gray-600"
                             }`}
                           />
                         ))}
@@ -257,7 +274,7 @@ const WelcomeDialog: React.FC = () => {
                           initial="initial"
                           animate="animate"
                           exit="exit"
-                          className="inline-flex items-center rounded-md bg-amber-100 dark:bg-amber-900/50 px-3 py-1 text-sm font-medium text-amber-800 dark:text-amber-200 ring-1 ring-amber-600/20 dark:ring-amber-600/30 ring-inset w-fit"
+                          className="inline-flex items-center rounded-md bg-amber-800 dark:bg-amber-900/50 px-3 py-1 text-sm font-bold text-white dark:text-amber-200 ring-1 ring-amber-400 ring-inset dark:ring-amber-400 w-fit"
                         >
                           {tabs[tabIndex].badge}
                         </motion.span>
@@ -271,14 +288,14 @@ const WelcomeDialog: React.FC = () => {
                         className="flex items-center space-x-1"
                       >
                         <DialogTitle
-                          as={motion.span}
+                          as={motion.h2}
                           variants={customTitleVariants}
                           initial="initial"
                           animate="animate"
                           exit="exit"
-                          transition={{ staggerChildren: 0.2 }}
+                          transition={{ staggerChildren: 0.3 }}
                           custom={tabIndex}
-                          className="font-normal text-4xl sm:text-[40px] text-zinc-900 dark:text-zinc-100"
+                          className="font-normal text-4xl sm:text-[37px] text-white dark:text-zinc-100"
                         >
                           {tabs[tabIndex].title.split("MyStuff")[0]}
                           {tabs[tabIndex].title.includes("MyStuff") && (
@@ -287,7 +304,7 @@ const WelcomeDialog: React.FC = () => {
                               initial="initial"
                               animate="animate"
                               exit="exit"
-                              className="bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-300 bg-clip-text text-transparent font-medium text-4xl sm:text-5xl"
+                              className="bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent font-bold text-4xl sm:text-4xl"
                             >
                               MyStuff
                             </motion.label>
@@ -295,16 +312,15 @@ const WelcomeDialog: React.FC = () => {
                         </DialogTitle>
                       </motion.div>
 
-                      <Description
-                        as={motion.p}
+                      <motion.div
                         variants={customDescriptionVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="text-[17px] font-light text-zinc-700 dark:text-zinc-300 max-w-xl"
+                        className="text-[17px] font-light text-white dark:text-gray-400 max-w-xl"
                       >
-                        {tabs[tabIndex].description}
-                      </Description>
+                        <Description as="p">{tabs[tabIndex].description}</Description>
+                      </motion.div>
 
                       <motion.div
                         variants={childVariants}
@@ -315,14 +331,14 @@ const WelcomeDialog: React.FC = () => {
                       >
                         {tabIndex > 0 && (
                           <Button
-                            className="px-12 py-2 bg-gray-200 dark:bg-gray-700 text-zinc-800 dark:text-zinc-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+                            className="px-12 py-2 bg-gray-400 dark:bg-gray-500 text-gray-800 dark:text-gray-200 hover:bg-gray-500 dark:hover:bg-gray-400 rounded-md"
                             onClick={handlePrevious}
                           >
                             Previous
                           </Button>
                         )}
                         <Button
-                          className="px-12 py-2 text-white dark:text-zinc-100 rounded-md hover:bg-blue-600 dark:hover:bg-blue-700"
+                          className="px-12 py-2 text-white bg-gradient-to-r from-orange-500 to-orange-600 dark:text-white font-bold rounded-md hover:bg-blue-700 dark:hover:bg-blue-600"
                           onClick={handleNext}
                         >
                           {tabIndex === tabs.length - 1 ? "Get Started" : "Next"}
@@ -336,7 +352,7 @@ const WelcomeDialog: React.FC = () => {
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className={`w-1/2 h-full flex items-center justify-center bg-gradient-to-br ${tabs[tabIndex].gradient} rounded-r-lg`}
+                        className={`w-1/2 h-full flex items-center justify-center bg-gradient-to-br ${tabs[tabIndex].gradient} p-0`} // No padding
                       >
                         <motion.div
                           variants={iconVariants}

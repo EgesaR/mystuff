@@ -1,11 +1,13 @@
-import { motion } from "framer-motion";
-import { useState } from "react";
+// File: /project/workspace/app/routes/tasks.tsx
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion"; // Removed AnimationOptions since TRANSITION is imported
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { json, defer } from "@remix-run/node";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { FiPlus } from "react-icons/fi";
 import TodayTaskComponent from "~/components/tasks/TodayTaskComponent";
 import data from "~/data/data.json";
+import useMotionTimeline from "~/hooks/useMotionTimeline"; // Corrected import path and named import
 
 // Meta function
 export const meta: MetaFunction = () => [{ title: "Tasks" }];
@@ -80,9 +82,26 @@ const tasks = getTasks(data[0].space[0].folders);
 const currentDate = new Date("2025-05-26");
 const categorizedTasks = categorizeTasks(tasks, currentDate);
 
+// ClientOnly component to prevent SSR issues
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  return isClient ? <>{children}</> : null;
+}
+
 // Animated desktop tabs
-function AnimatedTabs({ onChange }: { onChange?: (tab: "overdue" | "upcoming" | "completed") => void }) {
-  const [activeTab, setActiveTab] = useState<"overdue" | "upcoming" | "completed">("overdue");
+function AnimatedTabs({
+  onChange,
+}: {
+  onChange?: (tab: "overdue" | "upcoming" | "completed") => void;
+}) {
+  const [activeTab, setActiveTab] = useState<
+    "overdue" | "upcoming" | "completed"
+  >("overdue");
 
   return (
     <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-700 p-1 rounded-full">
@@ -117,7 +136,9 @@ function AnimatedTabs({ onChange }: { onChange?: (tab: "overdue" | "upcoming" | 
 
 // Main Page
 export default function TasksPage() {
-  const [currentTab, setCurrentTab] = useState<"overdue" | "upcoming" | "completed">("overdue");
+  const [currentTab, setCurrentTab] = useState<
+    "overdue" | "upcoming" | "completed"
+  >("overdue");
 
   const getFolderName = (folderId: string | null) => {
     if (!folderId) return "Unknown";
@@ -135,7 +156,9 @@ export default function TasksPage() {
       {/* 📱 Mobile */}
       <div className="flex flex-col sm:hidden w-full h-full py-5 pt-8 px-3">
         <nav className="flex items-center justify-between">
-          <h1 className="text-2xl font-medium text-gray-900 dark:text-neutral-100">Tasks</h1>
+          <h1 className="text-2xl font-medium text-gray-900 dark:text-neutral-100">
+            Tasks
+          </h1>
           <button className="flex items-center gap-2 px-2 py-1 text-xs font-medium text-gray-900 dark:text-neutral-100 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600">
             <FiPlus className="size-4" />
             New Task
@@ -155,7 +178,10 @@ export default function TasksPage() {
             </TabList>
             <TabPanels className="mt-3">
               {tabData.map((tab) => (
-                <TabPanel key={tab.id} className="rounded-xl bg-gray-100 dark:bg-neutral-700 p-3">
+                <TabPanel
+                  key={tab.id}
+                  className="rounded-xl bg-gray-100 dark:bg-neutral-700 p-3"
+                >
                   <TodayTaskComponent tasks={categorizedTasks[tab.id]} />
                 </TabPanel>
               ))}
@@ -168,7 +194,9 @@ export default function TasksPage() {
       <div className="hidden sm:flex h-screen w-full justify-center px-4 pt-24">
         <div className="w-full max-w-4xl">
           <nav className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-medium text-gray-900 dark:text-neutral-100">Tasks</h1>
+            <h1 className="text-2xl font-medium text-gray-900 dark:text-neutral-100">
+              Tasks
+            </h1>
             <button className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-900 dark:text-neutral-100 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600">
               <FiPlus className="size-6" />
               New Task
@@ -183,18 +211,102 @@ export default function TasksPage() {
                 key={task.id}
                 className="h-full w-full bg-gray-100 dark:bg-neutral-700 rounded-2xl aspect-square flex flex-col items-center justify-center p-4 text-center"
               >
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{task.title}</h2>
-                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">{task.description}</p>
-                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">Due: {task.dueDate}</p>
-                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">Folder: {getFolderName(task.folderId)}</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                  {task.title}
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
+                  {task.description}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
+                  Due: {task.dueDate}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
+                  Folder: {getFolderName(task.folderId)}
+                </p>
                 <p className="text-sm text-gray-600 dark:text-neutral-400 mt-2">
                   Status: {task.completed ? "Completed" : "Not Completed"}
                 </p>
               </div>
             ))}
+            <ClientOnly>
+              <AnimatedBars />
+            </ClientOnly>
           </main>
         </div>
       </div>
+    </div>
+  );
+}
+
+// AnimatedBars component to handle useMotionTimeline
+function AnimatedBars() {
+  const scope = useMotionTimeline(
+    [
+      [".bar-2", { height: 48 }, TRANSITION],
+      [
+        [".bar-1", { x: -24 }, TRANSITION],
+        [".bar-3", { x: 24 }, TRANSITION],
+      ],
+      [
+        [".bar-1", { height: 48, rotate: 90 }, TRANSITION],
+        [".bar-3", { height: 48, rotate: -90 }, TRANSITION],
+      ],
+      [
+        [".bar-1", { x: 48 }, TRANSITION],
+        [".bar-3", { x: -48 }, TRANSITION],
+      ],
+      [
+        [".bar-1", { rotate: 120, background: "#059669" }, TRANSITION],
+        [".bar-2", { rotate: -120, background: "#34d399" }, TRANSITION],
+        [".bar-3", { rotate: 90 }, TRANSITION],
+      ],
+      [
+        [
+          ".bar-1",
+          { rotate: 0, x: 0, height: 96, background: "#FFFFFF" },
+          { ...TRANSITION, delay: 2 },
+        ],
+        [
+          ".bar-2",
+          { rotate: 0, height: 96, background: "#FFFFFF" },
+          { ...TRANSITION, delay: 2 },
+        ],
+        [
+          ".bar-3",
+          { rotate: 0, x: 0, height: 96, background: "#FFFFFF" },
+          { ...TRANSITION, delay: 2 },
+        ],
+      ],
+    ],
+    Infinity
+  );
+
+  return (
+    <div
+      ref={scope}
+      className="flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 bg-grid-zinc-900"
+    >
+      <div
+        style={{
+          width: 48,
+          height: 96,
+        }}
+        className="bar-1 bg-white"
+      />
+      <div
+        style={{
+          width: 48,
+          height: 96,
+        }}
+        className="bar-2 bg-white"
+      />
+      <div
+        style={{
+          width: 48,
+          height: 96,
+        }}
+        className="bar-3 bg-white"
+      />
     </div>
   );
 }

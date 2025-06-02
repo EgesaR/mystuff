@@ -430,5 +430,25 @@
     "createdAt": "2025-05-26T12:52:11.745Z",
     "owners": [],
     "tags": []
+  },
+  {
+    "id": "c619313e-b90f-4d7e-a129-75458ba03cce",
+    "title": "Tooltip Animation From Dribbble",
+    "body": [
+      {
+        "type": "paragraph",
+        "content": "https://dribbble.com/shots/9829963-Tooltip-animation"
+      },
+      {
+        "type": "image",
+        "content": {
+          "url": "https://cdn.dribbble.com/userupload/25965308/file/original-774b2aabb70e2649692bc7a45fc89ac7.gif"
+        }
+      }
+    ],
+    "updatedAt": "2025-06-02T02:33:26.826Z",
+    "createdAt": "2025-06-02T02:32:59.575Z",
+    "owners": [],
+    "tags": []
   }
 ]

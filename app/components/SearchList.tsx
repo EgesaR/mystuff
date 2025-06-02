@@ -59,6 +59,8 @@ const SearchList = memo(
           initial="hidden"
           animate="visible"
           exit="exit"
+         layout
+         transition={{ ease: "easeInOut", duration: 0.5}}
         >
           {items.length === 0 && searchQuery.trim() && (
             <motion.li

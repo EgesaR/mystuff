@@ -65,7 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="w-full h-screen overflow-hidden font-inter bg-zinc-950">
-        <WelcomeDialog />
+       
         <style>
           {`
             :root {

@@ -116,6 +116,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-label={label}
           aria-invalid={hasError}
           aria-describedby={`${id}-label`}
+          
         />
 
         <motion.label
