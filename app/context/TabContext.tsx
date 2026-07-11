@@ -4,7 +4,6 @@ import {
   useCallback,
   useReducer,
   useEffect,
-  useRef,
   type ReactNode,
 } from "react";
 import { useNavigate, useLocation } from "react-router";
@@ -18,7 +17,7 @@ import type {
   IslandId,
   TabStatus,
 } from "~/types/tabs";
-import { loadTabState, saveTabState, getDefaultState } from "~/lib/tabStorage";
+import { loadTabState, saveTabState } from "~/lib/tabStorage";
 
 type TabAction =
   | { type: "SET_STATE"; payload: TabState }
@@ -53,14 +52,11 @@ function tabReducer(state: TabState, action: TabAction): TabState {
       return action.payload;
 
     case "CREATE_TAB": {
-      // Determine the new active ID
       const newActiveId = action.payload.isActive
         ? action.payload.id
         : state.activeTabId;
-
       return {
         ...state,
-        // FIX 1: Map over ALL tabs (including the new one) to ensure ONLY the active one is true
         tabs: [...state.tabs, action.payload].map((t) => ({
           ...t,
           isActive: t.id === newActiveId,
@@ -81,57 +77,29 @@ function tabReducer(state: TabState, action: TabAction): TabState {
     }
 
     case "DELETE_TAB": {
-      const deletedTab = state.tabs.find((t) => t.id === action.payload);
+      const deletedIndex = state.tabs.findIndex((t) => t.id === action.payload);
+      if (deletedIndex === -1) return state;
+
       const filteredTabs = state.tabs.filter((t) => t.id !== action.payload);
       let newActiveId = state.activeTabId;
 
-      if (state.activeTabId === action.payload && deletedTab) {
-        // Sort tabs exactly as they appear visually to find the true neighbor
-        const sortedTabs = [...state.tabs].sort((a, b) => {
-          const aIsland = a.islandId ?? "__none__";
-          const bIsland = b.islandId ?? "__none__";
-          if (aIsland !== bIsland) {
-            if (aIsland === "__none__") return -1;
-            if (bIsland === "__none__") return 1;
-            const aIslandOrder =
-              state.islands.find((i) => i.id === aIsland)?.order ?? 999;
-            const bIslandOrder =
-              state.islands.find((i) => i.id === bIsland)?.order ?? 999;
-            return aIslandOrder - bIslandOrder;
-          }
-          return a.order - b.order;
-        });
-
-        const deletedIndex = sortedTabs.findIndex(
-          (t) => t.id === action.payload,
-        );
-
+      if (state.activeTabId === action.payload) {
         if (filteredTabs.length === 0) {
-          newActiveId = null;
+          newActiveId = null; // Will trigger the useEffect to create a fresh tab
         } else {
-          // Attempt to select the next tab to the right, otherwise fallback to the left
-          const nextTab = sortedTabs[deletedIndex + 1];
-          const prevTab = sortedTabs[deletedIndex - 1];
-
-          if (nextTab) {
-            newActiveId = nextTab.id;
-          } else if (prevTab) {
-            newActiveId = prevTab.id;
-          } else {
-            newActiveId = filteredTabs[0].id;
-          }
+          // Safe fallback: grab the tab that took its place, or the one to its left
+          const fallbackTab =
+            filteredTabs[deletedIndex] || filteredTabs[deletedIndex - 1];
+          newActiveId = fallbackTab.id;
         }
       }
 
-      // FIX 2: Map over the remaining tabs and sync the isActive flag with the newly chosen newActiveId
-      const updatedTabs = filteredTabs.map((t) => ({
-        ...t,
-        isActive: t.id === newActiveId,
-      }));
-
       return {
         ...state,
-        tabs: updatedTabs,
+        tabs: filteredTabs.map((t) => ({
+          ...t,
+          isActive: t.id === newActiveId,
+        })),
         activeTabId: newActiveId,
       };
     }
@@ -167,15 +135,14 @@ function tabReducer(state: TabState, action: TabAction): TabState {
       };
 
     case "MOVE_TAB": {
-      const { tabId, targetIslandId, newOrder } = action.payload;
       return {
         ...state,
         tabs: state.tabs.map((t) =>
-          t.id === tabId
+          t.id === action.payload.tabId
             ? {
                 ...t,
-                islandId: targetIslandId,
-                order: newOrder,
+                islandId: action.payload.targetIslandId,
+                order: action.payload.newOrder,
                 updatedAt: Date.now(),
               }
             : t,
@@ -184,10 +151,7 @@ function tabReducer(state: TabState, action: TabAction): TabState {
     }
 
     case "CREATE_ISLAND":
-      return {
-        ...state,
-        islands: [...state.islands, action.payload],
-      };
+      return { ...state, islands: [...state.islands, action.payload] };
 
     case "UPDATE_ISLAND":
       return {
@@ -199,7 +163,7 @@ function tabReducer(state: TabState, action: TabAction): TabState {
         ),
       };
 
-    case "DELETE_ISLAND": {
+    case "DELETE_ISLAND":
       return {
         ...state,
         tabs: state.tabs.map((t) =>
@@ -209,7 +173,6 @@ function tabReducer(state: TabState, action: TabAction): TabState {
         ),
         islands: state.islands.filter((i) => i.id !== action.payload),
       };
-    }
 
     case "TOGGLE_ISLAND_COLLAPSE":
       return {
@@ -264,53 +227,11 @@ export function TabProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [state, dispatch] = useReducer(tabReducer, null, () => loadTabState());
-  const isInitialMount = useRef(true);
-  const isNavigating = useRef(false);
 
-  // Save state to localStorage on changes
+  // Save to storage on every state change
   useEffect(() => {
     saveTabState(state);
   }, [state]);
-
-  // 1. Handle URL changes (Initial load, Browser Back/Forward, Address Bar)
-  useEffect(() => {
-    // If the navigation was triggered by clicking a tab, ignore it here
-    if (isNavigating.current) {
-      isNavigating.current = false;
-      return;
-    }
-
-    const matchingTab = state.tabs.find((t) => t.url === location.pathname);
-
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      if (matchingTab && state.activeTabId !== matchingTab.id) {
-        dispatch({ type: "SET_ACTIVE_TAB", payload: matchingTab.id });
-      }
-      // REMOVED: The aggressive redirect that blocked 404s on initial load
-      return;
-    }
-
-    // For subsequent external URL changes
-    if (matchingTab && state.activeTabId !== matchingTab.id) {
-      dispatch({ type: "SET_ACTIVE_TAB", payload: matchingTab.id });
-    }
-    // IF !matchingTab: We purposefully do nothing!
-    // This allows React Router to naturally fall back to dashboard.$.tsx
-  }, [location.pathname, state.tabs, state.activeTabId]);
-
-  // 2. Handle Tab Selection (User clicks a tab or a tab is deleted)
-  useEffect(() => {
-    if (isInitialMount.current) return;
-
-    const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
-
-    // Only force a navigation if the active tab's URL doesn't match the current URL
-    if (activeTab && location.pathname !== activeTab.url) {
-      isNavigating.current = true;
-      navigate(activeTab.url, { replace: true });
-    }
-  }, [state.activeTabId, navigate]); // ONLY trigger when activeTabId changes
 
   const createTab = useCallback(
     (params: Partial<Omit<Tab, "id" | "createdAt" | "updatedAt">>): Tab => {
@@ -325,7 +246,7 @@ export function TabProvider({ children }: { children: ReactNode }) {
       const newTab: Tab = {
         id: `tab-${uuidv4()}`,
         title: params.title ?? "New Tab",
-        url: params.url ?? "/dashboard",
+        url: params.url ?? `/dashboard?new=${Date.now()}`,
         islandId: params.islandId ?? null,
         icon: params.icon ?? { type: "lucide", name: "File" },
         status: params.status ?? "idle",
@@ -342,26 +263,72 @@ export function TabProvider({ children }: { children: ReactNode }) {
     [state.tabs],
   );
 
-  const updateTab = useCallback((id: TabId, updates: Partial<Tab>) => {
-    dispatch({ type: "UPDATE_TAB", payload: { id, updates } });
-  }, []);
+  // Sync #1: Active Tab State -> Browser URL
+  // This hook is strictly bound to the activeTabId. It will NEVER run just because the URL changed.
+  useEffect(() => {
+    // Prevent the user from getting stuck with 0 tabs.
+    if (!state.activeTabId && state.tabs.length === 0) {
+      createTab({ title: "New Tab", url: `/dashboard?new=${Date.now()}` });
+      return;
+    }
 
-  const deleteTab = useCallback((id: TabId) => {
-    dispatch({ type: "DELETE_TAB", payload: id });
-  }, []);
+    const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
+    if (activeTab) {
+      // Compare the FULL URL so "New Tabs" (?new=123) are correctly identified
+      const currentFullUrl = location.pathname + location.search;
 
-  const setActiveTab = useCallback((id: TabId) => {
-    dispatch({ type: "SET_ACTIVE_TAB", payload: id });
-  }, []);
+      if (currentFullUrl !== activeTab.url) {
+        navigate(activeTab.url);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.activeTabId]);
+  // ^ The dependency array is strictly limited to prevent looping.
 
-  const pinTab = useCallback((id: TabId) => {
-    dispatch({ type: "PIN_TAB", payload: id });
-  }, []);
+  // Sync #2: Browser URL -> Tab State
+  // This hook only handles external navigation like the browser's Back/Forward buttons.
+  useEffect(() => {
+    const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
 
-  const unpinTab = useCallback((id: TabId) => {
-    dispatch({ type: "UNPIN_TAB", payload: id });
-  }, []);
+    // We only care about the base path for matching tabs, not the query params
+    const currentCleanUrl = location.pathname;
+    const tabCleanUrl = activeTab ? activeTab.url.split("?")[0] : "";
 
+    if (currentCleanUrl !== tabCleanUrl && activeTab) {
+      const matchingTab = state.tabs.find(
+        (t) => t.url.split("?")[0] === currentCleanUrl,
+      );
+
+      // If we found a tab that matches this URL, and it isn't active, activate it.
+      if (matchingTab && matchingTab.id !== state.activeTabId) {
+        dispatch({ type: "SET_ACTIVE_TAB", payload: matchingTab.id });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+  // ^ The dependency array is strictly limited to prevent looping.
+
+  const updateTab = useCallback(
+    (id: TabId, updates: Partial<Tab>) =>
+      dispatch({ type: "UPDATE_TAB", payload: { id, updates } }),
+    [],
+  );
+  const deleteTab = useCallback(
+    (id: TabId) => dispatch({ type: "DELETE_TAB", payload: id }),
+    [],
+  );
+  const setActiveTab = useCallback(
+    (id: TabId) => dispatch({ type: "SET_ACTIVE_TAB", payload: id }),
+    [],
+  );
+  const pinTab = useCallback(
+    (id: TabId) => dispatch({ type: "PIN_TAB", payload: id }),
+    [],
+  );
+  const unpinTab = useCallback(
+    (id: TabId) => dispatch({ type: "UNPIN_TAB", payload: id }),
+    [],
+  );
   const moveTab = useCallback(
     (tabId: TabId, targetIslandId: IslandId | null, newOrder: number) => {
       dispatch({
@@ -380,7 +347,6 @@ export function TabProvider({ children }: { children: ReactNode }) {
         state.islands.length > 0
           ? Math.max(...state.islands.map((i) => i.order))
           : -1;
-
       const newIsland: TabIsland = {
         id: `island-${uuidv4()}`,
         name: params.name ?? "New Island",
@@ -390,7 +356,6 @@ export function TabProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-
       dispatch({ type: "CREATE_ISLAND", payload: newIsland });
       return newIsland;
     },
@@ -398,58 +363,52 @@ export function TabProvider({ children }: { children: ReactNode }) {
   );
 
   const updateIsland = useCallback(
-    (id: IslandId, updates: Partial<TabIsland>) => {
-      dispatch({ type: "UPDATE_ISLAND", payload: { id, updates } });
-    },
+    (id: IslandId, updates: Partial<TabIsland>) =>
+      dispatch({ type: "UPDATE_ISLAND", payload: { id, updates } }),
+    [],
+  );
+  const deleteIsland = useCallback(
+    (id: IslandId) => dispatch({ type: "DELETE_ISLAND", payload: id }),
+    [],
+  );
+  const toggleIslandCollapse = useCallback(
+    (id: IslandId) => dispatch({ type: "TOGGLE_ISLAND_COLLAPSE", payload: id }),
+    [],
+  );
+  const reorderTabs = useCallback(
+    (tabIds: TabId[]) => dispatch({ type: "REORDER_TABS", payload: tabIds }),
+    [],
+  );
+  const reorderIslands = useCallback(
+    (islandIds: IslandId[]) =>
+      dispatch({ type: "REORDER_ISLANDS", payload: islandIds }),
+    [],
+  );
+  const setTabStatus = useCallback(
+    (id: TabId, status: TabStatus) =>
+      dispatch({ type: "SET_TAB_STATUS", payload: { id, status } }),
     [],
   );
 
-  const deleteIsland = useCallback((id: IslandId) => {
-    dispatch({ type: "DELETE_ISLAND", payload: id });
-  }, []);
-
-  const toggleIslandCollapse = useCallback((id: IslandId) => {
-    dispatch({ type: "TOGGLE_ISLAND_COLLAPSE", payload: id });
-  }, []);
-
-  const reorderTabs = useCallback((tabIds: TabId[]) => {
-    dispatch({ type: "REORDER_TABS", payload: tabIds });
-  }, []);
-
-  const reorderIslands = useCallback((islandIds: IslandId[]) => {
-    dispatch({ type: "REORDER_ISLANDS", payload: islandIds });
-  }, []);
-
-  const setTabStatus = useCallback((id: TabId, status: TabStatus) => {
-    dispatch({ type: "SET_TAB_STATUS", payload: { id, status } });
-  }, []);
-
   const getTabsByIsland = useCallback(
-    (islandId: IslandId | null) => {
-      return state.tabs
+    (islandId: IslandId | null) =>
+      state.tabs
         .filter((t) => t.islandId === islandId)
-        .sort((a, b) => a.order - b.order);
-    },
+        .sort((a, b) => a.order - b.order),
     [state.tabs],
   );
-
   const getIslandById = useCallback(
-    (id: IslandId) => {
-      return state.islands.find((i) => i.id === id);
-    },
+    (id: IslandId) => state.islands.find((i) => i.id === id),
     [state.islands],
   );
-
   const getTabById = useCallback(
-    (id: TabId) => {
-      return state.tabs.find((t) => t.id === id);
-    },
+    (id: TabId) => state.tabs.find((t) => t.id === id),
     [state.tabs],
   );
-
-  const getActiveTab = useCallback(() => {
-    return state.tabs.find((t) => t.id === state.activeTabId);
-  }, [state.tabs, state.activeTabId]);
+  const getActiveTab = useCallback(
+    () => state.tabs.find((t) => t.id === state.activeTabId),
+    [state.tabs, state.activeTabId],
+  );
 
   const value: TabState & TabActions = {
     ...state,
@@ -478,8 +437,6 @@ export function TabProvider({ children }: { children: ReactNode }) {
 
 export function useTabs() {
   const context = useContext(TabContext);
-  if (!context) {
-    throw new Error("useTabs must be used within a TabProvider");
-  }
+  if (!context) throw new Error("useTabs must be used within a TabProvider");
   return context;
 }

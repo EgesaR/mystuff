@@ -71,7 +71,7 @@ const TabBar = () => {
     if (tabs.length === 0) {
       createTab({
         title: "New Tab",
-        url: "/dashboard",
+        url: `/dashboard?new=${Date.now()}`,
         icon: { type: "lucide", name: "File" },
       });
     }
@@ -305,7 +305,7 @@ const TabBar = () => {
               onClick={() =>
                 createTab({
                   title: "New Tab",
-                  url: "/dashboard",
+                  url: `/dashboard?new=${Date.now()}`,
                   icon: { type: "lucide", name: "File" },
                 })
               }

@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { NavLink, useLocation } from "react-router";
+import React from "react";
+import { useLocation, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import {
   Sidebar,
@@ -20,9 +20,8 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
-import { useTabs } from "~/context/TabContext"; // 👈 Import useTabs
+import { useTabs } from "~/context/TabContext";
 
-// 👇 Added iconName to pass to the TabProvider when generating a new tab
 const MAIN_NAV_ITEMS = [
   {
     label: "Home",
@@ -81,57 +80,60 @@ const UTILITY_NAV_ITEMS = [
 const NavigationRail = () => {
   const { open, toggleSidebar } = useSidebar();
   const { user } = useAuth();
-
-  // 👇 Bring in location and tab context
   const location = useLocation();
-  const { tabs, activeTabId, createTab, updateTab } = useTabs();
+  const navigate = useNavigate();
+  const {
+    tabs,
+    activeTabId,
+    createTab,
+    updateTab,
+    setActiveTab,
+    getActiveTab,
+  } = useTabs();
 
-  // Safely extract the best display name and initial
   const displayName = user?.full_name || user?.username || "Your Account";
   const userInitial =
     displayName !== "Your Account" ? displayName.charAt(0).toUpperCase() : null;
 
-  // 👇 The Sync Engine: Watches the URL and ensures a tab exists for known sidebar routes
-  useEffect(() => {
-    const allItems = [...MAIN_NAV_ITEMS, ...UTILITY_NAV_ITEMS];
-    const activeItem = allItems.find(
-      (item) => item.route === location.pathname,
-    );
+  // STRICT CLICK HANDLER: No more useEffect fighting the router.
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    item: (typeof MAIN_NAV_ITEMS)[0],
+  ) => {
+    e.preventDefault();
 
-    if (activeItem) {
-      // Check if a tab for this route already exists
-      const tabExists = tabs.some((t) => t.url === activeItem.route);
+    const existingTab = tabs.find((t) => t.url.split("?")[0] === item.route);
 
-      if (!tabExists) {
-        // Find out what tab the user is currently looking at
-        const currentActiveTab = tabs.find((t) => t.id === activeTabId);
-
-        // THE MAGIC TRICK: Are we currently sitting on a fresh "New Tab"?
-        if (currentActiveTab && currentActiveTab.title === "New Tab") {
-          // Recycle it! Transform the empty tab into the new route.
-          updateTab(currentActiveTab.id, {
-            title: activeItem.label,
-            url: activeItem.route,
-            icon: { type: "lucide", name: activeItem.iconName },
-          });
-        } else {
-          // We are working in an active, established tab. Spawn a new one!
-          createTab({
-            title: activeItem.label,
-            url: activeItem.route,
-            icon: { type: "lucide", name: activeItem.iconName },
-          });
-        }
+    if (existingTab) {
+      setActiveTab(existingTab.id);
+      navigate(item.route);
+    } else {
+      const currentActive = getActiveTab();
+      // If we are currently sitting on a blank "New Tab", morph it into the clicked route
+      if (currentActive && currentActive.title === "New Tab") {
+        updateTab(currentActive.id, {
+          title: item.label,
+          url: item.route,
+          icon: { type: "lucide", name: item.iconName },
+        });
+        navigate(item.route);
+      } else {
+        // Otherwise, spawn a fresh tab
+        createTab({
+          title: item.label,
+          url: item.route,
+          icon: { type: "lucide", name: item.iconName },
+        });
+        // createTab automatically sets isActive: true, TabContext handles the router update.
       }
     }
-  }, [location.pathname, tabs, activeTabId, createTab, updateTab]);
+  };
 
   return (
     <Sidebar
       collapsible="icon"
       className="h-full border-0 bg-emerald-200/40! flex flex-col transition-all duration-300 rounded-2xl shadow-xs"
     >
-      {/* HEADER: App Logo & Trigger */}
       <SidebarHeader className="mt-2 flex items-center justify-center shrink-0">
         <Button
           variant="ghost"
@@ -150,87 +152,79 @@ const NavigationRail = () => {
         </Button>
       </SidebarHeader>
 
-      {/* CONTENT: Primary App Features */}
       <SidebarContent
         className={cn(
           "flex flex-col gap-2 mt-6 overflow-y-auto scrollbar-none transition-all",
           open ? "px-3 items-stretch" : "px-0 items-center",
         )}
       >
-        {MAIN_NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.route}
-            end={item.route === "/dashboard"}
-            className={({ isActive }) =>
-              cn(
-                "inline-flex items-center whitespace-nowrap rounded-xl text-sm transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        {MAIN_NAV_ITEMS.map((item) => {
+          const isActive = location.pathname === item.route;
+          return (
+            <a
+              key={item.id}
+              href={item.route}
+              onClick={(e) => handleNavClick(e, item)}
+              className={cn(
+                "inline-flex items-center whitespace-nowrap rounded-xl text-sm transition-all duration-200 outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-ring",
                 open
                   ? "w-full justify-start px-3 h-10 gap-3"
                   : "size-9 justify-center shrink-0",
                 isActive
                   ? "bg-accent text-foreground font-semibold shadow-xs dark:bg-white/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium",
-              )
-            }
-            title={!open ? item.label : undefined}
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon
-                  size={open ? 16 : 18}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  className="shrink-0"
-                />
-                {open && (
-                  <span className="truncate text-[13px]">{item.label}</span>
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
+              )}
+              title={!open ? item.label : undefined}
+            >
+              <item.icon
+                size={open ? 16 : 18}
+                strokeWidth={isActive ? 2.5 : 2}
+                className="shrink-0"
+              />
+              {open && (
+                <span className="truncate text-[13px]">{item.label}</span>
+              )}
+            </a>
+          );
+        })}
       </SidebarContent>
 
-      {/* FOOTER: Utilities and Profile */}
       <SidebarFooter
         className={cn(
           "flex flex-col gap-2 mb-4 shrink-0 transition-all",
           open ? "px-3 items-stretch" : "px-0 items-center",
         )}
       >
-        {UTILITY_NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.route}
-            className={({ isActive }) =>
-              cn(
-                "inline-flex items-center whitespace-nowrap rounded-xl text-sm transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        {UTILITY_NAV_ITEMS.map((item) => {
+          const isActive = location.pathname === item.route;
+          return (
+            <a
+              key={item.id}
+              href={item.route}
+              onClick={(e) => handleNavClick(e, item)}
+              className={cn(
+                "inline-flex items-center whitespace-nowrap rounded-xl text-sm transition-all duration-200 outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-ring",
                 open
                   ? "w-full justify-start px-3 h-10 gap-3"
                   : "size-9 justify-center shrink-0",
                 isActive
                   ? "bg-accent text-foreground font-semibold shadow-xs dark:bg-white/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium",
-              )
-            }
-            title={!open ? item.label : undefined}
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon
-                  size={open ? 16 : 18}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  className="shrink-0"
-                />
-                {open && (
-                  <span className="truncate text-[13px]">{item.label}</span>
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
+              )}
+              title={!open ? item.label : undefined}
+            >
+              <item.icon
+                size={open ? 16 : 18}
+                strokeWidth={isActive ? 2.5 : 2}
+                className="shrink-0"
+              />
+              {open && (
+                <span className="truncate text-[13px]">{item.label}</span>
+              )}
+            </a>
+          );
+        })}
 
-        {/* Divider */}
         <div
           className={cn(
             "h-px bg-border my-1 rounded-full transition-all",
@@ -238,7 +232,6 @@ const NavigationRail = () => {
           )}
         />
 
-        {/* User Account */}
         <Button
           variant="ghost"
           className={cn(

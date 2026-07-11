@@ -1,8 +1,9 @@
 import { type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import type { LucideIcon } from "lucide-react";
+import type { WorkspaceRoute } from "~/lib/tabRoutes";
 
-export type TabId = string;
+export type TabId = WorkspaceRoute;
 export type IslandId = string;
 
 export type TabStatus = "idle" | "loading" | "error" | "success";
@@ -14,6 +15,7 @@ export type TabIcon = {
 
 export interface Tab {
   id: TabId;
+  workspaceId: WorkspaceRoute;
   title: string;
   url: string;
   islandId: IslandId | null;
@@ -222,6 +224,7 @@ export interface TabActions {
   getIslandById: (id: IslandId) => TabIsland | undefined;
   getTabById: (id: TabId) => Tab | undefined;
   getActiveTab: () => Tab | undefined;
+  openWorkspace: (pathname: string) => Tab;
 }
 
 export type TabContextValue = TabState & TabActions;
