@@ -20,7 +20,6 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
-import { useTabs } from "~/context/TabContext";
 
 const MAIN_NAV_ITEMS = [
   {
@@ -82,14 +81,6 @@ const NavigationRail = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    tabs,
-    activeTabId,
-    createTab,
-    updateTab,
-    setActiveTab,
-    getActiveTab,
-  } = useTabs();
 
   const displayName = user?.full_name || user?.username || "Your Account";
   const userInitial =
@@ -101,38 +92,13 @@ const NavigationRail = () => {
     item: (typeof MAIN_NAV_ITEMS)[0],
   ) => {
     e.preventDefault();
-
-    const existingTab = tabs.find((t) => t.url.split("?")[0] === item.route);
-
-    if (existingTab) {
-      setActiveTab(existingTab.id);
-      navigate(item.route);
-    } else {
-      const currentActive = getActiveTab();
-      // If we are currently sitting on a blank "New Tab", morph it into the clicked route
-      if (currentActive && currentActive.title === "New Tab") {
-        updateTab(currentActive.id, {
-          title: item.label,
-          url: item.route,
-          icon: { type: "lucide", name: item.iconName },
-        });
-        navigate(item.route);
-      } else {
-        // Otherwise, spawn a fresh tab
-        createTab({
-          title: item.label,
-          url: item.route,
-          icon: { type: "lucide", name: item.iconName },
-        });
-        // createTab automatically sets isActive: true, TabContext handles the router update.
-      }
-    }
+    navigate(item.route);
   };
 
   return (
     <Sidebar
       collapsible="icon"
-      className="h-full border-0 bg-emerald-200/40! flex flex-col transition-all duration-300 rounded-2xl shadow-xs"
+      className="h-full border border-black/5 dark:border-white/10 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl flex flex-col transition-all duration-300 rounded-2xl shadow-sm"
     >
       <SidebarHeader className="mt-2 flex items-center justify-center shrink-0">
         <Button
@@ -171,8 +137,8 @@ const NavigationRail = () => {
                   ? "w-full justify-start px-3 h-10 gap-3"
                   : "size-9 justify-center shrink-0",
                 isActive
-                  ? "bg-accent text-foreground font-semibold shadow-xs dark:bg-white/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium",
+                  ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 font-medium",
               )}
               title={!open ? item.label : undefined}
             >
@@ -208,8 +174,8 @@ const NavigationRail = () => {
                   ? "w-full justify-start px-3 h-10 gap-3"
                   : "size-9 justify-center shrink-0",
                 isActive
-                  ? "bg-accent text-foreground font-semibold shadow-xs dark:bg-white/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium",
+                  ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 font-medium",
               )}
               title={!open ? item.label : undefined}
             >

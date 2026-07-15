@@ -52,6 +52,10 @@ const TabBar = () => {
     getTabsByIsland,
   } = useTabs();
 
+  const sortedIslands = useMemo(
+    () => [...islands].sort((a, b) => a.order - b.order),
+    [islands],
+  );
   const [activeDragItem, setActiveDragItem] = useState<{
     type: "Tab";
     item: Tab;
@@ -225,10 +229,7 @@ const TabBar = () => {
 
   const renderTabSegments = () => {
     const segments: React.ReactNode[] = [];
-    const sortedIslands = useMemo(
-      () => [...islands].sort((a, b) => a.order - b.order),
-      [islands],
-    );
+    
 
     // 1. Render Animated Tab Islands
     for (const island of sortedIslands) {

@@ -3,7 +3,7 @@ import type { IconType } from "react-icons";
 import type { LucideIcon } from "lucide-react";
 import type { WorkspaceRoute } from "~/lib/tabRoutes";
 
-export type TabId = WorkspaceRoute;
+export type TabId = string;
 export type IslandId = string;
 
 export type TabStatus = "idle" | "loading" | "error" | "success";
@@ -15,7 +15,7 @@ export type TabIcon = {
 
 export interface Tab {
   id: TabId;
-  workspaceId: WorkspaceRoute;
+  workspaceId: WorkspaceRoute | null;
   title: string;
   url: string;
   islandId: IslandId | null;
@@ -75,112 +75,118 @@ export const ISLAND_COLORS: {
   { value: "rose", label: "Rose", hex: "#F43F5E" },
 ];
 
-export const getIslandColorStyles = (color: IslandColor) => {
-  const colorMap: Record<
-    IslandColor,
-    { bg: string; text: string; border: string; dot: string; ring: string }
-  > = {
-    red: {
-      bg: "bg-linear-to-b from-red-500 to-red-500/90",
-      text: "text-white",
-      border: "border-red-500/30",
-      dot: "bg-red-500",
-      ring: "ring-red-500/30",
-    },
-    orange: {
-      bg: "bg-linear-to-b from-orange-500 to-orange-500/90",
-      text: "text-white",
-      border: "border-orange-500/30",
-      dot: "bg-orange-500",
-      ring: "ring-orange-500/30",
-    },
-    amber: {
-      bg: "bg-linear-to-b from-amber-500 to-amber-500/90",
-      text: "text-white",
-      border: "border-amber-500/30",
-      dot: "bg-amber-500",
-      ring: "ring-amber-500/30",
-    },
-    green: {
-      bg: "bg-linear-to-b from-green-500 to-green-500/90",
-      text: "text-white",
-      border: "border-green-500/30",
-      dot: "bg-green-500",
-      ring: "ring-green-500/30",
-    },
-    emerald: {
-      bg: "bg-linear-to-b from-emerald-500 to-emerald-500/90",
-      text: "text-white",
-      border: "border-emerald-500/30",
-      dot: "bg-emerald-500",
-      ring: "ring-emerald-500/30",
-    },
-    teal: {
-      bg: "bg-linear-to-b from-teal-500 to-teal-500/90",
-      text: "text-white",
-      border: "border-teal-500/30",
-      dot: "bg-teal-500",
-      ring: "ring-teal-500/30",
-    },
-    cyan: {
-      bg: "bg-linear-to-b from-cyan-500 to-cyan-500/90",
-      text: "text-white",
-      border: "border-cyan-500/30",
-      dot: "bg-cyan-500",
-      ring: "ring-cyan-500/30",
-    },
-    blue: {
-      bg: "bg-linear-to-b from-blue-500 to-blue-500/90",
-      text: "text-white",
-      border: "border-blue-500/30",
-      dot: "bg-blue-500",
-      ring: "ring-blue-500/30",
-    },
-    indigo: {
-      bg: "bg-linear-to-b from-indigo-500 to-indigo-500/90",
-      text: "text-white",
-      border: "border-indigo-500/30",
-      dot: "bg-indigo-500",
-      ring: "ring-indigo-500/30",
-    },
-    violet: {
-      bg: "bg-linear-to-b from-violet-500 to-violet-500/90",
-      text: "text-white",
-      border: "border-violet-500/30",
-      dot: "bg-violet-500",
-      ring: "ring-violet-500/30",
-    },
-    purple: {
-      bg: "bg-linear-to-b from-purple-500 to-purple-500/90",
-      text: "text-white",
-      border: "border-purple-500/30",
-      dot: "bg-purple-500",
-      ring: "ring-purple-500/30",
-    },
-    fuchsia: {
-      bg: "bg-linear-to-b from-fuchsia-500 to-fuchsia-500/90",
-      text: "text-white",
-      border: "border-fuchsia-500/30",
-      dot: "bg-fuchsia-500",
-      ring: "ring-fuchsia-500/30",
-    },
-    pink: {
-      bg: "bg-linear-to-b from-pink-500 to-pink-500/90",
-      text: "text-white",
-      border: "border-pink-500/30",
-      dot: "bg-pink-500",
-      ring: "ring-pink-500/30",
-    },
-    rose: {
-      bg: "bg-linear-to-b from-rose-500 to-rose-500/90",
-      text: "text-white",
-      border: "border-rose-500/30",
-      dot: "bg-rose-500",
-      ring: "ring-rose-500/30",
-    },
-  };
-  return colorMap[color] || colorMap.blue;
+const ISLAND_STYLE_MAP: Record<
+  IslandColor,
+  {
+    dot: string;
+    chipBg: string;
+    chipText: string;
+    chipBorder: string;
+    ring: string;
+  }
+> = {
+  red: {
+    dot: "bg-red-500",
+    chipBg: "bg-red-500/10",
+    chipText: "text-red-700 dark:text-red-300",
+    chipBorder: "border-red-500/20",
+    ring: "ring-red-500/30",
+  },
+  orange: {
+    dot: "bg-orange-500",
+    chipBg: "bg-orange-500/10",
+    chipText: "text-orange-700 dark:text-orange-300",
+    chipBorder: "border-orange-500/20",
+    ring: "ring-orange-500/30",
+  },
+  amber: {
+    dot: "bg-amber-500",
+    chipBg: "bg-amber-500/10",
+    chipText: "text-amber-700 dark:text-amber-300",
+    chipBorder: "border-amber-500/20",
+    ring: "ring-amber-500/30",
+  },
+  green: {
+    dot: "bg-green-500",
+    chipBg: "bg-green-500/10",
+    chipText: "text-green-700 dark:text-green-300",
+    chipBorder: "border-green-500/20",
+    ring: "ring-green-500/30",
+  },
+  emerald: {
+    dot: "bg-emerald-500",
+    chipBg: "bg-emerald-500/10",
+    chipText: "text-emerald-700 dark:text-emerald-300",
+    chipBorder: "border-emerald-500/20",
+    ring: "ring-emerald-500/30",
+  },
+  teal: {
+    dot: "bg-teal-500",
+    chipBg: "bg-teal-500/10",
+    chipText: "text-teal-700 dark:text-teal-300",
+    chipBorder: "border-teal-500/20",
+    ring: "ring-teal-500/30",
+  },
+  cyan: {
+    dot: "bg-cyan-500",
+    chipBg: "bg-cyan-500/10",
+    chipText: "text-cyan-700 dark:text-cyan-300",
+    chipBorder: "border-cyan-500/20",
+    ring: "ring-cyan-500/30",
+  },
+  blue: {
+    dot: "bg-blue-500",
+    chipBg: "bg-blue-500/10",
+    chipText: "text-blue-700 dark:text-blue-300",
+    chipBorder: "border-blue-500/20",
+    ring: "ring-blue-500/30",
+  },
+  indigo: {
+    dot: "bg-indigo-500",
+    chipBg: "bg-indigo-500/10",
+    chipText: "text-indigo-700 dark:text-indigo-300",
+    chipBorder: "border-indigo-500/20",
+    ring: "ring-indigo-500/30",
+  },
+  violet: {
+    dot: "bg-violet-500",
+    chipBg: "bg-violet-500/10",
+    chipText: "text-violet-700 dark:text-violet-300",
+    chipBorder: "border-violet-500/20",
+    ring: "ring-violet-500/30",
+  },
+  purple: {
+    dot: "bg-purple-500",
+    chipBg: "bg-purple-500/10",
+    chipText: "text-purple-700 dark:text-purple-300",
+    chipBorder: "border-purple-500/20",
+    ring: "ring-purple-500/30",
+  },
+  fuchsia: {
+    dot: "bg-fuchsia-500",
+    chipBg: "bg-fuchsia-500/10",
+    chipText: "text-fuchsia-700 dark:text-fuchsia-300",
+    chipBorder: "border-fuchsia-500/20",
+    ring: "ring-fuchsia-500/30",
+  },
+  pink: {
+    dot: "bg-pink-500",
+    chipBg: "bg-pink-500/10",
+    chipText: "text-pink-700 dark:text-pink-300",
+    chipBorder: "border-pink-500/20",
+    ring: "ring-pink-500/30",
+  },
+  rose: {
+    dot: "bg-rose-500",
+    chipBg: "bg-rose-500/10",
+    chipText: "text-rose-700 dark:text-rose-300",
+    chipBorder: "border-rose-500/20",
+    ring: "ring-rose-500/30",
+  },
 };
+
+export const getIslandColorStyles = (color: IslandColor) =>
+  ISLAND_STYLE_MAP[color] ?? ISLAND_STYLE_MAP.blue;
 
 export interface TabState {
   tabs: Tab[];
@@ -224,7 +230,6 @@ export interface TabActions {
   getIslandById: (id: IslandId) => TabIsland | undefined;
   getTabById: (id: TabId) => Tab | undefined;
   getActiveTab: () => Tab | undefined;
-  openWorkspace: (pathname: string) => Tab;
 }
 
 export type TabContextValue = TabState & TabActions;

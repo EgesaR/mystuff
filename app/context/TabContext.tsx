@@ -18,6 +18,11 @@ import type {
   TabStatus,
 } from "~/types/tabs";
 import { loadTabState, saveTabState } from "~/lib/tabStorage";
+import {
+  getWorkspaceIcon,
+  getWorkspaceRoute,
+  getWorkspaceTitle,
+} from "~/lib/tabRoutes";
 
 type TabAction =
   | { type: "SET_STATE"; payload: TabState }
@@ -52,9 +57,15 @@ function tabReducer(state: TabState, action: TabAction): TabState {
       return action.payload;
 
     case "CREATE_TAB": {
+      // Prevent duplicate workspace tabs
+      if (state.tabs.some((t) => t.id === action.payload.id)) {
+        return state;
+      }
+
       const newActiveId = action.payload.isActive
         ? action.payload.id
         : state.activeTabId;
+
       return {
         ...state,
         tabs: [...state.tabs, action.payload].map((t) => ({
@@ -233,80 +244,49 @@ export function TabProvider({ children }: { children: ReactNode }) {
     saveTabState(state);
   }, [state]);
 
-  const createTab = useCallback(
-    (params: Partial<Omit<Tab, "id" | "createdAt" | "updatedAt">>): Tab => {
-      const islandTabs = state.tabs.filter(
-        (t) => t.islandId === (params.islandId ?? null),
-      );
-      const maxOrder =
-        islandTabs.length > 0
-          ? Math.max(...islandTabs.map((t) => t.order))
-          : -1;
+  function createTab(
+    params: Partial<Omit<Tab, "id" | "createdAt" | "updatedAt">>,
+  ): Tab {
+    const islandTabs = state.tabs.filter(
+      (t) => t.islandId === (params.islandId ?? null),
+    );
+    const maxOrder =
+      islandTabs.length > 0 ? Math.max(...islandTabs.map((t) => t.order)) : -1;
 
-      const newTab: Tab = {
-        id: `tab-${uuidv4()}`,
-        title: params.title ?? "New Tab",
-        url: params.url ?? `/dashboard?new=${Date.now()}`,
-        islandId: params.islandId ?? null,
-        icon: params.icon ?? { type: "lucide", name: "File" },
-        status: params.status ?? "idle",
-        isActive: true,
-        isPinned: params.isPinned ?? false,
-        order: params.order ?? maxOrder + 1,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
+    // Only real workspace pages get a stable, route-derived id (so the
+    // "one tab per workspace" dedupe in the reducer keeps working).
+    // Everything else (ad hoc "New Tab" clicks) gets a real unique id.
+    const id = params.workspaceId ?? `tab-${uuidv4()}`;
 
-      dispatch({ type: "CREATE_TAB", payload: newTab });
-      return newTab;
-    },
-    [state.tabs],
-  );
+    const newTab: Tab = {
+      id,
+      workspaceId: params.workspaceId ?? null,
+      title: params.title ?? "New Tab",
+      url: params.url ?? `/dashboard?new=${Date.now()}`,
+      islandId: params.islandId ?? null,
+      icon: params.icon ?? { type: "lucide", name: "File" },
+      status: params.status ?? "idle",
+      isActive: true,
+      isPinned: params.isPinned ?? false,
+      order: params.order ?? maxOrder + 1,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    dispatch({ type: "CREATE_TAB", payload: newTab });
+    return newTab;
+  }
 
   // Sync #1: Active Tab State -> Browser URL
-  // This hook is strictly bound to the activeTabId. It will NEVER run just because the URL changed.
   useEffect(() => {
-    // Prevent the user from getting stuck with 0 tabs.
-    if (!state.activeTabId && state.tabs.length === 0) {
-      createTab({ title: "New Tab", url: `/dashboard?new=${Date.now()}` });
-      return;
-    }
+    const active = state.tabs.find((t) => t.id === state.activeTabId);
 
-    const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
-    if (activeTab) {
-      // Compare the FULL URL so "New Tabs" (?new=123) are correctly identified
-      const currentFullUrl = location.pathname + location.search;
+    if (!active) return;
 
-      if (currentFullUrl !== activeTab.url) {
-        navigate(activeTab.url);
-      }
+    if (location.pathname !== active.url) {
+      navigate(active.url);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activeTabId]);
-  // ^ The dependency array is strictly limited to prevent looping.
-
-  // Sync #2: Browser URL -> Tab State
-  // This hook only handles external navigation like the browser's Back/Forward buttons.
-  useEffect(() => {
-    const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
-
-    // We only care about the base path for matching tabs, not the query params
-    const currentCleanUrl = location.pathname;
-    const tabCleanUrl = activeTab ? activeTab.url.split("?")[0] : "";
-
-    if (currentCleanUrl !== tabCleanUrl && activeTab) {
-      const matchingTab = state.tabs.find(
-        (t) => t.url.split("?")[0] === currentCleanUrl,
-      );
-
-      // If we found a tab that matches this URL, and it isn't active, activate it.
-      if (matchingTab && matchingTab.id !== state.activeTabId) {
-        dispatch({ type: "SET_ACTIVE_TAB", payload: matchingTab.id });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
-  // ^ The dependency array is strictly limited to prevent looping.
 
   const updateTab = useCallback(
     (id: TabId, updates: Partial<Tab>) =>
@@ -409,6 +389,36 @@ export function TabProvider({ children }: { children: ReactNode }) {
     () => state.tabs.find((t) => t.id === state.activeTabId),
     [state.tabs, state.activeTabId],
   );
+
+  useEffect(() => {
+    const workspace = getWorkspaceRoute(location.pathname);
+
+    const existing = state.tabs.find((t) => t.workspaceId === workspace);
+    
+    if (!existing) {
+      createTab({
+        workspaceId: workspace,
+        url: location.pathname,
+        title: getWorkspaceTitle(location.pathname),
+        icon: getWorkspaceIcon(location.pathname),
+        status: "success",
+        order: state.tabs.length,
+      });
+
+      return;
+    }
+
+    // Update URL if user navigated deeper into the workspace
+    if (existing.url !== location.pathname) {
+      updateTab(existing.id, {
+        url: location.pathname,
+      });
+    }
+
+    if (state.activeTabId !== existing.id) {
+      setActiveTab(existing.id);
+    }
+  }, [location.pathname]);
 
   const value: TabState & TabActions = {
     ...state,

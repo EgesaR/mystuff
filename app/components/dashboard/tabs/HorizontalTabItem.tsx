@@ -1,3 +1,4 @@
+// components/dashboard/tabs/HorizontalTabItem.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -8,7 +9,6 @@ import {
   type RefObject,
 } from "react";
 import { useTabs } from "~/context/TabContext";
-import { getIslandColorStyles } from "~/types/tabs";
 import { cn } from "~/lib/utils";
 import { type Tab, type TabIsland as TabIslandType } from "~/types/tabs";
 import { FaSpinner } from "react-icons/fa";
@@ -92,18 +92,16 @@ const HorizontalTabItem = ({
       onMouseEnter={() => setShowClose(true)}
       onMouseLeave={() => setShowClose(false)}
     >
-      {/* Pop-in entry animation for new tabs */}
       <motion.div
-        initial={isOverlay ? false : { opacity: 0, y: 15,  }}
-        animate={{ opacity: 1, y: 0, }}
+        initial={isOverlay ? false : { opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{
-          duration: 0.72,
-          ease: [0.23, 1, 0.32, 1], // Ultra-smooth Apple-like easing
-          delay: isOverlay ? 0 : index * 0.06, // 40ms stagger per tab
+          duration: 0.35,
+          ease: [0.23, 1, 0.32, 1],
+          delay: isOverlay ? 0 : Math.min(index * 0.04, 0.24),
         }}
         className="flex w-full h-full"
       >
-        {/*Hover progress ring for grouping*/}
         {hoveredByTabId && hoverProgress > 0 && (
           <div className="absolute inset-0 rounded-lg pointer-events-none">
             <svg
@@ -128,19 +126,27 @@ const HorizontalTabItem = ({
           </div>
         )}
 
-        {/* Tab button */}
-        <button
+        {/* Was a <button> — now a div with role="button" so the close
+            control inside it can be a real <button> without nesting. */}
+        <div
           {...attributes}
           {...listeners}
+          role="button"
+          tabIndex={0}
           onClick={() => setActiveTab(tab.id)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setActiveTab(tab.id);
+            }
+          }}
           className={cn(
             "relative flex items-center gap-1.5 px-3 py-1.5 h-8 rounded-md",
-            "text-sm font-medium cursor-pointer select-none",
+            "text-sm font-medium cursor-pointer select-none outline-none",
             "transition-all duration-150 ease-out border border-transparent",
             tab.isActive
               ? "bg-white text-foreground shadow-sm hover:bg-white/90 dark:bg-background dark:hover:bg-background/80"
-              : // 👇 This is the updated hover state for inactive tabs!
-                "text-muted-foreground hover:text-foreground hover:bg-neutral-500/15 dark:hover:bg-white/10",
+              : "text-muted-foreground hover:text-foreground hover:bg-neutral-500/15 dark:hover:bg-white/10",
             isOverlay &&
               "opacity-90 shadow-2xl scale-105 rotate-1 border-border bg-background",
             tab.isPinned && "px-2",
@@ -180,7 +186,6 @@ const HorizontalTabItem = ({
                   animate={{ width: 16, opacity: 1, marginLeft: 4 }}
                   exit={{ width: 0, opacity: 0, marginLeft: 0 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  role="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteTab(tab.id);
@@ -194,7 +199,7 @@ const HorizontalTabItem = ({
           ) : (
             <Pin size={12} className="shrink-0 text-muted-foreground/50 ml-1" />
           )}
-        </button>
+        </div>
       </motion.div>
 
       <AnimatePresence>
@@ -231,7 +236,6 @@ const GroupTooltip = ({
 
   useEffect(() => {
     let frameId: number;
-
     const update = () => {
       const el = anchorRef.current;
       if (el) {
@@ -271,4 +275,5 @@ const GroupTooltip = ({
     document.body,
   );
 };
+
 export default HorizontalTabItem;

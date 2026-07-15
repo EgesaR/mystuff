@@ -31,13 +31,14 @@ const AuthFields = ({ type, form }: Props) => {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <FieldLabel htmlFor={`${type}-username`}>Username</FieldLabel>
 
               <Input
                 {...field}
-                id="username"
+                id={`${type}-username`}
                 type="text"
                 placeholder="@username"
+                autoComplete="username"
               />
 
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -51,13 +52,15 @@ const AuthFields = ({ type, form }: Props) => {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor={`${type}-email`}>Email</FieldLabel>
 
             <Input
               {...field}
-              id="email"
+              id={`${type}-email`}
               type="email"
               placeholder="you@email.com"
+              // In sign-in, the email acts as the credential identifier (username)
+              autoComplete={isSignIn ? "username" : "email"}
             />
 
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -65,13 +68,21 @@ const AuthFields = ({ type, form }: Props) => {
         )}
       />
 
-      <PasswordField control={form.control} name="password" label="Password" />
+      <PasswordField
+        control={form.control}
+        name="password"
+        label="Password"
+        id={`${type}-password`}
+        autoComplete={isSignIn ? "current-password" : "new-password"}
+      />
 
       {!isSignIn && (
         <PasswordField
           control={form.control}
           name="confirmPassword"
           label="Confirm password"
+          id={`${type}-confirmPassword`}
+          autoComplete="new-password"
         />
       )}
     </FieldGroup>
@@ -82,6 +93,8 @@ type PasswordFieldProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
+  id: string;
+  autoComplete: "current-password" | "new-password";
   placeholder?: string;
 };
 
@@ -89,6 +102,8 @@ function PasswordField<T extends FieldValues>({
   control,
   name,
   label,
+  id,
+  autoComplete,
   placeholder = "••••••••",
 }: PasswordFieldProps<T>) {
   const [showPassword, setShowPassword] = useState(false);
@@ -99,14 +114,15 @@ function PasswordField<T extends FieldValues>({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={name}>{label}</FieldLabel>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
 
           <InputGroup>
             <InputGroupInput
               {...field}
-              id={name}
+              id={id}
               type={showPassword ? "text" : "password"}
               placeholder={placeholder}
+              autoComplete={autoComplete}
             />
 
             <InputGroupAddon

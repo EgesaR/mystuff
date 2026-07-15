@@ -26,12 +26,25 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('my-stuff-theme') || 'system';
+                const resolved = theme === 'system'
+                  ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                  : theme;
+                document.documentElement.classList.toggle('dark', resolved === 'dark');
+              } catch {}
+            `,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -45,8 +58,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return <Outlet />;
 }
-
-
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   // If it's a 404 thrown via a loader/action, use our beautiful component

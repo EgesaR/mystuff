@@ -23,6 +23,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
   const { state } = useNavigation();
   const { form, onSubmit, oauth } = useAuthForm(type);
   const isSubmitting = state === "submitting";
+
   return (
     <div className="flex w-full sm:w-lg flex-col justify-center px-2 sm:px-8">
       {/* Header */}
@@ -49,7 +50,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
           </>
         )}
         {/* Fields */}
-        <form id={formId} method="post" onSubmit={onSubmit}>
+        {/* Key set to {type} ensures smooth state reset when switching forms */}
+        <form id={formId} method="post" onSubmit={onSubmit} key={type}>
           <AuthFields type={type} form={form} />
         </form>
       </CardContent>
