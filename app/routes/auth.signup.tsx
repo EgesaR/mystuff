@@ -3,6 +3,8 @@ import type { Route } from "./+types/auth.login";
 import { redirectIfAuthenticated } from "~/lib/loaders/auth.server";
 import { signUp } from "~/lib/actions/auth.server";
 import { useActionData } from "react-router";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Signup" },
@@ -24,11 +26,15 @@ export async function action({ request }: Route.ActionArgs) {
 
 const AuthSignup = () => {
   const result = useActionData<typeof action>();
+
+  useEffect(() => {
+    if (result?.success === false) {
+      toast.error(result.error);
+    }
+  }, [result]);
   return (
     <div>
       <AuthForm type="sign-up" />
-
-      {result?.success === false && <p>{result.error}</p>}
     </div>
   );
 };
