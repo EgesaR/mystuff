@@ -1,10 +1,24 @@
 // routes/dashboard.settings.account.tsx
 import { useEffect, useState } from "react";
+import { motion, type Variants } from "framer-motion";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { useAuth } from "~/hooks/useAuth";
 import type { User } from "~/lib/types";
+
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+const item: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+};
 
 interface FormState {
   first_name: string;
@@ -69,16 +83,24 @@ function AccountCenter() {
     "?";
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Account Center</h1>
-        <p className="text-muted-foreground mt-2">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      <motion.div variants={item}>
+        <h2 className="text-xl font-semibold text-foreground">Account</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Manage your personal information and preferences.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="bg-card border border-border/50 rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Profile</h3>
+      <motion.div
+        variants={item}
+        className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm"
+      >
+        <h3 className="text-sm font-semibold mb-4 text-foreground">Profile</h3>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex items-center gap-6">
             <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white text-2xl font-bold">
@@ -147,8 +169,8 @@ function AccountCenter() {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

@@ -40,9 +40,9 @@ export function TabPanel() {
   const activeTab = getActiveTab();
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background relative min-h-0 rounded-tl-2xl border-l border-t border-border/40 shadow-sm">
+    <div className="flex-1 flex flex-col overflow-hidden bg-background relative min-h-0 rounded-2xl border-l border-t border-border/40 shadow-sm">
       {/* Page content */}
-      <div className="flex-1 overflow-auto p-6 min-h-0">
+      <div className="flex-1 overflow-auto p-2 min-h-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

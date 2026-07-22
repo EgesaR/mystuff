@@ -1,0 +1,481 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/_index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/about": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.forgot-password": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.logout": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.signup": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.login": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.notifications": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.notes": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.tasks": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.storage": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.analytics": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.settings._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.settings.account": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.settings.appearance": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.settings.security": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/dashboard.$": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/$": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.tsx",
+        "path": "",
+        "config": {}
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "app/routes/_index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/about": {
+        "id": "routes/about",
+        "parentId": "root",
+        "file": "app/routes/about.tsx",
+        "path": "about",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/auth": {
+        "id": "routes/auth",
+        "parentId": "root",
+        "file": "app/routes/auth.tsx",
+        "path": "auth",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/auth.forgot-password": {
+        "id": "routes/auth.forgot-password",
+        "parentId": "routes/auth",
+        "file": "app/routes/auth.forgot-password.tsx",
+        "path": "forgot-password",
+        "config": {}
+      },
+      "routes/auth.logout": {
+        "id": "routes/auth.logout",
+        "parentId": "routes/auth",
+        "file": "app/routes/auth.logout.tsx",
+        "path": "logout",
+        "config": {}
+      },
+      "routes/auth.signup": {
+        "id": "routes/auth.signup",
+        "parentId": "routes/auth",
+        "file": "app/routes/auth.signup.tsx",
+        "path": "signup",
+        "config": {}
+      },
+      "routes/auth.login": {
+        "id": "routes/auth.login",
+        "parentId": "routes/auth",
+        "file": "app/routes/auth.login.tsx",
+        "path": "login",
+        "config": {}
+      },
+      "routes/dashboard": {
+        "id": "routes/dashboard",
+        "parentId": "root",
+        "file": "app/routes/dashboard.tsx",
+        "path": "dashboard",
+        "config": {}
+      },
+      "routes/dashboard._index": {
+        "id": "routes/dashboard._index",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.notifications": {
+        "id": "routes/dashboard.notifications",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.notifications.tsx",
+        "path": "notifications",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.notes": {
+        "id": "routes/dashboard.notes",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.notes.tsx",
+        "path": "notes",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.tasks": {
+        "id": "routes/dashboard.tasks",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.tasks.tsx",
+        "path": "tasks",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.storage": {
+        "id": "routes/dashboard.storage",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.storage.tsx",
+        "path": "storage",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.analytics": {
+        "id": "routes/dashboard.analytics",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.analytics.tsx",
+        "path": "analytics",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.settings": {
+        "id": "routes/dashboard.settings",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.settings.tsx",
+        "path": "settings",
+        "config": {}
+      },
+      "routes/dashboard.settings._index": {
+        "id": "routes/dashboard.settings._index",
+        "parentId": "routes/dashboard.settings",
+        "file": "app/routes/dashboard.settings._index.tsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.settings.account": {
+        "id": "routes/dashboard.settings.account",
+        "parentId": "routes/dashboard.settings",
+        "file": "app/routes/dashboard.settings.account.tsx",
+        "path": "account",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.settings.appearance": {
+        "id": "routes/dashboard.settings.appearance",
+        "parentId": "routes/dashboard.settings",
+        "file": "app/routes/dashboard.settings.appearance.tsx",
+        "path": "appearance",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.settings.security": {
+        "id": "routes/dashboard.settings.security",
+        "parentId": "routes/dashboard.settings",
+        "file": "app/routes/dashboard.settings.security.tsx",
+        "path": "security",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/dashboard.$": {
+        "id": "routes/dashboard.$",
+        "parentId": "routes/dashboard",
+        "file": "app/routes/dashboard.$.tsx",
+        "path": "*",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/$": {
+        "id": "routes/$",
+        "parentId": "root",
+        "file": "app/routes/$.tsx",
+        "path": "*",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "/home/ray-644/Projects/trials/my-stuff/app",
+    "basename": "/",
+    "buildDirectory": "/home/ray-644/Projects/trials/my-stuff/build",
+    "future": {
+      "unstable_optimizeDeps": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.tsx",
+        "path": ""
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "routes/_index.tsx",
+        "index": true
+      },
+      "routes/about": {
+        "id": "routes/about",
+        "parentId": "root",
+        "file": "routes/about.tsx",
+        "path": "about"
+      },
+      "routes/auth": {
+        "id": "routes/auth",
+        "parentId": "root",
+        "file": "routes/auth.tsx",
+        "path": "auth"
+      },
+      "routes/auth.forgot-password": {
+        "id": "routes/auth.forgot-password",
+        "parentId": "routes/auth",
+        "file": "routes/auth.forgot-password.tsx",
+        "path": "forgot-password"
+      },
+      "routes/auth.logout": {
+        "id": "routes/auth.logout",
+        "parentId": "routes/auth",
+        "file": "routes/auth.logout.tsx",
+        "path": "logout"
+      },
+      "routes/auth.signup": {
+        "id": "routes/auth.signup",
+        "parentId": "routes/auth",
+        "file": "routes/auth.signup.tsx",
+        "path": "signup"
+      },
+      "routes/auth.login": {
+        "id": "routes/auth.login",
+        "parentId": "routes/auth",
+        "file": "routes/auth.login.tsx",
+        "path": "login"
+      },
+      "routes/dashboard": {
+        "id": "routes/dashboard",
+        "parentId": "root",
+        "file": "routes/dashboard.tsx",
+        "path": "dashboard"
+      },
+      "routes/dashboard._index": {
+        "id": "routes/dashboard._index",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard._index.tsx",
+        "index": true
+      },
+      "routes/dashboard.notifications": {
+        "id": "routes/dashboard.notifications",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.notifications.tsx",
+        "path": "notifications"
+      },
+      "routes/dashboard.notes": {
+        "id": "routes/dashboard.notes",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.notes.tsx",
+        "path": "notes"
+      },
+      "routes/dashboard.tasks": {
+        "id": "routes/dashboard.tasks",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.tasks.tsx",
+        "path": "tasks"
+      },
+      "routes/dashboard.storage": {
+        "id": "routes/dashboard.storage",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.storage.tsx",
+        "path": "storage"
+      },
+      "routes/dashboard.analytics": {
+        "id": "routes/dashboard.analytics",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.analytics.tsx",
+        "path": "analytics"
+      },
+      "routes/dashboard.settings": {
+        "id": "routes/dashboard.settings",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.settings.tsx",
+        "path": "settings"
+      },
+      "routes/dashboard.settings._index": {
+        "id": "routes/dashboard.settings._index",
+        "parentId": "routes/dashboard.settings",
+        "file": "routes/dashboard.settings._index.tsx",
+        "index": true
+      },
+      "routes/dashboard.settings.account": {
+        "id": "routes/dashboard.settings.account",
+        "parentId": "routes/dashboard.settings",
+        "file": "routes/dashboard.settings.account.tsx",
+        "path": "account"
+      },
+      "routes/dashboard.settings.appearance": {
+        "id": "routes/dashboard.settings.appearance",
+        "parentId": "routes/dashboard.settings",
+        "file": "routes/dashboard.settings.appearance.tsx",
+        "path": "appearance"
+      },
+      "routes/dashboard.settings.security": {
+        "id": "routes/dashboard.settings.security",
+        "parentId": "routes/dashboard.settings",
+        "file": "routes/dashboard.settings.security.tsx",
+        "path": "security"
+      },
+      "routes/dashboard.$": {
+        "id": "routes/dashboard.$",
+        "parentId": "routes/dashboard",
+        "file": "routes/dashboard.$.tsx",
+        "path": "*"
+      },
+      "routes/$": {
+        "id": "routes/$",
+        "parentId": "root",
+        "file": "routes/$.tsx",
+        "path": "*"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "splitRouteModules": true,
+    "subResourceIntegrity": false,
+    "allowedActionOrigins": false,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.tsx",
+        "children": [
+          {
+            "id": "routes/_index",
+            "file": "routes/_index.tsx",
+            "index": true
+          },
+          {
+            "id": "routes/about",
+            "file": "routes/about.tsx",
+            "path": "about"
+          },
+          {
+            "id": "routes/auth",
+            "file": "routes/auth.tsx",
+            "path": "auth",
+            "children": [
+              {
+                "id": "routes/auth.forgot-password",
+                "file": "routes/auth.forgot-password.tsx",
+                "path": "forgot-password"
+              },
+              {
+                "id": "routes/auth.logout",
+                "file": "routes/auth.logout.tsx",
+                "path": "logout"
+              },
+              {
+                "id": "routes/auth.signup",
+                "file": "routes/auth.signup.tsx",
+                "path": "signup"
+              },
+              {
+                "id": "routes/auth.login",
+                "file": "routes/auth.login.tsx",
+                "path": "login"
+              }
+            ]
+          },
+          {
+            "file": "routes/dashboard.tsx",
+            "children": [
+              {
+                "file": "routes/dashboard._index.tsx",
+                "index": true
+              },
+              {
+                "file": "routes/dashboard.notifications.tsx",
+                "path": "notifications"
+              },
+              {
+                "file": "routes/dashboard.notes.tsx",
+                "path": "notes"
+              },
+              {
+                "file": "routes/dashboard.tasks.tsx",
+                "path": "tasks"
+              },
+              {
+                "file": "routes/dashboard.storage.tsx",
+                "path": "storage"
+              },
+              {
+                "file": "routes/dashboard.analytics.tsx",
+                "path": "analytics"
+              },
+              {
+                "file": "routes/dashboard.settings.tsx",
+                "children": [
+                  {
+                    "file": "routes/dashboard.settings._index.tsx",
+                    "index": true
+                  },
+                  {
+                    "file": "routes/dashboard.settings.account.tsx",
+                    "path": "account"
+                  },
+                  {
+                    "file": "routes/dashboard.settings.appearance.tsx",
+                    "path": "appearance"
+                  },
+                  {
+                    "file": "routes/dashboard.settings.security.tsx",
+                    "path": "security"
+                  }
+                ],
+                "path": "settings"
+              },
+              {
+                "file": "routes/dashboard.$.tsx",
+                "path": "*"
+              }
+            ],
+            "path": "dashboard"
+          },
+          {
+            "file": "routes/$.tsx",
+            "path": "*"
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}

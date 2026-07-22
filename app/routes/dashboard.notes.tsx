@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Pin, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { Card } from "~/components/ui/card";
 
 interface NoteRecord {
   id: string;
@@ -119,6 +120,9 @@ export default function NotesPage() {
               </span>
             </div>
           ))}
+              {sorted.map((note) => (
+                <Card></Card>
+              ))}
         </div>
       )}
     </div>

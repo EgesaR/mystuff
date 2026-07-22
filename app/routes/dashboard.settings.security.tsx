@@ -1,9 +1,23 @@
 // routes/dashboard.settings.security.tsx
 import { useState } from "react";
+import { motion, type Variants } from "framer-motion";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { cn } from "~/lib/utils";
+
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+const item: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+};
 
 export default function SecuritySettings() {
   const [form, setForm] = useState({ current: "", next: "", confirm: "" });
@@ -45,61 +59,72 @@ export default function SecuritySettings() {
   };
 
   return (
-    <div className="space-y-6 max-w-md">
-      <div>
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 max-w-md"
+    >
+      <motion.div variants={item}>
         <h2 className="text-xl font-semibold text-foreground">Security</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Change your password.
         </p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="current">Current password</Label>
-          <Input
-            id="current"
-            type="password"
-            value={form.current}
-            onChange={(e) => setForm({ ...form, current: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="next">New password</Label>
-          <Input
-            id="next"
-            type="password"
-            value={form.next}
-            onChange={(e) => setForm({ ...form, next: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm new password</Label>
-          <Input
-            id="confirm"
-            type="password"
-            value={form.confirm}
-            onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-          />
-        </div>
-        {message && (
-          <p
-            className={cn(
-              "text-sm",
-              status === "error"
-                ? "text-red-600 dark:text-red-400"
-                : "text-emerald-600 dark:text-emerald-400",
-            )}
+      </motion.div>
+
+      <motion.div
+        variants={item}
+        className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="current">Current password</Label>
+            <Input
+              id="current"
+              type="password"
+              value={form.current}
+              onChange={(e) => setForm({ ...form, current: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="next">New password</Label>
+            <Input
+              id="next"
+              type="password"
+              value={form.next}
+              onChange={(e) => setForm({ ...form, next: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm">Confirm new password</Label>
+            <Input
+              id="confirm"
+              type="password"
+              value={form.confirm}
+              onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+            />
+          </div>
+          {message && (
+            <p
+              className={cn(
+                "text-sm",
+                status === "error"
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-emerald-600 dark:text-emerald-400",
+              )}
+            >
+              {message}
+            </p>
+          )}
+          <Button
+            type="submit"
+            disabled={status === "saving"}
+            className="rounded-lg"
           >
-            {message}
-          </p>
-        )}
-        <Button
-          type="submit"
-          disabled={status === "saving"}
-          className="rounded-lg"
-        >
-          {status === "saving" ? "Updating…" : "Update password"}
-        </Button>
-      </form>
-    </div>
+            {status === "saving" ? "Updating…" : "Update password"}
+          </Button>
+        </form>
+      </motion.div>
+    </motion.div>
   );
 }
