@@ -4,6 +4,7 @@ import {
   useCallback,
   useReducer,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import { useNavigate, useLocation } from "react-router";
@@ -23,6 +24,9 @@ import {
   getWorkspaceRoute,
   getWorkspaceTitle,
 } from "~/lib/tabRoutes";
+import { useAuth } from "~/hooks/useAuth";
+import { apiFetch } from "~/lib/http.client";
+import { WS_URL } from "~/lib/config";
 
 type TabAction =
   | { type: "SET_STATE"; payload: TabState }
@@ -57,7 +61,6 @@ function tabReducer(state: TabState, action: TabAction): TabState {
       return action.payload;
 
     case "CREATE_TAB": {
-      // Prevent duplicate workspace tabs
       if (state.tabs.some((t) => t.id === action.payload.id)) {
         return state;
       }
@@ -96,9 +99,8 @@ function tabReducer(state: TabState, action: TabAction): TabState {
 
       if (state.activeTabId === action.payload) {
         if (filteredTabs.length === 0) {
-          newActiveId = null; // Will trigger the useEffect to create a fresh tab
+          newActiveId = null;
         } else {
-          // Safe fallback: grab the tab that took its place, or the one to its left
           const fallbackTab =
             filteredTabs[deletedIndex] || filteredTabs[deletedIndex - 1];
           newActiveId = fallbackTab.id;
@@ -237,12 +239,188 @@ const TabContext = createContext<(TabState & TabActions) | null>(null);
 export function TabProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [state, dispatch] = useReducer(tabReducer, null, () => loadTabState());
+  const { user } = useAuth();
 
-  // Save to storage on every state change
+  const [state, dispatch] = useReducer(tabReducer, null, () =>
+    loadTabState(user?.id),
+  );
+
+  // Sync state tracking refs
+  const lastSyncedJsonRef = useRef<string>(JSON.stringify(state));
+  const isRemoteUpdateRef = useRef<boolean>(false);
+
+  // Initial Load and Conflict Resolution
   useEffect(() => {
-    saveTabState(state);
-  }, [state]);
+    if (!user?.id) return;
+
+    let isMounted = true;
+    const localState = loadTabState(user.id);
+
+    apiFetch("/api/tabs/sync", { method: "GET" })
+      .then((res) => res.json())
+      .then(
+        (
+          cloudResponse: { state_data?: TabState; updated_at?: string } | null,
+        ) => {
+          if (!isMounted) return;
+
+          if (!cloudResponse?.state_data || !cloudResponse?.updated_at) {
+            // Push local state if no cloud state exists yet
+            const localJson = JSON.stringify(localState);
+            lastSyncedJsonRef.current = localJson;
+
+            apiFetch("/api/tabs/sync", {
+              method: "POST",
+              body: localJson,
+              retries: 0,
+            }).catch((err) =>
+              console.error("Failed to initialize cloud tabs", err),
+            );
+            return;
+          }
+
+          const cloudData = cloudResponse.state_data;
+          const cloudTimestamp = new Date(cloudResponse.updated_at).getTime();
+
+          const localLatest = Math.max(
+            ...localState.tabs.map((t) => t.updatedAt),
+            ...localState.islands.map((i) => i.updatedAt),
+            0,
+          );
+
+          if (cloudTimestamp > localLatest) {
+            // Cloud is newer: Apply to local without triggering POST back
+            isRemoteUpdateRef.current = true;
+            lastSyncedJsonRef.current = JSON.stringify(cloudData);
+
+            dispatch({ type: "SET_STATE", payload: cloudData });
+            saveTabState(cloudData, user.id);
+          } else if (localLatest > cloudTimestamp) {
+            // Local is newer: Push up immediately
+            const localJson = JSON.stringify(localState);
+            lastSyncedJsonRef.current = localJson;
+
+            apiFetch("/api/tabs/sync", {
+              method: "POST",
+              body: localJson,
+              retries: 0,
+            }).catch((err) =>
+              console.error("Failed to sync newer local tabs", err),
+            );
+          }
+        },
+      )
+      .catch((err) => console.error("Failed to fetch cloud tabs", err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  // Local Storage Persistence & Optimized Debounced Cloud Sync
+  useEffect(() => {
+    if (!user?.id || !state) return;
+
+    saveTabState(state, user.id);
+
+    // 1. If this state update came from the server, clear flag and DO NOT POST back
+    if (isRemoteUpdateRef.current) {
+      isRemoteUpdateRef.current = false;
+      return;
+    }
+
+    const currentJson = JSON.stringify(state);
+
+    // 2. Diff Check: If the state hasn't actually changed, cancel sync
+    if (currentJson === lastSyncedJsonRef.current) {
+      return;
+    }
+
+    // 3. Debounce sync requests (1.5s window)
+    const handler = setTimeout(() => {
+      apiFetch("/api/tabs/sync", {
+        method: "POST",
+        body: currentJson,
+        retries: 0,
+      })
+        .then(() => {
+          lastSyncedJsonRef.current = currentJson;
+        })
+        .catch((err) => console.error("Failed to auto-save tabs", err));
+    }, 1500);
+
+    return () => clearTimeout(handler);
+  }, [state, user?.id]);
+
+  // Real-Time WebSocket Listener
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const wsNotificationsURL = `${WS_URL}/ws/notifications`;
+    const ws = new WebSocket(wsNotificationsURL);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "WORKSPACE_UPDATED") {
+          apiFetch("/api/tabs/sync", { method: "GET" })
+            .then((res) => res.json())
+            .then(
+              (
+                cloudResponse: {
+                  state_data?: TabState;
+                  updated_at?: string;
+                } | null,
+              ) => {
+                if (!cloudResponse?.state_data || !cloudResponse.updated_at)
+                  return;
+
+                const cloudData = cloudResponse.state_data;
+                const cloudJson = JSON.stringify(cloudData);
+
+                // Stop execution if we already have this state synced locally
+                if (cloudJson === lastSyncedJsonRef.current) {
+                  return;
+                }
+
+                const cloudTimestamp = new Date(
+                  cloudResponse.updated_at,
+                ).getTime();
+                const currentLocalState = loadTabState(user.id);
+                const localLatest = Math.max(
+                  ...currentLocalState.tabs.map((t) => t.updatedAt),
+                  ...currentLocalState.islands.map((i) => i.updatedAt),
+                  0,
+                );
+
+                if (cloudTimestamp > localLatest) {
+                  // Mark as remote update so our auto-save effect doesn't POST it back
+                  isRemoteUpdateRef.current = true;
+                  lastSyncedJsonRef.current = cloudJson;
+
+                  dispatch({ type: "SET_STATE", payload: cloudData });
+                  saveTabState(cloudData, user.id);
+                }
+              },
+            )
+            .catch((err) =>
+              console.error("Failed to pull real-time update", err),
+            );
+        }
+      } catch (error) {
+        console.error("Failed to parse websocket message", error);
+      }
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.CONNECTING) {
+        ws.onopen = () => ws.close();
+      } else if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [user?.id]);
 
   function createTab(
     params: Partial<Omit<Tab, "id" | "createdAt" | "updatedAt">>,
@@ -253,9 +431,6 @@ export function TabProvider({ children }: { children: ReactNode }) {
     const maxOrder =
       islandTabs.length > 0 ? Math.max(...islandTabs.map((t) => t.order)) : -1;
 
-    // Only real workspace pages get a stable, route-derived id (so the
-    // "one tab per workspace" dedupe in the reducer keeps working).
-    // Everything else (ad hoc "New Tab" clicks) gets a real unique id.
     const id = params.workspaceId ?? `tab-${uuidv4()}`;
 
     const newTab: Tab = {
@@ -277,10 +452,9 @@ export function TabProvider({ children }: { children: ReactNode }) {
     return newTab;
   }
 
-  // Sync #1: Active Tab State -> Browser URL
+  // Active Tab State -> Browser URL Sync
   useEffect(() => {
     const active = state.tabs.find((t) => t.id === state.activeTabId);
-
     if (!active) return;
 
     if (location.pathname !== active.url) {
@@ -390,11 +564,11 @@ export function TabProvider({ children }: { children: ReactNode }) {
     [state.tabs, state.activeTabId],
   );
 
+  // Synchronize route changes to tabs
   useEffect(() => {
     const workspace = getWorkspaceRoute(location.pathname);
-
     const existing = state.tabs.find((t) => t.workspaceId === workspace);
-    
+
     if (!existing) {
       createTab({
         workspaceId: workspace,
@@ -408,7 +582,6 @@ export function TabProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Update URL if user navigated deeper into the workspace
     if (existing.url !== location.pathname) {
       updateTab(existing.id, {
         url: location.pathname,

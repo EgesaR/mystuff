@@ -19,6 +19,7 @@ export default [
       "**/dashboard.notifications.tsx",
       "**/dashboard.settings.appearance.tsx",
       "**/dashboard.settings.security.tsx",
+      "**/dashboard.feedback.tsx",
     ],
   })),
 
@@ -36,6 +37,7 @@ export default [
       route("appearance", "routes/dashboard.settings.appearance.tsx"),
       route("security", "routes/dashboard.settings.security.tsx"),
     ]),
+    route("feedback", "routes/dashboard.feedback.tsx"),
     route("*", "routes/dashboard.$.tsx"),
   ]),
 

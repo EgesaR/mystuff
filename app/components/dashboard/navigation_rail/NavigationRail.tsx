@@ -18,8 +18,12 @@ import {
   MessageSquare,
   Settings,
   User,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
+import { logout } from "~/components/services/auth.client";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
+import { AnimatePresence, motion } from "framer-motion";
 
 type NavItem = {
   label: string;
@@ -76,6 +80,10 @@ function RailTooltip({ label, show }: { label: string; show: boolean }) {
   );
 }
 
+const checkIsActive = (itemRoute: string, currentPath: string) => {
+  // Strip trailing 
+}
+
 function NavLink({
   item,
   isActive,
@@ -128,6 +136,8 @@ const NavigationRail = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   const displayName = user?.full_name || user?.username || "Your Account";
   const userInitial =
@@ -139,6 +149,19 @@ const NavigationRail = () => {
   ) => {
     e.preventDefault();
     navigate(route);
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      setMenuOpen(false);
+      navigate("/auth/login", { replace: true });
+    }
   };
 
   return (
@@ -226,35 +249,72 @@ const NavigationRail = () => {
           )}
         />
 
-        <Button
-          variant="ghost"
-          aria-label={displayName}
-          className={cn(
-            // Added !overflow-visible directly to the button
-            "group/btn relative !overflow-visible rounded-full bg-neutral-100 dark:bg-neutral-800 text-muted-foreground hover:text-foreground mt-1 transition-all duration-200 ease-out p-0",
-            open
-              ? "w-full h-11 justify-start px-2 gap-2.5 rounded-xl"
-              : "size-9 justify-center shrink-0 mx-auto",
-          )}
-        >
-          <div className="shrink-0 size-[30px] rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs text-foreground uppercase overflow-hidden">
-            {userInitial ? userInitial : <User size={14} strokeWidth={2.5} />}
-          </div>
-          <div
-            className={cn(
-              "flex flex-col items-start truncate text-left select-none leading-tight transition-all duration-200 ease-out overflow-hidden",
-              open ? "opacity-100 max-w-[10rem]" : "opacity-0 max-w-0 w-0",
-            )}
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              aria-label={displayName}
+              className={cn(
+                "group/btn relative !overflow-visible rounded-full bg-neutral-100 dark:bg-neutral-800 text-muted-foreground hover:text-foreground mt-1 transition-all duration-200 ease-out p-0",
+                menuOpen &&
+                  "bg-neutral-200 dark:bg-neutral-700 text-foreground",
+                open
+                  ? "w-full h-11 justify-start px-2 gap-2.5 rounded-xl"
+                  : "size-9 justify-center shrink-0 mx-auto",
+              )}
+            >
+              <div className="shrink-0 size-[30px] rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs text-foreground uppercase overflow-hidden">
+                {userInitial ? (
+                  userInitial
+                ) : (
+                  <User size={14} strokeWidth={2.5} />
+                )}
+              </div>
+              <div
+                className={cn(
+                  "flex flex-col items-start truncate text-left select-none leading-tight transition-all duration-200 ease-out overflow-hidden",
+                  open ? "opacity-100 max-w-[10rem]" : "opacity-0 max-w-0 w-0",
+                )}
+              >
+                <span className="text-xs font-semibold text-foreground truncate w-full">
+                  {displayName}
+                </span>
+                <span className="text-[10px] font-medium text-muted-foreground truncate w-full">
+                  {user?.email || "Free Plan"}
+                </span>
+              </div>
+              <RailTooltip label={displayName} show={!open && !menuOpen} />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            side={open ? "top" : "right"}
+            align={open ? "center" : "end"}
+            sideOffset={8}
+            className="!z-[110] w-56 ml-2"
           >
-            <span className="text-xs font-semibold text-foreground truncate w-full">
-              {displayName}
-            </span>
-            <span className="text-[10px] font-medium text-muted-foreground truncate w-full">
-              {user?.email || "Free Plan"}
-            </span>
-          </div>
-          <RailTooltip label={displayName} show={!open} />
-        </Button>
+            <DropdownMenuLabel className="flex flex-col gap-0.5">
+              <span className="text-sm font-semibold text-foreground truncate">
+                {displayName}
+              </span>
+              <span className="text-xs font-normal text-muted-foreground truncate">
+                {user?.email || "Free Plan"}
+              </span>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              variant="destructive"
+              className="gap-2 cursor-pointer"
+            >
+              <LogOut size={15} strokeWidth={2} />
+              {isLoggingOut ? "Logging out..." : "Log out"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );

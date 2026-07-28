@@ -5,7 +5,9 @@ export type WorkspaceRoute =
   | "/dashboard/notes"
   | "/dashboard/tasks"
   | "/dashboard/storage"
-  | "/dashboard/settings";
+  | "/dashboard/settings"
+  | "/dashboard/notifications"
+  | "/dashboard/feedback";
 
 const WORKSPACE_ROUTES: WorkspaceRoute[] = [
   "/dashboard",
@@ -13,6 +15,8 @@ const WORKSPACE_ROUTES: WorkspaceRoute[] = [
   "/dashboard/tasks",
   "/dashboard/storage",
   "/dashboard/settings",
+  "/dashboard/notifications",
+  "/dashboard/feedback",
 ];
 
 /**
@@ -47,6 +51,10 @@ export function getWorkspaceTitle(pathname: string): string {
       return "Storage";
     case "/dashboard/settings":
       return "Settings";
+    case "/dashboard/notifications":
+      return "Notifications";
+    case "/dashboard/feedback":
+      return "Feedback";
   }
 }
 
@@ -76,6 +84,16 @@ export function getWorkspaceIcon(pathname: string): TabIcon {
       return {
         type: "lucide",
         name: "Settings",
+      };
+    case "/dashboard/notifications":
+      return {
+        type: "lucide",
+        name: "Bell",
+      };
+    case "/dashboard/feedback":
+      return {
+        type: "lucide",
+        name: "MessageSquare",
       };
   }
 }

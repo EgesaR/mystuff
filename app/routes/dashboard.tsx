@@ -10,6 +10,7 @@ import { AuthProvider } from "~/context/AuthProvider";
 import { UploadProvider } from "~/context/UploadContext";
 import UploadTray from "~/components/dashboard/uploads/UploadTray";
 import { ThemeProvider } from "~/context/ThemeProvider";
+import { API_URL } from "~/lib/config";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Dashboard" },
@@ -46,6 +47,7 @@ const Dashboard = () => {
 
                 {/* Main Workspace Panel */}
                 <div className="shrink grow h-full overflow-hidden flex flex-col gap-2">
+                  API URL:{API_URL}
                   <TabBar />
                   <TabPanel />
                 </div>

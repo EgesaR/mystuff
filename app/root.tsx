@@ -11,6 +11,8 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import NotFound from "./components/shared/NotFound";
 import { Toaster } from "./components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
+import { useServerWakeup } from "./hooks/useServerWakeup";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -26,11 +28,16 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  useServerWakeup();
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="google-site-verification"
+          content="ERwMq3r779g9QA9E8wXcHEuiIylCdZ_OnZ3wR3fUksY"
+        />
         <Meta />
         <Links />
         <script
@@ -49,6 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Analytics />
         <ScrollRestoration />
         <Scripts />
         <Toaster position="top-right" richColors closeButton duration={3000} />

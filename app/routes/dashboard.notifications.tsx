@@ -389,7 +389,7 @@ export default function NotificationsPage() {
                           "group flex items-start gap-3 px-4 py-3 border-b border-border/30 last:border-0 cursor-pointer transition-colors",
                           !n.read && "bg-indigo-500/5",
                           isChecked && "bg-indigo-500/10",
-                          "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]",
+                          "hover:bg-black/2 dark:hover:bg-white/2",
                         )}
                       >
                         <div className="pt-1">

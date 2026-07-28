@@ -42,42 +42,17 @@ import {
 import { MediaViewer } from "~/components/dashboard/storage/MediaViewer";
 import { CreateItemModal } from "~/components/dashboard/storage/CreateItemModal";
 import { CollectionPickerMenu } from "~/components/dashboard/storage/CollectionPickerMenu";
+import type {
+  FolderRecord,
+  FileRecord,
+  CollectionRecord,
+} from "~/types/storage";
+import * as foldersApi from "~/lib/api/folders";
+import * as filesApi from "~/lib/api/files";
+import * as collectionsApi from "~/lib/api/collections";
+import { apiFetch } from "~/lib/http.client";
 
 export const meta: Route.MetaFunction = () => [{ title: "Storage" }];
-
-// ── Types ─────────────────────────────────────────────────────────────────
-
-interface FolderRecord {
-  id: string;
-  name: string;
-  color: string;
-  parent_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface FileRecord {
-  id: string;
-  name: string;
-  original_name: string;
-  file_path: string;
-  url: string;
-  mime_type: string | null;
-  size_bytes: number;
-  media_type: string;
-  folder_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface CollectionRecord {
-  id: string;
-  name: string;
-  color: string;
-  file_count?: number;
-  created_at: string;
-  updated_at: string;
-}
 
 type SortKey = "name" | "size" | "modified";
 type CreateType = "folder" | "collection";
@@ -412,7 +387,7 @@ function FileListRow({
       }}
       {...longPress}
       className={cn(
-        "group border-b border-border/30 last:border-0 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] cursor-pointer select-none transition-colors",
+        "group border-b border-border/30 last:border-0 hover:bg-black/2 dark:hover:bg-white/2 cursor-pointer select-none transition-colors",
         checked && "bg-indigo-500/5",
         isDropTarget && "ring-2 ring-inset ring-indigo-500/40 bg-indigo-500/5",
       )}
@@ -770,7 +745,7 @@ export default function StorageWorkspace() {
 
   const refreshFiles = async () => {
     try {
-      const res = await fetch("/api/files", { credentials: "include" });
+      const res = await apiFetch("/api/files");
       if (res.ok) setAllFiles(await res.json());
     } finally {
       setLoading(false);
@@ -779,9 +754,7 @@ export default function StorageWorkspace() {
 
   const refreshFolders = async (parentId: string | null) => {
     const qs = parentId ? `?parent_id=${parentId}` : "";
-    const res = await fetch(`/api/files/folders${qs}`, {
-      credentials: "include",
-    });
+    const res = await apiFetch(`/api/files/folders${qs}`);
     if (res.ok) setFolders(await res.json());
   };
 
@@ -793,16 +766,8 @@ export default function StorageWorkspace() {
   // rest of the page keeps working even before those routes exist.
   const refreshCollections = async () => {
     setCollectionsLoading(true);
-    try {
-      const res = await fetch("/api/files/collections", {
-        credentials: "include",
-      });
-      if (res.ok) setCollections(await res.json());
-    } catch {
-      // backend route not implemented yet
-    } finally {
-      setCollectionsLoading(false);
-    }
+    setCollections(await collectionsApi.listCollections());
+    setCollectionsLoading(false);
   };
 
   useEffect(() => {
@@ -902,14 +867,12 @@ export default function StorageWorkspace() {
 
   const handleCreateFolder = async (name: string, color: string) => {
     try {
-      const res = await fetch("/api/files/folders", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color, parent_id: currentFolderId }),
+      const folder = await foldersApi.createFolder({
+        name,
+        color,
+        parent_id: currentFolderId,
       });
-      if (!res.ok) return;
-      const folder: FolderRecord = await res.json();
+      if (!folder) return;
       setFolders((prev) => [...prev, folder]);
       if (mergeCandidates.length > 0) {
         await moveFiles(
@@ -924,22 +887,16 @@ export default function StorageWorkspace() {
 
   const handleCreateCollection = async (name: string, color: string) => {
     try {
-      const res = await fetch("/api/files/collections", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color }),
-      });
-      if (!res.ok) return;
-      const collection: CollectionRecord = await res.json();
+      const collection = await collectionsApi.createCollection({ name, color });
+      if (!collection) return;
       setCollections((prev) => [...prev, collection]);
       if (mergeCandidates.length > 0) {
         await Promise.all(
-          mergeCandidates.map((f) => addFileToCollection(f.id, collection.id)),
+          mergeCandidates.map((f) =>
+            collectionsApi.addFileToCollection(f.id, collection.id),
+          ),
         );
       }
-    } catch {
-      // backend route not implemented yet
     } finally {
       setMergeCandidates([]);
     }
@@ -950,14 +907,8 @@ export default function StorageWorkspace() {
     const name = renameValue.trim();
 
     if (renameTarget.kind === "folder") {
-      const res = await fetch(`/api/files/folders/${renameTarget.item.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
+      const updated = await foldersApi.renameFolder(renameTarget.item.id, name);
+      if (updated) {
         setFolders((prev) =>
           prev.map((f) => (f.id === updated.id ? updated : f)),
         );
@@ -966,37 +917,16 @@ export default function StorageWorkspace() {
       setAllFiles((prev) =>
         prev.map((f) => (f.id === renameTarget.item.id ? { ...f, name } : f)),
       );
-      try {
-        // Assumes PATCH /api/files/{id} accepts a name field — add this
-        // route if it doesn't exist yet.
-        await fetch(`/api/files/${renameTarget.item.id}`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name }),
-        });
-      } catch {
-        // ignore — optimistic update already applied
-      }
+      filesApi.renameFile(renameTarget.item.id, name); // optimistic; no await needed
     } else if (renameTarget.kind === "collection") {
-      try {
-        const res = await fetch(
-          `/api/files/collections/${renameTarget.item.id}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name }),
-          },
+      const updated = await collectionsApi.renameCollection(
+        renameTarget.item.id,
+        name,
+      );
+      if (updated) {
+        setCollections((prev) =>
+          prev.map((c) => (c.id === updated.id ? updated : c)),
         );
-        if (res.ok) {
-          const updated = await res.json();
-          setCollections((prev) =>
-            prev.map((c) => (c.id === updated.id ? updated : c)),
-          );
-        }
-      } catch {
-        // backend route not implemented yet
       }
     }
     setRenameTarget(null);
@@ -1010,10 +940,7 @@ export default function StorageWorkspace() {
     )
       return;
     setFolders((prev) => prev.filter((f) => f.id !== folder.id));
-    await fetch(`/api/files/folders/${folder.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    await foldersApi.deleteFolder(folder.id);
     refreshFiles();
   };
 
@@ -1029,14 +956,7 @@ export default function StorageWorkspace() {
       setActiveCollection(null);
       setCollectionFiles([]);
     }
-    try {
-      await fetch(`/api/files/collections/${collection.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-    } catch {
-      // backend route not implemented yet
-    }
+    await collectionsApi.deleteCollection(collection.id);
   };
 
   // ── File actions ──
@@ -1060,10 +980,7 @@ export default function StorageWorkspace() {
   const deleteFile = async (id: string) => {
     setAllFiles((prev) => prev.filter((f) => f.id !== id));
     setCollectionFiles((prev) => prev.filter((f) => f.id !== id));
-    await fetch(`/api/files/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    await filesApi.deleteFile(id);
   };
 
   const deleteSelected = async () => {
@@ -1077,11 +994,7 @@ export default function StorageWorkspace() {
     setAllFiles((prev) => prev.filter((f) => !selected.has(f.id)));
     setCollectionFiles((prev) => prev.filter((f) => !selected.has(f.id)));
     setSelected(new Set());
-    await Promise.all(
-      ids.map((id) =>
-        fetch(`/api/files/${id}`, { method: "DELETE", credentials: "include" }),
-      ),
-    );
+    await Promise.all(ids.map((id) => filesApi.deleteFile(id)));
   };
 
   const moveFiles = async (ids: string[], targetFolderId: string | null) => {
@@ -1092,59 +1005,22 @@ export default function StorageWorkspace() {
     );
     setSelected(new Set());
     setMovePopoverOpen(false);
-    await Promise.all(
-      ids.map((id) => {
-        const qs = targetFolderId ? `?folder_id=${targetFolderId}` : "";
-        return fetch(`/api/files/${id}/move${qs}`, {
-          method: "PATCH",
-          credentials: "include",
-        });
-      }),
-    );
+    await Promise.all(ids.map((id) => filesApi.moveFile(id, targetFolderId)));
   };
 
   // ── Collections ──
 
-  const addFileToCollection = async (fileId: string, collectionId: string) => {
-    try {
-      await fetch(`/api/files/collections/${collectionId}/files`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file_id: fileId }),
-      });
-    } catch {
-      // backend route not implemented yet
-    }
-  };
+  const addFileToCollection = (fileId: string, collectionId: string) =>
+    collectionsApi.addFileToCollection(fileId, collectionId);
 
-  const removeFileFromCollection = async (
-    fileId: string,
-    collectionId: string,
-  ) => {
-    try {
-      await fetch(`/api/files/collections/${collectionId}/files/${fileId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-    } catch {
-      // backend route not implemented yet
-    }
-  };
+  const removeFileFromCollection = (fileId: string, collectionId: string) =>
+    collectionsApi.removeFileFromCollection(fileId, collectionId);
 
   const openCollection = async (collection: CollectionRecord) => {
     setActiveCollection(collection);
     setCollectionFilesLoading(true);
-    try {
-      const res = await fetch(`/api/files/collections/${collection.id}/files`, {
-        credentials: "include",
-      });
-      setCollectionFiles(res.ok ? await res.json() : []);
-    } catch {
-      setCollectionFiles([]);
-    } finally {
-      setCollectionFilesLoading(false);
-    }
+    setCollectionFiles(await collectionsApi.getCollectionFiles(collection.id));
+    setCollectionFilesLoading(false);
   };
 
   const openCollectionPickerForFile = async (
@@ -1152,18 +1028,8 @@ export default function StorageWorkspace() {
     y: number,
     file: FileRecord,
   ) => {
-    let memberIds = new Set<string>();
-    try {
-      const res = await fetch(`/api/files/collections/for-file/${file.id}`, {
-        credentials: "include",
-      });
-      if (res.ok)
-        memberIds = new Set(
-          (await res.json()).map((c: CollectionRecord) => c.id),
-        );
-    } catch {
-      // backend route not implemented yet — picker still works, just without checkmarks
-    }
+    const memberOf = await collectionsApi.getCollectionsForFile(file.id);
+    const memberIds = new Set(memberOf.map((c) => c.id));
     setCollectionPicker({ x, y, fileIds: [file.id], memberIds });
   };
 
@@ -1392,7 +1258,7 @@ export default function StorageWorkspace() {
         </div>
         <div className="relative group flex items-center gap-4 px-4 py-3 bg-card border border-border/50 rounded-2xl shadow-sm cursor-default">
           <UsageRing pct={usagePct} />
-          <div className="min-w-[10rem]">
+          <div className="min-w-40">
             <p className="text-sm font-semibold">
               {formatBytes(totalUsed)}{" "}
               <span className="text-muted-foreground font-normal">used</span>
