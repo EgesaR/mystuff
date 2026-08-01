@@ -33,8 +33,8 @@ import {
   SheetDescription,
 } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
-
-const API_BASE = process.env.API_BASE_URL ?? "http://localhost:8000";
+import { z } from "zod";
+import { apiFetch } from '~/lib/http.server';
 
 interface NotificationRecord {
   id: string;
@@ -47,7 +47,8 @@ interface NotificationRecord {
   created_at: string;
 }
 
-type ViewFilter = "active" | "unread" | "archived";
+const ViewFilterSchema = z.enum(["all", "active", "unread", "archived"]);
+type ViewFilter = z.infer<typeof ViewFilterSchema>;
 
 function forwardedHeaders(request: Request): HeadersInit {
   const cookie = request.headers.get("cookie");
@@ -58,11 +59,12 @@ function forwardedHeaders(request: Request): HeadersInit {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const view = (url.searchParams.get("view") as ViewFilter) || "active";
+  const view = ViewFilterSchema.catch("all").parse(url.searchParams.get("view")) ?? "active";
 
-  const res = await fetch(
-    `${API_BASE}/api/notifications?archived=${view === "archived"}&unread_only=${view === "unread"}&limit=200`,
-    { headers: forwardedHeaders(request) },
+  const res = await apiFetch(
+    `/api/notifications?archived=${view === "archived"}&unread_only=${view === "unread"}&limit=200`,
+    {},
+    request
   );
   if (!res.ok)
     throw new Response("Failed to load notifications", { status: res.status });
@@ -74,59 +76,36 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const jsonHeaders = {
-    "Content-Type": "application/json",
-    ...forwardedHeaders(request),
-  };
 
   switch (intent) {
     case "mark-read": {
       const id = formData.get("id");
-      await fetch(`${API_BASE}/api/notifications/${id}/read`, {
-        method: "POST",
-        headers: forwardedHeaders(request),
-      });
+      await apiFetch(`/api/notifications/${id}/read`, { method: "POST" }, request);
       return { ok: true };
     }
     case "mark-all-read": {
-      await fetch(`${API_BASE}/api/notifications/read-all`, {
-        method: "POST",
-        headers: forwardedHeaders(request),
-      });
+      await apiFetch(`/api/notifications/read-all`, { method: "POST" }, request);
       return { ok: true };
     }
     case "archive": {
       const id = formData.get("id");
-      await fetch(`${API_BASE}/api/notifications/${id}/archive`, {
-        method: "POST",
-        headers: forwardedHeaders(request),
-      });
+      await apiFetch(`/api/notifications/${id}/archive`, { method: "POST" }, request);
       return { ok: true };
     }
     case "unarchive": {
       const id = formData.get("id");
-      await fetch(`${API_BASE}/api/notifications/${id}/unarchive`, {
-        method: "POST",
-        headers: forwardedHeaders(request),
-      });
+      await apiFetch(`/api/notifications/${id}/unarchive`, { method: "POST" }, request);
       return { ok: true };
     }
     case "delete": {
       const id = formData.get("id");
-      await fetch(`${API_BASE}/api/notifications/${id}`, {
-        method: "DELETE",
-        headers: forwardedHeaders(request),
-      });
+      await apiFetch(`/api/notifications/${id}`, { method: "DELETE" }, request);
       return { ok: true };
     }
     case "bulk": {
       const ids = JSON.parse(String(formData.get("ids")));
       const bulkAction = String(formData.get("bulkAction"));
-      await fetch(`${API_BASE}/api/notifications/bulk`, {
-        method: "POST",
-        headers: jsonHeaders,
-        body: JSON.stringify({ ids, action: bulkAction }),
-      });
+      await apiFetch(`/api/notifications/bulk`, { method: "POST", body: JSON.stringify({ ids, action: bulkAction }) }, request);
       return { ok: true };
     }
     default:

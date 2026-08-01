@@ -35,7 +35,7 @@ const Dashboard = () => {
             <SidebarProvider
               style={
                 {
-                  // 👇 FIX: Declare the proper expanded vs collapsed rail metrics
+                  // Declare the proper expanded vs collapsed rail metrics
                   "--sidebar-width": "14rem", // Width when expanded (~224px)
                   "--sidebar-width-icon": "3rem", // Width when collapsed (~48px / w-12 equivalent)
                   "--sidebar-width-mobile": "20rem",
@@ -47,6 +47,8 @@ const Dashboard = () => {
 
                 {/* Main Workspace Panel */}
                 <div className="shrink grow h-full overflow-hidden flex flex-col gap-2">
+                  <p>{import.meta.env.VITE_API_URL}</p>
+                  <p>{import.meta.env.VITE_WS_URL}</p>
                   <TabBar />
                   <TabPanel />
                 </div>
