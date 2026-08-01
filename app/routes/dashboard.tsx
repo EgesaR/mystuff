@@ -47,7 +47,6 @@ const Dashboard = () => {
 
                 {/* Main Workspace Panel */}
                 <div className="shrink grow h-full overflow-hidden flex flex-col gap-2">
-                  API URL:{API_URL}
                   <TabBar />
                   <TabPanel />
                 </div>

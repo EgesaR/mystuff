@@ -9,6 +9,11 @@ export async function listFolders(
   return res.ok ? res.json() : [];
 }
 
+export async function getFolderTree(id: string): Promise<FolderRecord | null> {
+  const res = await apiFetch(`/api/files/folders/${id}/tree`);
+  return res.ok ? res.json() : null;
+}
+
 export async function createFolder(input: {
   name: string;
   color: string;
