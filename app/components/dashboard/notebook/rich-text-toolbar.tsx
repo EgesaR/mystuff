@@ -9,11 +9,16 @@ import {
   Heading3,
   List,
   ListOrdered,
+  CheckSquare,
   Quote,
   Code2,
   Link2,
+  Table as TableIcon,
+  Image as ImageIcon,
+  Film,
   Eraser,
   Undo2,
+  Search,
 } from "lucide-react";
 
 interface ToolbarCommand {
@@ -39,6 +44,7 @@ const HEADINGS: ToolbarCommand[] = [
 const LISTS: ToolbarCommand[] = [
   { cmd: "insertUnorderedList", icon: List, label: "Bullet list" },
   { cmd: "insertOrderedList", icon: ListOrdered, label: "Numbered list" },
+  { cmd: "checklist", icon: CheckSquare, label: "Checklist" },
 ];
 
 const BLOCKS: ToolbarCommand[] = [
@@ -47,12 +53,19 @@ const BLOCKS: ToolbarCommand[] = [
   { cmd: "createLink", icon: Link2, label: "Link" },
 ];
 
+const INSERT: ToolbarCommand[] = [
+  { cmd: "insertTable", icon: TableIcon, label: "Insert table" },
+  { cmd: "insertImage", icon: ImageIcon, label: "Insert image" },
+  { cmd: "insertEmbed", icon: Film, label: "Embed link" },
+];
+
 const UTILITY: ToolbarCommand[] = [
   { cmd: "removeFormat", icon: Eraser, label: "Clear formatting" },
   { cmd: "undo", icon: Undo2, label: "Undo" },
+  { cmd: "find", icon: Search, label: "Find & Replace (Ctrl/Cmd+F)" },
 ];
 
-const GROUPS = [TEXT_STYLE, HEADINGS, LISTS, BLOCKS, UTILITY];
+const GROUPS = [TEXT_STYLE, HEADINGS, LISTS, BLOCKS, INSERT, UTILITY];
 
 export const RichTextToolbar = memo(function RichTextToolbar({
   onCommand,
@@ -60,7 +73,7 @@ export const RichTextToolbar = memo(function RichTextToolbar({
   onCommand: (cmd: string, val?: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-0.5 px-4 py-1.5 border-b border-border/40 flex-wrap">
+    <div className="flex items-center gap-0.5 px-4 py-1.5 border-b border-border/40 flex-wrap print:hidden">
       {GROUPS.map((group, i) => (
         <div key={i} className="flex items-center gap-0.5">
           {i > 0 && <div className="w-px h-5 bg-border/60 mx-1.5" />}
@@ -69,9 +82,6 @@ export const RichTextToolbar = memo(function RichTextToolbar({
               key={label}
               type="button"
               title={label}
-              // Critical: without preventDefault here, the mousedown steals
-              // focus/selection out of the editor before the click fires,
-              // so bold/italic/etc. would apply to nothing.
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onCommand(cmd, val)}
               className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"

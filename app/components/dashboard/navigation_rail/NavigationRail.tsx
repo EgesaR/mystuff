@@ -22,7 +22,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
 import { logout } from "~/components/services/auth.client";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { AnimatePresence, motion } from "framer-motion";
 
 type NavItem = {
@@ -81,8 +88,8 @@ function RailTooltip({ label, show }: { label: string; show: boolean }) {
 }
 
 const checkIsActive = (itemRoute: string, currentPath: string) => {
-  // Strip trailing 
-}
+  // Strip trailing
+};
 
 function NavLink({
   item,
@@ -160,7 +167,7 @@ const NavigationRail = () => {
       console.error("Logout request failed:", err);
     } finally {
       setMenuOpen(false);
-      navigate("/auth/login", { replace: true });
+      navigate("/api/auth/login", { replace: true });
     }
   };
 

@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { cn } from "~/lib/utils";
+import { apiFetch } from "~/lib/http.client";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -35,7 +36,7 @@ export default function SecuritySettings() {
     }
     setStatus("saving");
     try {
-      const res = await fetch("/api/auth/change-password", {
+      const res = await apiFetch("/api/auth/change-password", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

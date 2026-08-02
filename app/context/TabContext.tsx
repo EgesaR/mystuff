@@ -26,7 +26,7 @@ import {
 } from "~/lib/tabRoutes";
 import { useAuth } from "~/hooks/useAuth";
 import { apiFetch } from "~/lib/http.client";
-import { WS_URL } from "~/lib/config";
+import { getWsUrl } from "~/lib/config";
 
 type TabAction =
   | { type: "SET_STATE"; payload: TabState }
@@ -356,7 +356,7 @@ export function TabProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user?.id) return;
 
-    const wsNotificationsURL = `${WS_URL}/ws/notifications`;
+    const wsNotificationsURL = `${getWsUrl()}/ws/notifications`;
     const ws = new WebSocket(wsNotificationsURL);
 
     ws.onmessage = (event) => {

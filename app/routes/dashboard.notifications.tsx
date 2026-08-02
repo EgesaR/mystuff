@@ -47,7 +47,7 @@ interface NotificationRecord {
   created_at: string;
 }
 
-const ViewFilterSchema = z.enum(["all", "active", "unread", "archived"]);
+const ViewFilterSchema = z.enum(["active", "unread", "archived"]);
 type ViewFilter = z.infer<typeof ViewFilterSchema>;
 
 function forwardedHeaders(request: Request): HeadersInit {
@@ -59,7 +59,7 @@ function forwardedHeaders(request: Request): HeadersInit {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const view = ViewFilterSchema.catch("all").parse(url.searchParams.get("view")) ?? "active";
+  const view = ViewFilterSchema.catch("active").parse(url.searchParams.get("view")) ?? "active";
 
   const res = await apiFetch(
     `/api/notifications?archived=${view === "archived"}&unread_only=${view === "unread"}&limit=200`,

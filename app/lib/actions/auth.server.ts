@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { API_AUTH } from "../config";
+import { getApiUrl } from "../config";
 import { apiFetch } from "../http.server";
 import { extractCookies, redirectWithCookies } from "../auth.server";
 
@@ -23,7 +23,7 @@ export async function signIn(
     // OAuth
     if (intent === "google" || intent === "github") {
       const res = await apiFetch(
-        `${API_AUTH}/oauth/${intent}`,
+        `${getApiUrl(request)}/oauth/${intent}`,
         {
           method: "POST",
         },
@@ -44,7 +44,7 @@ export async function signIn(
 
     // Password Login
     const res = await apiFetch(
-      `${API_AUTH}/login`,
+      `${getApiUrl(request)}/login`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -54,6 +54,7 @@ export async function signIn(
       },
       request,
     );
+    console.log("Response: ", res);
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({
@@ -89,7 +90,7 @@ export async function signUp(
 ): Promise<Response | ActionResult> {
   try {
     const res = await apiFetch(
-      `${API_AUTH}/signup`,
+      `${getApiUrl(request)}/signup`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -140,14 +141,14 @@ export async function signUp(
 export async function logout(request: Request) {
   try {
     const res = await apiFetch(
-      `${API_AUTH}/logout`,
+      `${getApiUrl(request)}/logout`,
       { method: "POST" },
       request,
     );
 
     return redirectWithCookies(res, "/");
   } catch (error) {
-    console.error("Logout fetch error:", error)
-    return redirect("/auth/login")
+    console.error("Logout fetch error:", error);
+    return redirect("/api/auth/login");
   }
 }

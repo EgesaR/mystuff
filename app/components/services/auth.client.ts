@@ -1,7 +1,7 @@
-import { API_AUTH } from "~/lib/config";
+import { getApiUrl } from "~/lib/config";
 
 export async function logout() {
-  await fetch(`${API_AUTH}/logout`, {
+  await fetch(`${getApiUrl()}/logout`, {
     method: "POST",
     credentials: "include",
   });

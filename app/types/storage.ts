@@ -63,3 +63,22 @@ export interface ShareRecord {
   created_at: string;
   updated_at: string;
 }
+
+export interface NoteMediaRecord {
+  id: string;
+  url: string;
+  media_type: string;
+  caption: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommentRecord {
+  id: string;
+  note_id: string;
+  author_id: string;
+  author_username: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}

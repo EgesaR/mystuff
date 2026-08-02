@@ -5,6 +5,7 @@ import { signIn } from "~/lib/actions/auth.server";
 import { useActionData } from "react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { getApiUrl } from "~/lib/config";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Login" },
@@ -34,6 +35,7 @@ const AuthLogin = () => {
   }, [result]);
   return (
     <div>
+      {getApiUrl()}
       <AuthForm type="sign-in" />
     </div>
   );

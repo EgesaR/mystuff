@@ -1,14 +1,15 @@
-import { API_URL } from "./config";
+import { getApiUrl } from "./config";
 
 export async function apiFetch(
   path: string,
   options: RequestInit = {},
   request?: Request,
 ) {
-  const headers = new Headers(options.headers);
+  const headers = new Headers(options.headers as HeadersInit);
 
-  if (!headers.has("Content-Type"))
+  if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
 
   // Forward cookies when called from a loader/action
   if (request) {
@@ -19,10 +20,11 @@ export async function apiFetch(
     }
   }
 
+  const base = getApiUrl(request);
   const url =
     path.startsWith("http://") || path.startsWith("https://")
       ? path
-      : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+      : new URL(path, base).toString();
 
   const response = await fetch(url, {
     ...options,

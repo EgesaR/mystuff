@@ -25,7 +25,7 @@ const AuthFooter = ({ type }: AuthFooterProps) => {
           {isSignIn ? "Don't have an account?" : "Already have an account"}
         </p>
         <Link
-          to={isSignIn ? "/auth/signup" : "/auth/login"}
+          to={isSignIn ? "/auth/signup" : "/api/auth/login"}
           className="text-blue-400 hover:underline text-sm"
         >
           {isSignIn ? "Sign up" : "Sign in"}

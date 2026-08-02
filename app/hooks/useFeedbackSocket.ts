@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { getWsUrl } from "~/lib/config";
 import type { Feedback } from "~/types/feedback";
 
 export function useFeedbackSocket(onNewFeedback: (feedback: Feedback) => void) {
@@ -6,10 +7,8 @@ export function useFeedbackSocket(onNewFeedback: (feedback: Feedback) => void) {
   callbackRef.current = onNewFeedback;
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(
-      `${protocol}://${window.location.host}/ws/feedback`,
-    );
+    // Use the shared runtime helper so the WS host/port come from the current origin
+    const socket = new WebSocket(`${getWsUrl()}/ws/feedback`);
 
     socket.onmessage = (event) => {
       try {

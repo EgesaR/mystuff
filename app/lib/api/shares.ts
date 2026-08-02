@@ -23,5 +23,15 @@ export async function acceptShare(token: string): Promise<ShareRecord | null> {
     method: "POST",
     body: JSON.stringify({ token }),
   });
-  return res.ok ? res.json() : null;
+
+  // Avoid consuming the response body twice. Use a clone for debugging/logging.
+  try {
+    const clone = await res.clone().json();
+    console.log("Response from shares:", clone);
+  } catch (err) {
+    console.warn("Failed to parse shares response for logging", err);
+  }
+
+  if (!res.ok) return null;
+  return res.json();
 }
