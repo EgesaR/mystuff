@@ -47,7 +47,10 @@ export const ENDPOINTS = {
   media: "/api/media",
   notifications: "/api/notifications",
   logs: "/api/logs",
-  feedback: "/api/feedback",
+  feedback: {
+    root: "/api/feedback",
+    ws: "/ws/feedback"
+  },
   shares: "/api/shares",
   workspace: "/api/tabs",
 

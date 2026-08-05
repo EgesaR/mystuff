@@ -151,6 +151,6 @@ export async function logout(request: Request) {
     return redirectWithCookies(res, "/");
   } catch (error) {
     console.error("Logout fetch error:", error);
-    return redirect("/api/auth/login");
+    return redirect("/auth/login");
   }
 }

@@ -1,5 +1,3 @@
-import { getApiUrl } from "~/lib/config";
-
 interface FetchOptions extends RequestInit {
   retries?: number;
   retryDelay?: number;
@@ -17,9 +15,7 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  const url = endpoint.startsWith("http")
-    ? endpoint
-    : `${getApiUrl()}${endpoint}`;
+  const url = endpoint;
 
   try {
     const response = await fetch(url, {
@@ -34,22 +30,22 @@ export async function apiFetch(
       return apiFetch(endpoint, {
         ...options,
         retries: retries - 1,
-        retryDelay: Math.round(retryDelay * 1.5),
+        retryDelay: retryDelay * 1.5,
       });
     }
 
     return response;
-  } catch (err) {
+  } catch (error) {
     if (retries > 0) {
       await new Promise((r) => setTimeout(r, retryDelay));
 
       return apiFetch(endpoint, {
         ...options,
         retries: retries - 1,
-        retryDelay: Math.round(retryDelay * 1.5),
+        retryDelay: retryDelay * 1.5,
       });
     }
 
-    throw err;
+    throw error;
   }
 }

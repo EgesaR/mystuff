@@ -167,7 +167,7 @@ const NavigationRail = () => {
       console.error("Logout request failed:", err);
     } finally {
       setMenuOpen(false);
-      navigate("/api/auth/login", { replace: true });
+      navigate("/auth/login", { replace: true });
     }
   };
 

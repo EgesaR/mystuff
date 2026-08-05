@@ -26,6 +26,5 @@ export async function apiFetch(
   return fetch(url, {
     ...options,
     headers,
-    credentials: "include",
   });
 }

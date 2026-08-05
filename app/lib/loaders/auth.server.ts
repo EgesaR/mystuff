@@ -8,7 +8,7 @@ export async function requireUser(request: Request) {
     const res = await apiFetch(meUrl, { method: "GET" }, request);
 
     if (!res.ok) {
-      throw redirect("/api/auth/login");
+      throw redirect("/auth/login");
     }
 
     return res.json();
@@ -16,7 +16,7 @@ export async function requireUser(request: Request) {
     if (error instanceof Response) {
       throw error;
     }
-    throw redirect("/api/auth/login");
+    throw redirect("/auth/login");
   }
 }
 
