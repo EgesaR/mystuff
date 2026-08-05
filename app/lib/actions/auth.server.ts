@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
-import { getApiUrl } from "../config";
 import { apiFetch } from "../http.server";
 import { extractCookies, redirectWithCookies } from "../auth.server";
+import { ENDPOINTS } from "../endpoint";
 
 export type ActionResult =
   | {
@@ -13,17 +13,23 @@ export type ActionResult =
       error: string;
     };
 
+const {
+  oauth: { google: googleUrl, github: githubUrl },
+  login: loginUrl,
+  signup: signoupUrl,
+  logout: logoutUrl,
+} = ENDPOINTS.auth;
+
 export async function signIn(
   request: Request,
   formData: FormData,
 ): Promise<Response | ActionResult> {
   const intent = formData.get("intent");
-
   try {
     // OAuth
     if (intent === "google" || intent === "github") {
       const res = await apiFetch(
-        `${getApiUrl(request)}/oauth/${intent}`,
+        intent === "google" ? googleUrl : githubUrl,
         {
           method: "POST",
         },
@@ -44,7 +50,7 @@ export async function signIn(
 
     // Password Login
     const res = await apiFetch(
-      `${getApiUrl(request)}/login`,
+      loginUrl,
       {
         method: "POST",
         body: JSON.stringify({
@@ -90,7 +96,7 @@ export async function signUp(
 ): Promise<Response | ActionResult> {
   try {
     const res = await apiFetch(
-      `${getApiUrl(request)}/signup`,
+      signoupUrl,
       {
         method: "POST",
         body: JSON.stringify({
@@ -140,11 +146,7 @@ export async function signUp(
 
 export async function logout(request: Request) {
   try {
-    const res = await apiFetch(
-      `${getApiUrl(request)}/logout`,
-      { method: "POST" },
-      request,
-    );
+    const res = await apiFetch(logoutUrl, { method: "POST" }, request);
 
     return redirectWithCookies(res, "/");
   } catch (error) {

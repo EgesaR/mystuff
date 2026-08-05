@@ -1,17 +1,16 @@
 import { getApiUrl } from "./config";
 
 export async function apiFetch(
-  path: string,
+  endpoint: string,
   options: RequestInit = {},
   request?: Request,
 ) {
-  const headers = new Headers(options.headers as HeadersInit);
+  const headers = new Headers(options.headers);
 
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  // Forward cookies when called from a loader/action
   if (request) {
     const cookie = request.headers.get("cookie");
 
@@ -20,17 +19,13 @@ export async function apiFetch(
     }
   }
 
-  const base = getApiUrl(request);
-  const url =
-    path.startsWith("http://") || path.startsWith("https://")
-      ? path
-      : new URL(path, base).toString();
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${getApiUrl(request)}${endpoint}`;
 
-  const response = await fetch(url, {
+  return fetch(url, {
     ...options,
     headers,
     credentials: "include",
   });
-
-  return response;
 }
