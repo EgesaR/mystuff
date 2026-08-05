@@ -4,14 +4,16 @@ import type { Feedback } from "~/types/feedback";
 
 export function useFeedbackSocket(onNewFeedback: (feedback: Feedback) => void) {
   const callbackRef = useRef(onNewFeedback);
+  const WS_BASE_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
 
   callbackRef.current = onNewFeedback;
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
+    
     const socket = new WebSocket(
-      `${protocol}//${window.location.host}${ENDPOINTS.feedback.ws}`,
+      `${WS_BASE_URL}${ENDPOINTS.feedback.ws}`,
+      //`${protocol}//${window.location.host}${ENDPOINTS.feedback.ws}`,
     );
 
     socket.onopen = () => {
