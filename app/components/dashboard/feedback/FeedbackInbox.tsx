@@ -69,17 +69,21 @@ export function FeedbackInbox({ initialItems }: { initialItems: Feedback[] }) {
     [items, statusFilter],
   );
 
-  useFeedbackSocket((incoming) => {
-    setItems((cur) => {
-      if (cur.some((f) => f.id === incoming.id)) return cur;
-      return [incoming, ...cur];
-    });
+  const { status } = useFeedbackSocket({
+    onNewFeedback: (incoming) => {
+      setItems((cur) => {
+        if (cur.some((f) => f.id === incoming.id)) return cur;
+        return [incoming, ...cur];
+      });
 
-    setJustArrivedId(incoming.id);
-    setTimeout(
-      () => setJustArrivedId((cur) => (cur === incoming.id ? null : cur)),
-      2500,
-    );
+      setJustArrivedId(incoming.id);
+      setTimeout(
+        () => setJustArrivedId((cur) => (cur === incoming.id ? null : cur)),
+        2500,
+      );
+    },
+    // TASK: Wire the developer status
+    //enabled: isDeveloper
   });
 
   const selected = items.find((f) => f.id === selectedId) ?? null;
