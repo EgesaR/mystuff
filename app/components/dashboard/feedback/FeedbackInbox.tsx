@@ -16,6 +16,7 @@ import { updateFeedbackStatus } from "~/lib/api/feedback";
 import { FeedbackComposer } from "~/components/dashboard/feedback/FeedbackComposer";
 import type { Feedback, FeedbackStatus } from "~/types/feedback";
 import { useFeedbackSocket } from "~/hooks/useFeedbackSocket";
+import { useAuth } from "~/hooks/useAuth";
 
 const CATEGORY_META: Record<
   Feedback["category"],
@@ -52,6 +53,7 @@ const STATUS_OPTIONS: { value: FeedbackStatus; label: string; dot: string }[] =
 
 export function FeedbackInbox({ initialItems }: { initialItems: Feedback[] }) {
   const [items, setItems] = useState(initialItems);
+  const { user, token } = useAuth();
   const [justArrivedId, setJustArrivedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | "all">(
     "all",
@@ -82,8 +84,8 @@ export function FeedbackInbox({ initialItems }: { initialItems: Feedback[] }) {
         2500,
       );
     },
-    // TASK: Wire the developer status
-    //enabled: isDeveloper
+    enabled: !!user?.is_developer && !!token,
+    token: token
   });
 
   const selected = items.find((f) => f.id === selectedId) ?? null;

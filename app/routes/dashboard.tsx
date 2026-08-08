@@ -24,10 +24,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 const Dashboard = () => {
-  const user = useLoaderData<typeof loader>();
+  const { user, token } = useLoaderData<typeof loader>();
   const location = useLocation();
   return (
-    <AuthProvider initialUser={user}>
+    <AuthProvider initialUser={user} initialToken={token}>
       <ThemeProvider>
         <UploadProvider>
           <TabProvider>

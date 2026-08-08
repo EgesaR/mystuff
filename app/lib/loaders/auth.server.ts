@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import { apiFetch } from "../http.server";
 import { ENDPOINTS } from "../endpoint";
+import type { User } from "../types";
 
 const { me: meUrl } = ENDPOINTS.auth;
 export async function requireUser(request: Request) {
@@ -11,7 +12,16 @@ export async function requireUser(request: Request) {
       throw redirect("/auth/login");
     }
 
-    return res.json();
+    const user: User = await res.json()
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const token =
+      cookieHeader
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("access_token="))
+        ?.split("=")[1] ?? null;
+
+    return { user, token };
   } catch (error) {
     if (error instanceof Response) {
       throw error;

@@ -9,10 +9,12 @@ interface UseFeedbackSocketOptions {
   onNewFeedback: (feedback: Feedback) => void;
   /** Only connect when true */
   enabled?: boolean;
+  token?: string | null;
 }
 export function useFeedbackSocket({
   onNewFeedback,
   enabled = true,
+  token,
 }: UseFeedbackSocketOptions) {
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
 
@@ -52,7 +54,12 @@ export function useFeedbackSocket({
       import.meta.env.VITE_WS_URL ||
       `${window.location.protocol === "https:" ? "wss:" : "ws"}//${window.location.host}`;
 
-    const socket = new WebSocket(`${wsBase}${ENDPOINTS.feedback.ws}`);
+    // Append token as query param
+    const url = new URL(`${wsBase}${ENDPOINTS.feedback.ws}`);
+    if (token) url.searchParams.set("token", token);
+
+    const socket = new WebSocket(url.toString());
+    wsRef.current = socket
 
     socket.onopen = () => {
       setStatus("connected");
@@ -133,5 +140,5 @@ export function useFeedbackSocket({
     };
   }, [enabled, connect, disconnect, clearTimers]);
 
-  return { status, connect, disconnect };
+  return { status, connect, token, disconnect };
 }

@@ -60,7 +60,6 @@ export async function signIn(
       },
       request,
     );
-    console.log("Response: ", res);
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({
@@ -71,7 +70,9 @@ export async function signIn(
         success: false,
         error: error.detail,
       };
-    }
+    } 
+
+    const data = await res.json()
 
     // Forward auth cookies to browser and redirect
     return redirectWithCookies(res, "/dashboard");
