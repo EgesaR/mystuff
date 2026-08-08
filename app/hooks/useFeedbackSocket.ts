@@ -5,12 +5,11 @@ import type { Feedback } from "~/types/feedback";
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 interface UseFeedbackSocketOptions {
-  /** Called whenever a new feedback item arrives */
   onNewFeedback: (feedback: Feedback) => void;
-  /** Only connect when true */
   enabled?: boolean;
   token?: string | null;
 }
+
 export function useFeedbackSocket({
   onNewFeedback,
   enabled = true,
@@ -23,8 +22,9 @@ export function useFeedbackSocket({
   const heartbeatRef = useRef<number | null>(null);
   const reconnectRef = useRef<number | null>(null);
   const shouldReconnect = useRef(true);
+  const isMounted = useRef(false);
 
-  // Keep callback fresh without re-creating the socket
+  // Keep callback fresh
   callbackRef.current = onNewFeedback;
 
   const clearTimers = useCallback(() => {
@@ -39,33 +39,39 @@ export function useFeedbackSocket({
   }, []);
 
   const connect = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled || !token) return;
+
+    // Already connected / connecting
     if (
       wsRef.current?.readyState === WebSocket.OPEN ||
       wsRef.current?.readyState === WebSocket.CONNECTING
-    )
+    ) {
       return;
+    }
 
     setStatus("connecting");
 
-    // Prefer same-origin so Vite proxy + cookies work in development
-    // Fall back to VITE_WS_URL only if you explicitly need a different host.
     const wsBase =
       import.meta.env.VITE_WS_URL ||
-      `${window.location.protocol === "https:" ? "wss:" : "ws"}//${window.location.host}`;
+      `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
 
-    // Append token as query param
     const url = new URL(`${wsBase}${ENDPOINTS.feedback.ws}`);
-    if (token) url.searchParams.set("token", token);
+    url.searchParams.set("token", token);
 
     const socket = new WebSocket(url.toString());
-    wsRef.current = socket
+    wsRef.current = socket;
 
     socket.onopen = () => {
+      // Component already unmounted → close immediately
+      if (!isMounted.current) {
+        socket.close();
+        return;
+      }
+
       setStatus("connected");
       shouldReconnect.current = true;
 
-      // Application-level heartbeat
+      // Heartbeat every 25s
       heartbeatRef.current = window.setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send("ping");
@@ -74,7 +80,6 @@ export function useFeedbackSocket({
     };
 
     socket.onmessage = (event) => {
-      // Ignore heartbeat responses
       if (event.data === "pong") return;
 
       try {
@@ -89,16 +94,18 @@ export function useFeedbackSocket({
       clearTimers();
       wsRef.current = null;
 
-      // 1008 = Policy Violation → auth/authorization failed
+      // Auth / permission failure
       if (event.code === 1008) {
         shouldReconnect.current = false;
         setStatus("error");
         console.warn("WebSocket closed: authentication failed");
         return;
       }
+
       setStatus("disconnected");
 
-      if (shouldReconnect.current && enabled) {
+      // Auto-reconnect only if still mounted and allowed
+      if (shouldReconnect.current && isMounted.current && enabled) {
         reconnectRef.current = window.setTimeout(() => {
           connect();
         }, 3000);
@@ -106,39 +113,42 @@ export function useFeedbackSocket({
     };
 
     socket.onerror = () => {
-      // onclose will fire afterwards
       setStatus("error");
     };
-  }, [enabled, clearTimers]);
-
-  const disconnect = useCallback(() => {
-    shouldReconnect.current = false;
-    clearTimers();
-    if (
-      wsRef.current &&
-      (wsRef.current.readyState === WebSocket.OPEN ||
-        wsRef.current.readyState === WebSocket.CONNECTING)
-    ) {
-      wsRef.current.close();
-    }
-    wsRef.current = null;
-    setStatus("disconnected");
-  }, [clearTimers]);
+  }, [enabled, token, clearTimers]);
 
   useEffect(() => {
-    if (enabled) {
-      connect();
-    } else {
-      disconnect();
+    isMounted.current = true;
+
+    if (enabled && token) {
+      // Small delay helps with React Strict Mode double-mount
+      const timer = window.setTimeout(() => {
+        connect();
+      }, 80);
+
+      return () => {
+        clearTimeout(timer);
+        isMounted.current = false;
+        shouldReconnect.current = false;
+        clearTimers();
+
+        if (wsRef.current) {
+          wsRef.current.close();
+          wsRef.current = null;
+        }
+      };
     }
 
-    return () => {
-      shouldReconnect.current = false;
-      clearTimers();
-      wsRef.current?.close();
+    // Not enabled → make sure we are disconnected
+    isMounted.current = false;
+    shouldReconnect.current = false;
+    clearTimers();
+    if (wsRef.current) {
+      wsRef.current.close();
       wsRef.current = null;
-    };
-  }, [enabled, connect, disconnect, clearTimers]);
+    }
+    setStatus("disconnected");
+  }, [enabled, token, connect, clearTimers]);
 
-  return { status, connect, token, disconnect };
+  return { status };
 }
