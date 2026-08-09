@@ -1,5 +1,7 @@
 // lib/http.client.ts
 
+import { getApiUrl } from "./config";
+
 interface FetchOptions extends RequestInit {
   retries?: number;
   retryDelay?: number;
@@ -17,14 +19,17 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${getApiUrl()}${endpoint}`;
+
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(url, {
       ...fetchOptions,
       headers,
       credentials: "include",
     });
 
-    // Retry only server-side failures.
     if (response.status >= 500 && retries > 0) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
