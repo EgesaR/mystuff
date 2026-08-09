@@ -175,7 +175,7 @@ export default function NotesPage() {
                 <div className="flex items-start justify-between gap-2">
                   {/* Link wrapper to navigate to specific note view */}
                   <Link
-                    to={`/dashboard/notes/${note.id}`}
+                    to={`/dashboard/notes/note/${note.id}`}
                     className="font-semibold text-sm truncate hover:underline flex-1"
                   >
                     {note.title}

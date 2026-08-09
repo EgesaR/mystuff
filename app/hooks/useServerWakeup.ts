@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import { ENDPOINTS } from "~/lib/endpoint";
 import { apiFetch } from "~/lib/http.client";
 
 export function useServerWakeup() {
   useEffect(() => {
-    apiFetch(`${import.meta.env.VITE_API_BASE_URL || ""}/api/health`)
+    apiFetch(`${import.meta.env.VITE_API_URL || ""}${ENDPOINTS.health}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "degraded") {

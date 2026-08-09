@@ -45,7 +45,10 @@ export const ENDPOINTS = {
     comments: (id: string) => `/api/notes/${id}/comments`,
   },
   media: "/api/media",
-  notifications: "/api/notifications",
+  notifications: {
+    root: "/api/notifications",
+    ws: "/ws/notificationsq"
+  },
   logs: "/api/logs",
   feedback: {
     root: "/api/feedback",
