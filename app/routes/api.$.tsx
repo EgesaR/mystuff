@@ -4,46 +4,23 @@ import { apiFetch } from "~/lib/http.server";
 async function proxy(request: Request) {
   const url = new URL(request.url);
 
-  // Remove the Vercel route prefix.
-  //
-  // Example:
-  // /api/notes
-  //
-  // becomes:
-  // /api/notes
-  //
-  // because the backend also expects /api/...
+  // Keep the path exactly as the browser requested
+  // (e.g. /api/notes/xxx → backend /api/notes/xxx)
   const backendPath = url.pathname;
-
   const search = url.search;
-
   const endpoint = `${backendPath}${search}`;
 
   const headers = new Headers();
 
-  // Forward headers that are useful to FastAPI.
+  // Forward useful headers
   const contentType = request.headers.get("content-type");
   const accept = request.headers.get("accept");
+  if (contentType) headers.set("Content-Type", contentType);
+  if (accept) headers.set("Accept", accept);
 
-  if (contentType) {
-    headers.set("Content-Type", contentType);
-  }
-
-  if (accept) {
-    headers.set("Accept", accept);
-  }
-
-  // CRITICAL:
-  //
-  // The browser's access_token belongs to
-  // mystuffs.vercel.app.
-  //
-  // We explicitly forward the Cookie header to Render.
+  // Critical: forward the browser's cookies
   const cookie = request.headers.get("cookie");
-
-  if (cookie) {
-    headers.set("Cookie", cookie);
-  }
+  if (cookie) headers.set("Cookie", cookie);
 
   const body =
     request.method === "GET" || request.method === "HEAD"
@@ -60,21 +37,30 @@ async function proxy(request: Request) {
     request,
   );
 
-  // Copy backend response headers back to browser.
+  // ---------- FIXED RESPONSE HANDLING ----------
   const responseHeaders = new Headers();
 
   response.headers.forEach((value, key) => {
-    // Don't blindly forward hop-by-hop headers.
+    const lower = key.toLowerCase();
+
+    // Never forward these hop-by-hop / encoding headers
     if (
-      key !== "connection" &&
-      key !== "keep-alive" &&
-      key !== "transfer-encoding"
+      lower === "connection" ||
+      lower === "keep-alive" ||
+      lower === "transfer-encoding" ||
+      lower === "content-encoding" || // ← this was the culprit
+      lower === "content-length" // ← length no longer matches
     ) {
-      responseHeaders.set(key, value);
+      return;
     }
+
+    responseHeaders.set(key, value);
   });
 
-  return new Response(response.body, {
+  // Read the body fully so we control the encoding
+  const responseBody = await response.arrayBuffer();
+
+  return new Response(responseBody, {
     status: response.status,
     statusText: response.statusText,
     headers: responseHeaders,
