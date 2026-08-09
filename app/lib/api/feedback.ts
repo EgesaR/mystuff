@@ -4,7 +4,7 @@ import type {
   FeedbackCreateInput,
   FeedbackStatus,
 } from "~/types/feedback";
-import { ENDPOINTS } from "../endpoint";
+import { ENDPOINTS } from "../endpoints";
 
 const BASE = ENDPOINTS.feedback.root;
 

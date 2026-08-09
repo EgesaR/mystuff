@@ -4,6 +4,12 @@ import { Plus, Pin, Trash2 } from "lucide-react";
 import { Link } from "react-router"; // Assuming React Router v7 navigation
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import {
+  createNote as createNoteApi,
+  deleteNote as deleteNoteApi,
+  listNotes,
+  updateNote,
+} from "~/lib/api/notes";
 
 interface NoteRecord {
   id: string;

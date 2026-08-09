@@ -1,4 +1,4 @@
-import { ENDPOINTS } from "~/lib/endpoint";
+import { ENDPOINTS } from "~/lib/endpoints";
 import { apiFetch } from "~/lib/http.client";
 
 export async function logout() {

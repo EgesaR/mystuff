@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 import { apiFetch } from "../http.server";
 import { extractCookies, redirectWithCookies } from "../auth.server";
-import { ENDPOINTS } from "../endpoint";
+import { ENDPOINTS } from "../endpoints";
 
 export type ActionResult =
   | {
@@ -70,9 +70,9 @@ export async function signIn(
         success: false,
         error: error.detail,
       };
-    } 
+    }
 
-    const data = await res.json()
+    const data = await res.json();
 
     // Forward auth cookies to browser and redirect
     return redirectWithCookies(res, "/dashboard");

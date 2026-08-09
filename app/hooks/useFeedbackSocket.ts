@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ENDPOINTS } from "~/lib/endpoint";
+import { ENDPOINTS } from "~/lib/endpoints";
 import type { Feedback } from "~/types/feedback";
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";

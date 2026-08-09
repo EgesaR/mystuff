@@ -1,3 +1,5 @@
+// lib/http.client.ts
+
 interface FetchOptions extends RequestInit {
   retries?: number;
   retryDelay?: number;
@@ -15,17 +17,16 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  const url = endpoint;
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(endpoint, {
       ...fetchOptions,
       headers,
       credentials: "include",
     });
 
-    if (!response.ok && response.status >= 500 && retries > 0) {
-      await new Promise((r) => setTimeout(r, retryDelay));
+    // Retry only server-side failures.
+    if (response.status >= 500 && retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
       return apiFetch(endpoint, {
         ...options,
@@ -37,7 +38,7 @@ export async function apiFetch(
     return response;
   } catch (error) {
     if (retries > 0) {
-      await new Promise((r) => setTimeout(r, retryDelay));
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
       return apiFetch(endpoint, {
         ...options,

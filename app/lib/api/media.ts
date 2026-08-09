@@ -1,6 +1,6 @@
 import type { NoteMediaRecord } from "~/types/storage";
 import { apiFetch } from "../http.client";
-import { ENDPOINTS } from "../endpoint";
+import { ENDPOINTS } from "../endpoints";
 
 export async function uploadNoteImage(
   noteId: string,
