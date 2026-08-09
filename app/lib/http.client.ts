@@ -19,20 +19,27 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  const url = endpoint.startsWith("http")
-    ? endpoint
-    : `${getApiUrl()}${endpoint}`;
+  // CRITICAL: always use relative URLs in the browser so requests
+  // hit the Vercel /api/* proxy (same-origin cookies).
+  // Only use the absolute backend URL when running on the server
+  // or when an explicit absolute URL is passed.
+  const isBrowser = typeof window !== "undefined";
+  const url =
+    endpoint.startsWith("http") || !isBrowser
+      ? endpoint.startsWith("http")
+        ? endpoint
+        : `${getApiUrl()}${endpoint}`
+      : endpoint; // relative → /api/notes goes to mystuffs.vercel.app/api/notes
 
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      credentials: "include",
+      credentials: "include", // still required
     });
 
     if (response.status >= 500 && retries > 0) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
-
       return apiFetch(endpoint, {
         ...options,
         retries: retries - 1,
@@ -44,14 +51,12 @@ export async function apiFetch(
   } catch (error) {
     if (retries > 0) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
-
       return apiFetch(endpoint, {
         ...options,
         retries: retries - 1,
         retryDelay: retryDelay * 1.5,
       });
     }
-
     throw error;
   }
 }
