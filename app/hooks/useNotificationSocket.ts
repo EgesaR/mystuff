@@ -8,7 +8,7 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 interface UseNotificationSocketOptions {
   /** Called when a new notification arrives */
-  onNotification: (notification: NotificationRecord) => void;
+  onNotification: (notification: Notification) => void;
   /** Only connect when true */
   enabled?: boolean;
   /** Access token (required in production) */
@@ -90,7 +90,7 @@ export function useNotificationSocket({
       if (event.data === "pong") return;
 
       try {
-        const data = JSON.parse(event.data) as NotificationRecord;
+        const data = JSON.parse(event.data) as Notification;
         callbackRef.current(data);
       } catch (err) {
         console.error("Invalid notification message", err);
