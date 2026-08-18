@@ -1,15 +1,14 @@
-export function ErrorBoundary({ error }: { error: any }) {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
-  if (error && typeof (error as any).status === 'number') {
-    const status = (error as any).status;
-    message = status === 404 ? "404" : "Error";
+  if (isRouteErrorResponse(error)) {
+    message = error.status === 404 ? "404" : "Error";
     details =
-      status === 404
+      error.status === 404
         ? "The requested page could not be found."
-        : (error as any).statusText || details;
+        : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
@@ -28,3 +27,13 @@ export function ErrorBoundary({ error }: { error: any }) {
   );
 }
 
+{
+  /* Floating Status Bar - add this guard */
+}
+{
+  activeTab && activeTab.title !== "Page Not Found" && (
+    <div className="absolute bottom-5 right-5 ...">
+      {/* ... rest of your status bar code ... */}
+    </div>
+  );
+}

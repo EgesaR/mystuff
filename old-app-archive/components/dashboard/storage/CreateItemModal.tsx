@@ -134,7 +134,7 @@ export function CreateItemModal({
                       ? "scale-110 ring-2 ring-offset-2 ring-offset-card"
                       : "hover:scale-110 opacity-70 hover:opacity-100",
                   )}
-                  style={{ backgroundColor: c }}
+                  style={{ backgroundColor: c, ringColor: c }}
                 />
               ))}
             </div>

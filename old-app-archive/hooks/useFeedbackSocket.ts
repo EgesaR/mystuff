@@ -1,36 +1,31 @@
-// ~/hooks/useNotificationSocket.ts
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ENDPOINTS } from "~/lib/endpoints";
-import type { Notification } from "~/types/notification"; // adjust path if needed
+import type { Feedback } from "~/types/feedback";
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
-interface UseNotificationSocketOptions {
-  /** Called when a new notification arrives */
-  onNotification: (notification: Notification) => void;
-  /** Only connect when true */
+interface UseFeedbackSocketOptions {
+  onNewFeedback: (feedback: Feedback) => void;
   enabled?: boolean;
-  /** Access token (required in production) */
   token?: string | null;
 }
 
-export function useNotificationSocket({
-  onNotification,
+export function useFeedbackSocket({
+  onNewFeedback,
   enabled = true,
   token,
-}: UseNotificationSocketOptions) {
+}: UseFeedbackSocketOptions) {
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
 
-  const callbackRef = useRef(onNotification);
+  const callbackRef = useRef(onNewFeedback);
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatRef = useRef<number | null>(null);
   const reconnectRef = useRef<number | null>(null);
   const shouldReconnect = useRef(true);
   const isMounted = useRef(false);
 
-  // Keep callback fresh without re-creating the socket
-  callbackRef.current = onNotification;
+  // Keep callback fresh
+  callbackRef.current = onNewFeedback;
 
   const clearTimers = useCallback(() => {
     if (heartbeatRef.current) {
@@ -46,7 +41,7 @@ export function useNotificationSocket({
   const connect = useCallback(() => {
     if (!enabled || !token) return;
 
-    // Prevent multiple sockets
+    // Already connected / connecting
     if (
       wsRef.current?.readyState === WebSocket.OPEN ||
       wsRef.current?.readyState === WebSocket.CONNECTING
@@ -60,9 +55,7 @@ export function useNotificationSocket({
       import.meta.env.VITE_WS_URL ||
       `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
 
-    const url = new URL(
-      `${wsBase}${ENDPOINTS.notifications?.ws ?? "/ws/notifications"}`,
-    );
+    const url = new URL(`${wsBase}${ENDPOINTS.feedback.ws}`);
     url.searchParams.set("token", token);
 
     const socket = new WebSocket(url.toString());
@@ -90,10 +83,10 @@ export function useNotificationSocket({
       if (event.data === "pong") return;
 
       try {
-        const data = JSON.parse(event.data) as Notification;
+        const data = JSON.parse(event.data) as Feedback;
         callbackRef.current(data);
       } catch (err) {
-        console.error("Invalid notification message", err);
+        console.error("Invalid feedback message", err);
       }
     };
 
@@ -105,7 +98,7 @@ export function useNotificationSocket({
       if (event.code === 1008) {
         shouldReconnect.current = false;
         setStatus("error");
-        console.warn("Notification WebSocket closed: authentication failed");
+        console.warn("WebSocket closed: authentication failed");
         return;
       }
 
@@ -146,7 +139,7 @@ export function useNotificationSocket({
       };
     }
 
-    // Not enabled → ensure disconnected
+    // Not enabled → make sure we are disconnected
     isMounted.current = false;
     shouldReconnect.current = false;
     clearTimers();
