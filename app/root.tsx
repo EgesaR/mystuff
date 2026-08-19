@@ -8,11 +8,11 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import "./app.css";
+import "~/app.css";
 import NotFound from "./components/shared/NotFound";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "~/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
-import { useServerWakeup } from "./hooks/useServerWakeup";
+import { useServerWakeup } from "~/hooks/useServerWakeup";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,6 +24,10 @@ export const links: Route.LinksFunction = () => [
   {
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+  },
+  {
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&display=swap",
   },
 ];
 

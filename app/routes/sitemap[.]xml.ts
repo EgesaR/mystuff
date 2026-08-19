@@ -1,50 +1,39 @@
-export async function loader() {
-  const baseUrl = "https://mystuffs.vercel.app"; // Change this to your real domain!
+import type { Route } from "./+types/sitemap[.]xml";
+import { apiFetch } from "~/lib/api";
+import { SITE_URL } from "~/lib/seo";
 
-  // Array of your public routes
-  const pages = [
-    { path: "", lastmod: "2026-07-24", changefreq: "weekly", priority: "1.0" },
-    {
-      path: "/features",
-      lastmod: "2026-07-20",
-      changefreq: "monthly",
-      priority: "0.9",
-    },
-    {
-      path: "/pricing",
-      lastmod: "2026-07-18",
-      changefreq: "monthly",
-      priority: "0.8",
-    },
-    {
-      path: "/blog",
-      lastmod: "2026-07-24",
-      changefreq: "daily",
-      priority: "0.8",
-    },
+interface Slugged {
+  slug: string;
+}
+
+const STATIC_PATHS = ["/", "/about", "/docs", "/blog", "/contact"];
+
+export async function loader(_args: Route.LoaderArgs) {
+  const [posts, docs] = await Promise.all([
+    apiFetch<Slugged[]>("/blog").catch(() => []),
+    apiFetch<Slugged[]>("/docs").catch(() => []),
+  ]);
+
+  const urls = [
+    ...STATIC_PATHS,
+    ...posts.map((post) => `/blog/${post.slug}`),
+    ...docs.map((doc) => `/docs/${doc.slug}`),
   ];
 
-  // Map over the array to generate the XML <url> blocks
-  const urls = pages
-    .map(
-      (page) => `
-    <url>
-        <loc>${baseUrl}${page.path}</loc>
-        <lastmod>${page.lastmod}</lastmod>
-        <changefreq>${page.changefreq}</changefreq>
-        <priority>${page.priority}</priority>
-    </url>`,
-    )
-    .join("");
-
-  // Construct the final XML string (No spaces before <?xml!)
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+  const body = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(
+    (path) => `  <url>
+    <loc>${SITE_URL}${path}</loc>
+  </url>`,
+  )
+  .join("\n")}
 </urlset>`;
 
-  return new Response(sitemap, {
+  return new Response(body, {
     headers: {
-      "Content-Type": "application/xml",
+      "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=86400",
     },
   });

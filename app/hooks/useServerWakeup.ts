@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { ENDPOINTS } from "~/lib/endpoints";
-import { apiFetch } from "~/lib/http.client";
+import { apiFetch } from "~/lib/http/client";
 
 export function useServerWakeup() {
   useEffect(() => {
