@@ -3,7 +3,7 @@ import {
   signUpSchema,
   type SignInData,
   type SignUpData,
-} from "~/lib/validation";
+} from "~/features/auth/validation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSubmit } from "react-router";

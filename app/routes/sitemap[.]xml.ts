@@ -1,5 +1,5 @@
 import type { Route } from "./+types/sitemap[.]xml";
-import { apiFetch } from "~/lib/api";
+import { apiFetch } from "~/lib/api/server";
 import { SITE_URL } from "~/lib/seo";
 
 interface Slugged {

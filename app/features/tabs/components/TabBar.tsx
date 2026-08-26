@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { FolderPlus, Plus } from "lucide-react";
 import { LayoutGroup } from "framer-motion";
-import { useTabs } from "~/context/TabContext";
+import { useTabs } from "~/providers/TabContext";
 import { cn } from "~/lib/utils";
 import type { Tab } from "~/types/tabs";
 
@@ -229,7 +229,6 @@ const TabBar = () => {
 
   const renderTabSegments = () => {
     const segments: React.ReactNode[] = [];
-    
 
     // 1. Render Animated Tab Islands
     for (const island of sortedIslands) {
@@ -251,12 +250,12 @@ const TabBar = () => {
     if (ungroupedTabs.length > 0) {
       segments.push(
         <SortableContext
-          key="ungrouped"
+          key='ungrouped'
           items={ungroupedTabs.map((t) => t.id)}
           strategy={horizontalListSortingStrategy}
         >
           <LayoutGroup>
-            <div className="flex items-center gap-1.5 px-0.5 h-full">
+            <div className='flex items-center gap-1.5 px-0.5 h-full'>
               {ungroupedTabs.map((tab, index) => {
                 const isHoverTarget = hoverState?.targetTabId === tab.id;
                 const isArmedTarget = pendingGroup?.targetTabId === tab.id;
@@ -287,7 +286,7 @@ const TabBar = () => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className='flex flex-col'>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -296,12 +295,12 @@ const TabBar = () => {
         onDragEnd={handleDragEnd}
         measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       >
-        <div className="flex items-center gap-2 px-2 pr-3 pb-1 pt-1.5 h-16">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none min-w-0 flex-1 h-full pt-1">
+        <div className='flex items-center gap-2 px-2 pr-3 pb-1 pt-1.5 h-16'>
+          <div className='flex items-center gap-2 overflow-x-auto scrollbar-none min-w-0 flex-1 h-full pt-1'>
             {renderTabSegments()}
           </div>
 
-          <div className="shrink-0 flex items-center gap-1 h-full border-l pl-2 border-border/50">
+          <div className='shrink-0 flex items-center gap-1 h-full border-l pl-2 border-border/50'>
             <Button
               onClick={() =>
                 createTab({
@@ -310,17 +309,17 @@ const TabBar = () => {
                   icon: { type: "lucide", name: "File" },
                 })
               }
-              variant="outline"
-              size="icon"
-              className="rounded-full bg-transparent hover:bg-white shadow-none border-none transition-colors shrink-0"
+              variant='outline'
+              size='icon'
+              className='rounded-full bg-transparent hover:bg-white shadow-none border-none transition-colors shrink-0'
             >
               <Plus size={15} />
             </Button>
             <Button
               onClick={() => createIsland({ name: "New Group", color: "blue" })}
-              variant="outline"
-              size="icon"
-              className="rounded-full bg-transparent hover:bg-white shadow-none border-none transition-colors shrink-0"
+              variant='outline'
+              size='icon'
+              className='rounded-full bg-transparent hover:bg-white shadow-none border-none transition-colors shrink-0'
             >
               <FolderPlus size={14} />
             </Button>

@@ -20,8 +20,6 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { useAuth } from "~/hooks/useAuth";
-import { logout } from "~/components/services/auth.client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "../auth/hooks/useAuth";
+import { logout } from "../auth/api";
 
 type NavItem = {
   label: string;
@@ -162,7 +162,7 @@ const NavigationRail = () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
-      await logout();
+      fetch("/dashboard/auth/logout")
     } catch (err) {
       console.error("Logout request failed:", err);
     } finally {
@@ -174,13 +174,13 @@ const NavigationRail = () => {
   return (
     <Sidebar
       collapsible="icon"
-      // Added !z-[100] and !overflow-visible to prevent the main dashboard layout from covering the popups
-      className="!z-[100] h-full border border-black/5 dark:border-white/10 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl flex flex-col transition-[width] duration-200 ease-out rounded-2xl shadow-sm !overflow-visible"
+      // Added !z-[100] and overflow-visible! to prevent the main dashboard layout from covering the popups
+      className="z-100! h-full border border-black/5 dark:border-white/10 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-xl flex flex-col transition-[width] duration-200 ease-out rounded-2xl shadow-sm overflow-visible!"
     >
       <SidebarHeader
-        // Added !overflow-visible to punch through Shadcn's internal Header wrapper constraints
+        // Added overflow-visible! to punch through Shadcn's internal Header wrapper constraints
         className={cn(
-          "mt-3 mb-2 flex flex-col w-full shrink-0 transition-all duration-200 ease-out !overflow-visible",
+          "mt-3 mb-2 flex flex-col w-full shrink-0 transition-all duration-200 ease-out overflow-visible!",
           open ? "px-4" : "px-0 items-center",
         )}
       >
@@ -189,8 +189,8 @@ const NavigationRail = () => {
           onClick={toggleSidebar}
           aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
           className={cn(
-            // Added !overflow-visible directly to the button
-            "group/btn relative !overflow-visible border-0 transition-all duration-200 ease-out hover:bg-black/5 dark:hover:bg-white/5 flex items-center p-0",
+            // Added overflow-visible! directly to the button
+            "group/btn relative overflow-visible! border-0 transition-all duration-200 ease-out hover:bg-black/5 dark:hover:bg-white/5 flex items-center p-0",
             open
               ? "w-full h-12 rounded-xl px-2 gap-3 justify-start"
               : "size-10 rounded-full justify-center shadow-xs mx-auto",
@@ -218,7 +218,7 @@ const NavigationRail = () => {
       <SidebarContent
         className={cn(
           "flex flex-col gap-1 mt-2 w-full scrollbar-none transition-all duration-200 ease-out",
-          open ? "px-3 overflow-y-auto" : "px-0 items-center !overflow-visible",
+          open ? "px-3 overflow-y-auto" : "px-0 items-center overflow-visible!",
         )}
       >
         {MAIN_NAV_ITEMS.map((item) => (
@@ -233,9 +233,9 @@ const NavigationRail = () => {
       </SidebarContent>
 
       <SidebarFooter
-        // Added !overflow-visible to punch through Shadcn's internal Footer wrapper constraints
+        // Added overflow-visible! to punch through Shadcn's internal Footer wrapper constraints
         className={cn(
-          "flex flex-col gap-1 mb-4 w-full shrink-0 transition-all duration-200 ease-out !overflow-visible",
+          "flex flex-col gap-1 mb-4 w-full shrink-0 transition-all duration-200 ease-out overflow-visible!",
           open ? "px-3" : "px-0 items-center",
         )}
       >
@@ -262,7 +262,7 @@ const NavigationRail = () => {
               variant="ghost"
               aria-label={displayName}
               className={cn(
-                "group/btn relative !overflow-visible rounded-full bg-neutral-100 dark:bg-neutral-800 text-muted-foreground hover:text-foreground mt-1 transition-all duration-200 ease-out p-0",
+                "group/btn relative overflow-visible! rounded-full bg-neutral-100 dark:bg-neutral-800 text-muted-foreground hover:text-foreground mt-1 transition-all duration-200 ease-out p-0",
                 menuOpen &&
                   "bg-neutral-200 dark:bg-neutral-700 text-foreground",
                 open

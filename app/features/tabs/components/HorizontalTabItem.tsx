@@ -8,7 +8,7 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { useTabs } from "~/context/TabContext";
+import { useTabs } from "~/providers/TabContext";
 import { cn } from "~/lib/utils";
 import { type Tab, type TabIsland as TabIslandType } from "~/types/tabs";
 import { FaSpinner } from "react-icons/fa";
@@ -100,27 +100,27 @@ const HorizontalTabItem = ({
           ease: [0.23, 1, 0.32, 1],
           delay: isOverlay ? 0 : Math.min(index * 0.04, 0.24),
         }}
-        className="flex w-full h-full"
+        className='flex w-full h-full'
       >
         {hoveredByTabId && hoverProgress > 0 && (
-          <div className="absolute inset-0 rounded-lg pointer-events-none">
+          <div className='absolute inset-0 rounded-lg pointer-events-none'>
             <svg
-              className="absolute inset-0 w-full h-full"
+              className='absolute inset-0 w-full h-full'
               style={{ transform: "rotate(-90deg)" }}
             >
               <rect
-                x="1"
-                y="1"
-                width="calc(100% - 2px)"
-                height="calc(100% - 2px)"
-                rx="6"
-                ry="6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-primary/60"
+                x='1'
+                y='1'
+                width='calc(100% - 2px)'
+                height='calc(100% - 2px)'
+                rx='6'
+                ry='6'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                className='text-primary/60'
                 strokeDasharray={`${hoverProgress * 200} 200`}
-                strokeLinecap="round"
+                strokeLinecap='round'
               />
             </svg>
           </div>
@@ -131,7 +131,7 @@ const HorizontalTabItem = ({
         <div
           {...attributes}
           {...listeners}
-          role="button"
+          role='button'
           tabIndex={0}
           onClick={() => setActiveTab(tab.id)}
           onKeyDown={(e) => {
@@ -166,14 +166,14 @@ const HorizontalTabItem = ({
           )}
 
           {!tab.isPinned && (
-            <span className="truncate text-[13px] font-medium flex-1 text-left">
+            <span className='truncate text-[13px] font-medium flex-1 text-left'>
               {tab.title}
             </span>
           )}
 
           {tab.status === "loading" && (
             <FaSpinner
-              className="size-3 animate-spin text-muted-foreground"
+              className='size-3 animate-spin text-muted-foreground'
               size={12}
             />
           )}
@@ -190,14 +190,14 @@ const HorizontalTabItem = ({
                     e.stopPropagation();
                     deleteTab(tab.id);
                   }}
-                  className="shrink-0 h-4 overflow-hidden rounded-full flex items-center justify-center hover:bg-muted-foreground/20 transition-colors duration-150 ease-out"
+                  className='shrink-0 h-4 overflow-hidden rounded-full flex items-center justify-center hover:bg-muted-foreground/20 transition-colors duration-150 ease-out'
                 >
-                  <X className="size-3 shrink-0 text-muted-foreground hover:text-foreground" />
+                  <X className='size-3 shrink-0 text-muted-foreground hover:text-foreground' />
                 </motion.button>
               )}
             </AnimatePresence>
           ) : (
-            <Pin size={12} className="shrink-0 text-muted-foreground/50 ml-1" />
+            <Pin size={12} className='shrink-0 text-muted-foreground/50 ml-1' />
           )}
         </div>
       </motion.div>
@@ -256,17 +256,17 @@ const GroupTooltip = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 4, scale: 0.95 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
-      className="fixed z-999 -translate-x-1/2 pointer-events-none"
+      className='fixed z-999 -translate-x-1/2 pointer-events-none'
       style={{ top: pos.top, left: pos.left }}
     >
-      <div className="bg-popover border border-border rounded-lg shadow-xl px-3 py-2 whitespace-nowrap">
-        <p className="text-xs text-muted-foreground">
+      <div className='bg-popover border border-border rounded-lg shadow-xl px-3 py-2 whitespace-nowrap'>
+        <p className='text-xs text-muted-foreground'>
           Release to group{" "}
-          <span className="font-semibold text-foreground">
+          <span className='font-semibold text-foreground'>
             "{sourceTab.title}"
           </span>{" "}
           with{" "}
-          <span className="font-semibold text-foreground">
+          <span className='font-semibold text-foreground'>
             "{targetTab.title}"
           </span>
         </p>

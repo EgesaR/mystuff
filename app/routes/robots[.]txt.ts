@@ -6,6 +6,9 @@ export async function loader(_args: Route.LoaderArgs) {
 Allow: /
 
 Sitemap: ${SITE_URL}/sitemap.xml
+
+Disallow: /dashboard
+Disallow: /auth
 `;
 
   return new Response(body, {

@@ -12,7 +12,7 @@ import {
   type HoverState,
   type PendingGroup,
 } from "./constants";
-import { useTabs } from "~/context/TabContext";
+import { useTabs } from "~/providers/TabContext";
 import { useDroppable } from "@dnd-kit/core";
 import {
   horizontalListSortingStrategy,
@@ -94,7 +94,7 @@ const TabIsland = ({
           : "border-black/5 dark:border-white/10",
       )}
     >
-      <CardContent className="flex h-full items-center p-1.5">
+      <CardContent className='flex h-full items-center p-1.5'>
         <motion.div
           className={cn(
             "grid shrink-0 cursor-pointer place-items-center",
@@ -119,14 +119,14 @@ const TabIsland = ({
           onClick={toggle}
         >
           <motion.div
-            className="size-2 rounded-full bg-white/90"
+            className='size-2 rounded-full bg-white/90'
             animate={{ scale: isOpen ? 1 : 0, opacity: isOpen ? 1 : 0 }}
             transition={{ duration: 0.15, delay: isOpen ? 0.1 : 0 }}
           />
         </motion.div>
 
         <motion.div
-          className="flex h-full items-center shrink-0 overflow-hidden"
+          className='flex h-full items-center shrink-0 overflow-hidden'
           animate={{
             width: isOpen ? contentWidth : 0,
             opacity: isOpen ? 1 : 0,
@@ -140,8 +140,8 @@ const TabIsland = ({
         >
           {/* Always rendered at full natural size, even while the parent
               clips it to 0 — that's what makes it measurable. */}
-          <div ref={contentRef} className="flex items-center h-full">
-            <div className="w-1.5 shrink-0" />
+          <div ref={contentRef} className='flex items-center h-full'>
+            <div className='w-1.5 shrink-0' />
 
             <div
               onDoubleClick={() => setEditing(true)}
@@ -167,15 +167,15 @@ const TabIsland = ({
                       setName(island.name);
                     }
                   }}
-                  className="bg-transparent outline-none w-16 text-xs font-semibold"
+                  className='bg-transparent outline-none w-16 text-xs font-semibold'
                 />
               ) : (
                 <>
-                  <span className="text-xs font-semibold whitespace-nowrap">
+                  <span className='text-xs font-semibold whitespace-nowrap'>
                     {island.name}
                   </span>
                   {!isHoveringLabel && (
-                    <span className="text-[10px] opacity-70 mt-0.75 ml-auto pl-1">
+                    <span className='text-[10px] opacity-70 mt-0.75 ml-auto pl-1'>
                       ({islandTabs.length})
                     </span>
                   )}
@@ -187,10 +187,10 @@ const TabIsland = ({
                         exit={{ opacity: 0, scale: 0.6, width: 0 }}
                         transition={{ duration: 0.15 }}
                         onClick={() => deleteIsland(island.id)}
-                        className="ml-auto pl-1 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
-                        title="Ungroup Island"
+                        className='ml-auto pl-1 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity'
+                        title='Ungroup Island'
                       >
-                        <Unlink size={12} className="shrink-0" />
+                        <Unlink size={12} className='shrink-0' />
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -198,16 +198,16 @@ const TabIsland = ({
               )}
             </div>
 
-            <div className="w-1.5 shrink-0" />
+            <div className='w-1.5 shrink-0' />
 
-            <div className="flex h-full min-w-24 shrink-0 items-center gap-1 rounded-sm px-1 pl-0">
+            <div className='flex h-full min-w-24 shrink-0 items-center gap-1 rounded-sm px-1 pl-0'>
               <SortableContext
                 items={islandTabs.map((t) => t.id)}
                 strategy={horizontalListSortingStrategy}
               >
                 {isEmpty ? (
-                  <div className="flex h-7 px-3 items-center justify-center rounded text-[11px] text-muted-foreground/60 border border-dashed border-border whitespace-nowrap">
-                    <span className="mt-0.75">Drop tabs here</span>
+                  <div className='flex h-7 px-3 items-center justify-center rounded text-[11px] text-muted-foreground/60 border border-dashed border-border whitespace-nowrap'>
+                    <span className='mt-0.75'>Drop tabs here</span>
                   </div>
                 ) : (
                   islandTabs.map((tab, index) => {

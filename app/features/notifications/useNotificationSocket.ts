@@ -1,7 +1,7 @@
 // ~/hooks/useNotificationSocket.ts
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ENDPOINTS } from "~/lib/endpoints";
+import { ENDPOINTS } from "~/lib/api/endpoints";
 import type { NotificationRecord } from "~/types/notification"; // adjust path if needed
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";

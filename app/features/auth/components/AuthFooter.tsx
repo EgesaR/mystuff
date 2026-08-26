@@ -13,7 +13,7 @@ const AuthFooter = ({ type }: AuthFooterProps) => {
       {isSignIn && (
         <div className="text-right">
           <Link
-            to={"/forgot-password"}
+            to={"/auth/forgot-password"}
             className="text-sm text-blue-400 hover:underline"
           >
             Forgot Password

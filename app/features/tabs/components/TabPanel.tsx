@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Outlet, useLocation } from "react-router";
-import { useTabs } from "~/context/TabContext";
+import { useTabs } from "~/providers/TabContext";
 import { cn } from "~/lib/utils";
 
 const contentVariants = {
@@ -40,17 +40,17 @@ export function TabPanel() {
   const activeTab = getActiveTab();
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background relative min-h-0 rounded-2xl border-l border-t border-border/40 shadow-sm">
+    <div className='flex-1 flex flex-col overflow-hidden bg-background relative min-h-0 rounded-2xl border-l border-t border-border/40 shadow-sm'>
       {/* Page content */}
-      <div className="flex-1 overflow-auto p-2 min-h-0">
-        <AnimatePresence mode="wait">
+      <div className='flex-1 overflow-auto p-2 min-h-0'>
+        <AnimatePresence mode='wait'>
           <motion.div
             key={location.pathname}
             variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="h-full"
+            initial='initial'
+            animate='animate'
+            exit='exit'
+            className='h-full'
           >
             <Outlet />
           </motion.div>
@@ -59,12 +59,12 @@ export function TabPanel() {
 
       {/* Floating Status Bar at Bottom Right */}
       {activeTab && (
-        <div className="absolute bottom-5 right-5 z-50 pointer-events-none">
+        <div className='absolute bottom-5 right-5 z-50 pointer-events-none'>
           <motion.div
             key={activeTab.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/50 bg-background/80 backdrop-blur-md shadow-sm pointer-events-auto"
+            className='flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/50 bg-background/80 backdrop-blur-md shadow-sm pointer-events-auto'
           >
             <div
               className={cn(
@@ -75,11 +75,11 @@ export function TabPanel() {
                 activeTab.status === "idle" && "bg-muted-foreground/30",
               )}
             />
-            <span className="text-[10px] font-semibold text-foreground">
+            <span className='text-[10px] font-semibold text-foreground'>
               {activeTab.title}
             </span>
-            <div className="h-3 w-px bg-border/60" />
-            <span className="text-[10px] text-muted-foreground font-mono tracking-tight max-w-35 truncate">
+            <div className='h-3 w-px bg-border/60' />
+            <span className='text-[10px] text-muted-foreground font-mono tracking-tight max-w-35 truncate'>
               {activeTab.url}
             </span>
           </motion.div>

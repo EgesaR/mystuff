@@ -1,4 +1,5 @@
 import type { MetaDescriptor } from "react-router";
+import { absoluteUrl } from "./utils";
 
 export const SITE_NAME = "My Stuff";
 export const SITE_URL = "https://mystuffs.vercel.app";
@@ -35,7 +36,7 @@ export function buildMeta({
   keywords,
   noIndex = false,
 }: SeoInput): MetaDescriptor[] {
-  const url = `${SITE_URL}${path}`;
+  const url = absoluteUrl(path);
   const fullTitle = path === "/" ? title : `${title} · ${SITE_NAME}`;
 
   return [
@@ -44,7 +45,7 @@ export function buildMeta({
     ...(keywords?.length
       ? [{ name: "keywords", content: keywords.join(",") }]
       : []),
-    { name: "robots", content: noIndex ? "noindex, nofollow" : "index follow" },
+    { name: "robots", content: noIndex ? "noindex, nofollow" : "index, follow" },
     // Canonical link.
     { tagName: "link", rel: "canonical", href: url },
 
@@ -55,6 +56,8 @@ export function buildMeta({
     { property: "og:url", content: url },
     { property: "og:site_name", content: SITE_NAME },
     { property: "og:image", content: image },
+    { property: "og:image:alt", content: `${fullTitle} - ${SITE_NAME}` },
+    {property: "og:image:type", content: "image/png"},
 
     // Twitter
     { name: "twitter:card", content: "summary_large_image" },

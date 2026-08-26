@@ -1,7 +1,8 @@
 import React, { useId } from "react";
 import { useNavigation } from "react-router";
-import * as z from "zod";
+import { motion, AnimatePresence } from "framer-motion";
 import {
+  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -25,43 +26,64 @@ const AuthForm = ({ type }: AuthFormProps) => {
   const isSubmitting = state === "submitting";
 
   return (
-    <div className="flex w-full sm:w-lg flex-col justify-center px-2 sm:px-8">
-      {/* Header */}
-      <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-semibold tracking-tight">
-          {isSignIn ? "Welcome back" : "Create Account"}
-        </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          {isSignIn ? "Sign in your account" : "Sign up for a new account"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6 mt-3">
-        {/* OAuth */}
-        {isSignIn && (
-          <>
-            <OAuthButtons oauth={oauth} isSubmitting={isSubmitting} />
-            <div className="relative flex gap-3 justify-center items-center">
-              <div className="h-0.5 rounded-full w-full flex-1 bg-zinc-500/40" />
-              <div className="flex justify-center text-xs uppercase">
-                or continue with email
-              </div>
-              <div className="h-0.5 rounded-full w-full flex-1 bg-zinc-500/40" />
-            </div>
-          </>
-        )}
-        {/* Fields */}
-        {/* Key set to {type} ensures smooth state reset when switching forms */}
-        <form id={formId} method="post" onSubmit={onSubmit} key={type}>
-          <AuthFields type={type} form={form} />
-        </form>
-      </CardContent>
-      {/* Footer */}
-      <CardFooter className="flex flex-col mt-4 space-y-4.5">
-        <SubmitButton type={type} formId={formId} isSubmitting={isSubmitting} />
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full max-w-md mx-auto px-2 sm:px-0"
+    >
+      <Card className="rounded-2xl border border-border/80 bg-card/95 backdrop-blur-md shadow-xl">
+        {/* Header */}
+        <CardHeader className="space-y-1.5 text-center pb-2">
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            {isSignIn ? "Welcome back" : "Create an account"}
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            {isSignIn
+              ? "Enter your credentials to access your account"
+              : "Enter your details below to get started"}
+          </CardDescription>
+        </CardHeader>
 
-        <AuthFooter type={type} />
-      </CardFooter>
-    </div>
+        <CardContent className="space-y-5 pt-2">
+          {/* OAuth Buttons */}
+          <OAuthButtons oauth={oauth} isSubmitting={isSubmitting} />
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center my-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative bg-card px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Or continue with email
+            </div>
+          </div>
+
+          {/* Form Fields with Motion Transition */}
+          <AnimatePresence mode="wait">
+            <motion.form
+              key={type}
+              id={formId}
+              method="post"
+              onSubmit={onSubmit}
+              initial={{ opacity: 0, x: isSignIn ? -10 : 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isSignIn ? 10 : -10 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="space-y-4"
+            >
+              <AuthFields type={type} form={form} />
+            </motion.form>
+          </AnimatePresence>
+        </CardContent>
+
+        {/* Footer */}
+        <CardFooter className="flex flex-col space-y-4 pt-2">
+          <SubmitButton type={type} formId={formId} isSubmitting={isSubmitting} />
+          <AuthFooter type={type} />
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };
 
