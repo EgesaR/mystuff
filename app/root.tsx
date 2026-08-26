@@ -44,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const modernStylesheet = JSON.stringify(appStyles);
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
 
