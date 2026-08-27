@@ -359,11 +359,15 @@ export async function forgotPassword(formData: FormData): Promise<ActionResult> 
   }
 }
 
-export async function resetPassword(email: string, code: string, password: string): Promise<ActionResult> {
+export async function resetPassword(
+  email: string,
+  code: string,
+  password: string,
+): Promise<ActionResult> {
   try {
     const res = await authRequest(resetPasswordUrl, {
       method: "POST",
-      body: JSON.stringify({ email, code, password }),
+      body: JSON.stringify({ email, code, new_password: password }),
     });
 
     if (!res.ok) {

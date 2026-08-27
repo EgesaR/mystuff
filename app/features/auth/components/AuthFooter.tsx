@@ -9,7 +9,7 @@ interface AuthFooterProps {
 const AuthFooter = ({ type }: AuthFooterProps) => {
   const isSignIn = type === "sign-in";
   return (
-    <div className="flex flex-col gap-2.5 w-full">
+    <div className="flex flex-col gap-2.5 w-full mt-2.5">
       {isSignIn && (
         <div className="text-right">
           <Link

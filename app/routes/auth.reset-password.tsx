@@ -416,7 +416,7 @@ const ResetPasswordRoute = () => {
                           </Button>
                           <Button
                             type="submit"
-                            className="w-2/3 gap-2"
+                            className="w-2/3 gap-2 px-2"
                             onMouseOver={() => shieldIconRef.current?.startAnimation()}
                             disabled={isSubmitting}
                           >

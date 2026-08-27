@@ -15,7 +15,7 @@ const AuthLayout = () => {
       </div>
 
       {/* Content — scrolls when the form is taller than the viewport */}
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-12 md:px-8">
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center justify-center px-4 sm:px-6 md:px-8">
         <Outlet />
       </div>
     </div>

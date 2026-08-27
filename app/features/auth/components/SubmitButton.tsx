@@ -13,7 +13,7 @@ const SubmitButton = ({ type, formId, isSubmitting }: SubmitButtonProps) => {
     <Button
       type="submit"
       form={formId}
-      className="w-full mt-4"
+      className="w-full mt-1.5"
       size={"lg"}
       disabled={isSubmitting}
     >
