@@ -92,7 +92,7 @@ const SiteHeader = () => {
               </Button>
 
               <Button asChild className="rounded-sm font-mono text-xs uppercase tracking-[0.14em]">
-                <Link to={"/auth/login"}>Sign up</Link>
+                <Link to={"/auth/signup"}>Sign up</Link>
               </Button>
             </>
           )}
